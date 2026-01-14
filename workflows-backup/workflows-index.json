@@ -1,0 +1,27 @@
+{
+  "backupDate": "2026-01-13T21:22:00Z",
+  "totalWorkflows": 12,
+  "workflows": [
+    {"id": "21EHe24mkMmfBhK6", "name": "Botfy - Tool: Reagendar Agendamento", "active": false, "nodeCount": 4, "backupFile": "21EHe24mkMmfBhK6-reagendar-agendamento.json"},
+    {"id": "8Ug0F3KuLov6EeCQ", "name": "Botfy - Tool: Buscar Agendamentos", "active": false, "nodeCount": 4, "backupFile": "8Ug0F3KuLov6EeCQ-buscar-agendamentos.json"},
+    {"id": "E7T0VyKgGPBUcdPn", "name": "Botfy - Agendamento - API Oficial", "active": false, "nodeCount": 65, "backupFile": "E7T0VyKgGPBUcdPn-agendamento-api-oficial.json"},
+    {"id": "Gni6gGgJfWMxYfgO", "name": "Maven SDR AI Agent", "active": false, "nodeCount": 64, "backupFile": "Gni6gGgJfWMxYfgO-maven-sdr.json"},
+    {"id": "HTR3ITfFDrK6eP2R", "name": "Botfy - Anti No-Show", "active": true, "nodeCount": 50, "backupFile": "HTR3ITfFDrK6eP2R-anti-no-show.json"},
+    {"id": "b3vmf5Ibb8eCWU3R", "name": "MavenOS Template 2", "active": false, "nodeCount": 49, "backupFile": null},
+    {"id": "bPJamJhBcrVCKgBg", "name": "Botfy - Agendamento", "active": true, "nodeCount": 64, "backupFile": "bPJamJhBcrVCKgBg-agendamento.json"},
+    {"id": "eEx2enJk3YpreNUm", "name": "Botfy - Tool: Criar Agendamento", "active": false, "nodeCount": 14, "backupFile": "eEx2enJk3YpreNUm-criar-agendamento.json"},
+    {"id": "gE2rpbLVUlnA5yMk", "name": "Botfy - Tool: Cancelar Agendamento", "active": false, "nodeCount": 4, "backupFile": "gE2rpbLVUlnA5yMk-cancelar-agendamento.json"},
+    {"id": "igG6sZsStxiDzNRY", "name": "Botfy - Tool: Buscar Paciente", "active": false, "nodeCount": 5, "backupFile": "igG6sZsStxiDzNRY-buscar-paciente.json"},
+    {"id": "nPRI8beXnEKPWQFa", "name": "Cria Lead no Odoo CRM", "active": false, "nodeCount": 19, "backupFile": null},
+    {"id": "uIH1rCROxDgQH9Fy", "name": "RAG Supabase", "active": false, "nodeCount": 12, "backupFile": null}
+  ],
+  "botfyClinicasWorkflows": [
+    "Botfy - Agendamento",
+    "Botfy - Anti No-Show",
+    "Botfy - Tool: Criar Agendamento",
+    "Botfy - Tool: Buscar Agendamentos",
+    "Botfy - Tool: Reagendar Agendamento",
+    "Botfy - Tool: Cancelar Agendamento",
+    "Botfy - Tool: Buscar Paciente"
+  ]
+}

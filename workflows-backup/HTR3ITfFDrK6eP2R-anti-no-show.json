@@ -1,0 +1,4546 @@
+{
+  "success": true,
+  "data": {
+    "updatedAt": "2026-01-13T23:38:31.601Z",
+    "createdAt": "2026-01-12T23:38:36.781Z",
+    "id": "HTR3ITfFDrK6eP2R",
+    "name": "Botfy - Anti No-Show",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 15
+              }
+            ]
+          }
+        },
+        "id": "schedule-trigger",
+        "name": "Verifica Consultas",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -1200,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "config_lembretes",
+          "returnAll": true,
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "ativo",
+                "condition": "eq",
+                "keyValue": "true"
+              }
+            ]
+          }
+        },
+        "id": "config-lembretes",
+        "name": "Busca Config Lembretes",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -1008,
+          304
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "vjxdwL14zFNscRrD",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "agendamentos_completos",
+          "returnAll": true,
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "data_hora",
+                "condition": "gte",
+                "keyValue": "={{ $now.toISO() }}"
+              },
+              {
+                "keyName": "data_hora",
+                "condition": "lte",
+                "keyValue": "={{ $now.plus({ hours: 48 }).toISO() }}"
+              },
+              {
+                "keyName": "status",
+                "condition": "in",
+                "keyValue": "agendada,confirmada"
+              }
+            ]
+          }
+        },
+        "id": "google-calendar",
+        "name": "Busca Agendamentos 48h",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -800,
+          304
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "vjxdwL14zFNscRrD",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "options": {}
+        },
+        "id": "merge-data",
+        "name": "Combina Dados",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          -608,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "consulta-id",
+                "name": "consulta_id",
+                "value": "={{ $json.id }}",
+                "type": "number"
+              },
+              {
+                "id": "evento-nome",
+                "name": "paciente_nome",
+                "value": "={{ $json.paciente_nome }}",
+                "type": "string"
+              },
+              {
+                "id": "evento-telefone",
+                "name": "paciente_telefone",
+                "value": "={{ $json.paciente_telefone }}",
+                "type": "string"
+              },
+              {
+                "id": "evento-email",
+                "name": "paciente_email",
+                "value": "={{ $json.paciente_email || '' }}",
+                "type": "string"
+              },
+              {
+                "id": "evento-inicio",
+                "name": "consulta_inicio",
+                "value": "={{ $json.data_hora }}",
+                "type": "string"
+              },
+              {
+                "id": "tipo-consulta",
+                "name": "tipo_consulta",
+                "value": "={{ $json.tipo_consulta }}",
+                "type": "string"
+              },
+              {
+                "id": "profissional",
+                "name": "profissional",
+                "value": "={{ $json.profissional }}",
+                "type": "string"
+              },
+              {
+                "id": "horas-restantes",
+                "name": "horas_ate_consulta",
+                "value": "={{ Math.floor(($json.data_hora.toDateTime().toMillis() - $now.toMillis()) / (1000 * 60 * 60)) }}",
+                "type": "number"
+              },
+              {
+                "id": "config-nome",
+                "name": "config_lembrete_nome",
+                "value": "={{ $('Busca Config Lembretes').item.json.nome }}",
+                "type": "string"
+              },
+              {
+                "id": "config-horas",
+                "name": "config_horas_antes",
+                "value": "={{ $('Busca Config Lembretes').item.json.horas_antes }}",
+                "type": "number"
+              },
+              {
+                "id": "config-tipo",
+                "name": "config_template_tipo",
+                "value": "={{ $('Busca Config Lembretes').item.json.template_tipo }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "calcula-tempo",
+        "name": "Calcula Tempo Restante",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -400,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "cond-timing",
+                "leftValue": "={{ $json.horas_ate_consulta }}",
+                "rightValue": "={{ $json.config_horas_antes }}",
+                "operator": {
+                  "type": "number",
+                  "operation": "lte"
+                }
+              },
+              {
+                "id": "cond-timing-min",
+                "leftValue": "={{ $json.horas_ate_consulta }}",
+                "rightValue": "={{ $json.config_horas_antes - 2 }}",
+                "operator": {
+                  "type": "number",
+                  "operation": "gte"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "if-timing",
+        "name": "Timing Correto?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -208,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "lembretes_enviados",
+          "limit": 1,
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "consulta_id",
+                "condition": "eq",
+                "keyValue": "={{ $json.consulta_id }}"
+              },
+              {
+                "keyName": "tipo_lembrete",
+                "condition": "eq",
+                "keyValue": "={{ $json.config_lembrete_nome }}"
+              }
+            ]
+          }
+        },
+        "id": "busca-enviados",
+        "name": "Ja Enviou Este Lembrete?",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          0,
+          208
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "vjxdwL14zFNscRrD",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "cond-vazio",
+                "leftValue": "={{ $json }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "object",
+                  "operation": "empty"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "if-nao-enviado",
+        "name": "Nao Enviado Ainda?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          208,
+          208
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "historico_noshow",
+          "returnAll": true,
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "telefone",
+                "condition": "eq",
+                "keyValue": "={{ $('Calcula Tempo Restante').item.json.paciente_email }}"
+              }
+            ]
+          }
+        },
+        "id": "busca-historico",
+        "name": "Busca Historico Paciente",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          400,
+          112
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "vjxdwL14zFNscRrD",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "dados-paciente",
+                "name": "dados_paciente",
+                "value": "={{ JSON.stringify($('Calcula Tempo Restante').item.json) }}",
+                "type": "string"
+              },
+              {
+                "id": "historico",
+                "name": "historico_noshow",
+                "value": "={{ $json.length > 0 ? 'Total consultas: ' + $json.length + ', Faltas: ' + $json.filter(h => !h.compareceu).length : 'Sem historico' }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "prepara-analise",
+        "name": "Prepara Dados Analise",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          608,
+          112
+        ]
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-4.1-mini",
+            "mode": "list"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "Voce e um analista de risco de no-show para clinica de estetica.\n\nAnalise o risco deste paciente faltar na consulta.\n\nDados do paciente e consulta:\n{{ $json.dados_paciente }}\n\nHistorico do paciente:\n{{ $json.historico_noshow }}\n\nRegras de analise:\n- Sexta-feira tarde: +20% risco\n- Segunda-feira manha: +10% risco\n- Paciente sem historico: risco medio (0.3)\n- Cada falta anterior: +15% risco\n- Consulta de retorno: -10% risco\n\nRetorne APENAS um JSON valido (sem markdown):\n{\"risco\": 0.0 a 1.0, \"fatores\": [\"fator1\", \"fator2\"], \"recomendacao\": \"lembrete_normal\" ou \"lembrete_reforcado\" ou \"ligar_antes\"}"
+              }
+            ]
+          },
+          "options": {
+            "temperature": 0.3
+          }
+        },
+        "id": "analise-risco",
+        "name": "IA Analisa Risco No-Show",
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 1.8,
+        "position": [
+          800,
+          112
+        ],
+        "credentials": {
+          "openAiApi": {
+            "id": "b2f06NWMfx9VK1I2",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "risco-obj",
+                "name": "analise_risco",
+                "value": "={{ JSON.parse($json.message.content) }}",
+                "type": "object"
+              },
+              {
+                "id": "risco-score",
+                "name": "risco_score",
+                "value": "={{ JSON.parse($json.message.content).risco }}",
+                "type": "number"
+              },
+              {
+                "id": "dados-evento",
+                "name": "evento",
+                "value": "={{ $('Calcula Tempo Restante').item.json }}",
+                "type": "object"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "parse-risco",
+        "name": "Extrai Score Risco",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1008,
+          112
+        ]
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-4.1-mini",
+            "mode": "list"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "=Gere uma mensagem de {{ $json.evento.config_template_tipo }} para o paciente.\n\nContexto:\n- Nome: {{ $json.evento.paciente_nome }}\n- Consulta com Dra. Paula\n- Data/Hora: {{ $json.evento.consulta_inicio }}\n- Risco de no-show: {{ $json.risco_score }} (NAO mencione isso ao paciente)\n- Tom: {{ $json.evento.config_template_tipo == 'lembrete' ? 'amigavel e acolhedor' : 'cordial mas objetivo' }}\n\nRegras:\n- Maximo 280 caracteres\n- Inclua opcao de CONFIRMAR ou REAGENDAR\n- Se risco > 0.5, enfatize importancia da presenca\n- NAO mencione risco ou no-show\n- Use emoji com moderacao (max 2)\n- Assine como Marilia, assistente da Dra. Paula\n\nRetorne APENAS a mensagem, sem aspas ou explicacoes."
+              }
+            ]
+          },
+          "options": {
+            "temperature": 0.7
+          }
+        },
+        "id": "gera-mensagem",
+        "name": "IA Gera Mensagem",
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 1.8,
+        "position": [
+          1200,
+          112
+        ],
+        "credentials": {
+          "openAiApi": {
+            "id": "b2f06NWMfx9VK1I2",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "telefone",
+                "name": "telefone",
+                "value": "={{ $('Calcula Tempo Restante').item.json.paciente_telefone }}",
+                "type": "string"
+              },
+              {
+                "id": "mensagem",
+                "name": "mensagem",
+                "value": "={{ $json.message.content }}",
+                "type": "string"
+              },
+              {
+                "id": "consulta-id-final",
+                "name": "consulta_id",
+                "value": "={{ $('Calcula Tempo Restante').item.json.consulta_id }}",
+                "type": "number"
+              },
+              {
+                "id": "tipo-lembrete",
+                "name": "tipo_lembrete",
+                "value": "={{ $('Calcula Tempo Restante').item.json.config_lembrete_nome }}",
+                "type": "string"
+              },
+              {
+                "id": "risco-final",
+                "name": "risco_score",
+                "value": "={{ $('Extrai Score Risco').item.json.risco_score }}",
+                "type": "number"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "prepara-envio",
+        "name": "Prepara Envio WhatsApp",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1408,
+          112
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $env.EVOLUTION_API_KEY }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n    \"number\": \"{{ $json.telefone }}\",\n    \"text\": \"{{ $json.mensagem.replace(/\\n/g, '\\\\n').replace(/['\"]/g, '') }}\",\n    \"delay\": 2000\n}",
+          "options": {}
+        },
+        "id": "envia-whatsapp",
+        "name": "Envia WhatsApp",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1600,
+          112
+        ]
+      },
+      {
+        "parameters": {
+          "tableId": "lembretes_enviados",
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "agendamento_id",
+                "fieldValue": "={{ $('Busca Agendamentos 48h').item.json.id }}"
+              },
+              {
+                "fieldId": "telefone",
+                "fieldValue": "={{ $('Busca Agendamentos 48h').item.json.paciente_telefone }}"
+              },
+              {
+                "fieldId": "tipo_lembrete",
+                "fieldValue": "={{ $('Busca Config Lembretes').item.json.nome }}"
+              },
+              {
+                "fieldId": "mensagem_enviada",
+                "fieldValue": "={{ $('IA Gera Mensagem').item.json.message.content }}"
+              },
+              {
+                "fieldId": "risco_noshow",
+                "fieldValue": "={{ $('Extrai Score Risco').item.json.risco }}"
+              }
+            ]
+          }
+        },
+        "id": "registra-lembrete",
+        "name": "Registra Lembrete Enviado",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1808,
+          112
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "vjxdwL14zFNscRrD",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "content": "## Botfy - Anti No-Show\nVerifica consultas proximas e envia lembretes inteligentes",
+          "height": 100,
+          "width": 400,
+          "color": 4
+        },
+        "id": "sticky-titulo",
+        "name": "Sticky Note",
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          -1248,
+          160
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "content": "## Analise de Risco IA\nCalcula probabilidade de no-show",
+          "height": 80,
+          "width": 300,
+          "color": 2
+        },
+        "id": "sticky-analise",
+        "name": "Sticky Note1",
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          752,
+          -48
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "content": "## Envio e Registro\nWhatsApp + Supabase",
+          "height": 80,
+          "width": 300,
+          "color": 6
+        },
+        "id": "sticky-envio",
+        "name": "Sticky Note2",
+        "type": "n8n-nodes-base.stickyNote",
+        "position": [
+          1360,
+          -48
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "anti-noshow-resposta",
+          "options": {}
+        },
+        "id": "webhook-resposta",
+        "name": "Webhook Resposta Paciente",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          -1200,
+          704
+        ],
+        "webhookId": "anti-noshow-webhook-001"
+      },
+      {
+        "parameters": {
+          "jsCode": "// Extrai dados da resposta do Evolution API\nconst body = $input.first().json.body || {};\nconst nestedBody = body.body || body;\n\n// Tenta extrair telefone de diferentes estruturas\nlet telefone = '';\nif (nestedBody.data && nestedBody.data.key && nestedBody.data.key.remoteJid) {\n  telefone = nestedBody.data.key.remoteJid.replace('@s.whatsapp.net', '');\n}\n\n// Tenta extrair mensagem\nlet mensagem = '';\nif (nestedBody.data && nestedBody.data.message) {\n  mensagem = nestedBody.data.message.conversation || \n             (nestedBody.data.message.extendedTextMessage && nestedBody.data.message.extendedTextMessage.text) || \n             '';\n}\n\nreturn [{\n  json: {\n    telefone,\n    mensagem,\n    instancia: nestedBody.instance || '',\n    server_url: nestedBody.server_url || '',\n    apikey: nestedBody.apikey || ''\n  }\n}];"
+        },
+        "id": "extrai-dados-resposta",
+        "name": "Extrai Dados Resposta",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1008,
+          704
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "lembretes_enviados",
+          "limit": 1,
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "telefone",
+                "condition": "eq",
+                "keyValue": "={{ $json.telefone }}"
+              },
+              {
+                "keyName": "status_resposta",
+                "condition": "eq",
+                "keyValue": "pendente"
+              }
+            ]
+          }
+        },
+        "id": "busca-lembrete-pendente",
+        "name": "Busca Lembrete Pendente",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -800,
+          704
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "vjxdwL14zFNscRrD",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "loose"
+            },
+            "conditions": [
+              {
+                "id": "cond-lembrete",
+                "leftValue": "={{ $json.id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "number",
+                  "operation": "exists"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "id": "if-tem-lembrete",
+        "name": "Tem Lembrete Pendente?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -608,
+          704
+        ]
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-4.1-mini",
+            "mode": "list"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "=Voce e um assistente que interpreta respostas de pacientes sobre confirmacao de consulta.\n\nMensagem do paciente: \"{{ $('Extrai Dados Resposta').item.json.mensagem }}\"\n\nClassifique a resposta em UMA das categorias:\n- CONFIRMA: paciente confirmou presenca (sim, ok, confirmado, vou, estarei la, etc)\n- CANCELA: paciente quer cancelar (nao vou, cancela, desmarcar, nao posso, etc)\n- REAGENDA: paciente quer mudar horario (trocar, remarcar, outro horario, etc)\n- DUVIDA: paciente tem duvida ou resposta nao clara\n\nRetorne APENAS um JSON valido:\n{\"categoria\": \"CONFIRMA|CANCELA|REAGENDA|DUVIDA\", \"confianca\": 0.0 a 1.0, \"resposta_sugerida\": \"mensagem curta para responder ao paciente\"}"
+              }
+            ]
+          },
+          "options": {
+            "temperature": 0.2
+          }
+        },
+        "id": "ai-interpreta-resposta",
+        "name": "IA Interpreta Resposta",
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 1.8,
+        "position": [
+          -400,
+          608
+        ],
+        "credentials": {
+          "openAiApi": {
+            "id": "b2f06NWMfx9VK1I2",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "categoria",
+                "name": "categoria",
+                "value": "={{ JSON.parse($json.message.content).categoria }}",
+                "type": "string"
+              },
+              {
+                "id": "confianca",
+                "name": "confianca",
+                "value": "={{ JSON.parse($json.message.content).confianca }}",
+                "type": "number"
+              },
+              {
+                "id": "resposta-sugerida",
+                "name": "resposta_sugerida",
+                "value": "={{ JSON.parse($json.message.content).resposta_sugerida }}",
+                "type": "string"
+              },
+              {
+                "id": "lembrete-id",
+                "name": "lembrete_id",
+                "value": "={{ $('Busca Lembrete Pendente').item.json.id }}",
+                "type": "number"
+              },
+              {
+                "id": "consulta-id-resp",
+                "name": "consulta_id",
+                "value": "={{ $('Busca Lembrete Pendente').item.json.consulta_id }}",
+                "type": "number"
+              },
+              {
+                "id": "telefone-final",
+                "name": "telefone",
+                "value": "={{ $('Extrai Dados Resposta').item.json.telefone }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "parse-categoria",
+        "name": "Extrai Categoria",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -208,
+          608
+        ]
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "cond-confirma",
+                      "leftValue": "={{ $json.categoria }}",
+                      "rightValue": "CONFIRMA",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "CONFIRMA"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "cond-cancela",
+                      "leftValue": "={{ $json.categoria }}",
+                      "rightValue": "CANCELA",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "CANCELA"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "cond-reagenda",
+                      "leftValue": "={{ $json.categoria }}",
+                      "rightValue": "REAGENDA",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "REAGENDA"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "id": "cond-duvida",
+                      "leftValue": "={{ $json.categoria }}",
+                      "rightValue": "DUVIDA",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "DUVIDA"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "switch-categoria",
+        "name": "Direciona por Categoria",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          0,
+          608
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "lembretes_enviados",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $json.lembrete_id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "status_resposta",
+                "fieldValue": "confirmado"
+              },
+              {
+                "fieldId": "data_resposta",
+                "fieldValue": "={{ $now.toISO() }}"
+              }
+            ]
+          }
+        },
+        "id": "atualiza-confirmado",
+        "name": "Atualiza Status Confirmado",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          256,
+          400
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "vjxdwL14zFNscRrD",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "lembretes_enviados",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $json.lembrete_id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "status_resposta",
+                "fieldValue": "cancelado"
+              },
+              {
+                "fieldId": "data_resposta",
+                "fieldValue": "={{ $now.toISO() }}"
+              }
+            ]
+          }
+        },
+        "id": "atualiza-cancelado",
+        "name": "Atualiza Status Cancelado",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          256,
+          560
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "vjxdwL14zFNscRrD",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $env.EVOLUTION_API_KEY }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n    \"number\": \"{{ $('Extrai Dados Resposta').item.json.telefone }}\",\n    \"text\": \"{{ $('Extrai Categoria').item.json.resposta_sugerida.replace(/\\n/g, '\\\\n').replace(/['\"]/g, '') }}\",\n    \"delay\": 1000\n}",
+          "options": {}
+        },
+        "id": "responde-paciente",
+        "name": "Responde Paciente",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          512,
+          512
+        ]
+      },
+      {
+        "parameters": {
+          "content": "## Webhook Respostas\nRecebe confirmacao/cancelamento do paciente",
+          "height": 100,
+          "width": 350,
+          "color": 5
+        },
+        "id": "sticky-webhook",
+        "name": "Sticky Note Webhook",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -1248,
+          560
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "lista_espera",
+          "limit": 3,
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "status",
+                "condition": "eq",
+                "keyValue": "aguardando"
+              }
+            ]
+          }
+        },
+        "id": "busca-lista-espera",
+        "name": "Busca Lista Espera",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          256,
+          752
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "vjxdwL14zFNscRrD",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "version": 2,
+              "leftValue": "",
+              "caseSensitive": true,
+              "typeValidation": "strict"
+            },
+            "conditions": [
+              {
+                "id": "cond-espera",
+                "leftValue": "={{ $json }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "object",
+                  "operation": "notEmpty"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "if-tem-espera",
+        "name": "Tem Pessoas na Espera?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          464,
+          752
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "agendamentos_completos",
+          "returnAll": false,
+          "limit": 1,
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('Busca Lembrete Pendente').item.json.agendamento_id }}"
+              }
+            ]
+          }
+        },
+        "id": "busca-evento-cancelado",
+        "name": "Busca Dados Agendamento",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          656,
+          656
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "vjxdwL14zFNscRrD",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "espera-telefone",
+                "name": "telefone_espera",
+                "value": "={{ $('Busca Lista Espera').item.json.telefone }}",
+                "type": "string"
+              },
+              {
+                "id": "espera-nome",
+                "name": "nome_espera",
+                "value": "={{ $('Busca Lista Espera').item.json.nome }}",
+                "type": "string"
+              },
+              {
+                "id": "espera-id",
+                "name": "espera_id",
+                "value": "={{ $('Busca Lista Espera').item.json.id }}",
+                "type": "number"
+              },
+              {
+                "id": "consulta-data",
+                "name": "evento_data",
+                "value": "={{ $json.data_hora }}",
+                "type": "string"
+              },
+              {
+                "id": "consulta-tipo",
+                "name": "evento_titulo",
+                "value": "={{ $json.tipo_consulta }}",
+                "type": "string"
+              },
+              {
+                "id": "consulta-id",
+                "name": "consulta_id",
+                "value": "={{ $json.id }}",
+                "type": "number"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "prepara-oferta-vaga",
+        "name": "Prepara Oferta Vaga",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          864,
+          656
+        ]
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-4.1-mini",
+            "mode": "list"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "=Gere uma mensagem curta oferecendo uma vaga que abriu para um paciente na lista de espera.\n\nDados:\n- Nome do paciente: {{ $json.nome_espera }}\n- Data/hora da vaga: {{ $json.evento_data }}\n- Clinica da Dra. Paula\n\nRegras:\n- Maximo 200 caracteres\n- Tom animado mas profissional\n- Pedir para responder SIM se quiser a vaga\n- Mencionar que e por ordem de chegada\n- Assinar como Marilia\n\nRetorne APENAS a mensagem, sem aspas."
+              }
+            ]
+          },
+          "options": {
+            "temperature": 0.7
+          }
+        },
+        "id": "gera-msg-espera",
+        "name": "IA Gera Mensagem Vaga",
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 1.8,
+        "position": [
+          1056,
+          656
+        ],
+        "credentials": {
+          "openAiApi": {
+            "id": "b2f06NWMfx9VK1I2",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $env.EVOLUTION_API_KEY }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n    \"number\": \"{{ $('Prepara Oferta Vaga').item.json.telefone_espera }}\",\n    \"text\": \"{{ $json.message.content.replace(/\\n/g, '\\\\n').replace(/['\\\"]/g, '') }}\",\n    \"delay\": 1000\n}",
+          "options": {}
+        },
+        "id": "envia-oferta-espera",
+        "name": "Envia Oferta para Espera",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1264,
+          656
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "lista_espera",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('Prepara Oferta Vaga').item.json.espera_id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "status",
+                "fieldValue": "contatado"
+              },
+              {
+                "fieldId": "data_contato",
+                "fieldValue": "={{ $now.toISO() }}"
+              }
+            ]
+          }
+        },
+        "id": "atualiza-espera-contatado",
+        "name": "Atualiza Espera Contatado",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          1456,
+          656
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "vjxdwL14zFNscRrD",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "agendamentos",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('Busca Lembrete Pendente').item.json.agendamento_id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "status",
+                "fieldValue": "cancelada"
+              },
+              {
+                "fieldId": "updated_at",
+                "fieldValue": "={{ $now.toISO() }}"
+              }
+            ]
+          }
+        },
+        "id": "deleta-evento-calendar",
+        "name": "Atualiza Agendamento Cancelado",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          464,
+          912
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "vjxdwL14zFNscRrD",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "content": "## Lista de Espera\nQuando cancela, oferece vaga para quem esta aguardando",
+          "height": 80,
+          "width": 400,
+          "color": 3
+        },
+        "id": "sticky-lista-espera",
+        "name": "Sticky Note Lista Espera",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          608,
+          528
+        ]
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours"
+              }
+            ]
+          }
+        },
+        "id": "schedule-escalacao",
+        "name": "Verifica Nao Respondidos",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -1200,
+          1104
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "lembretes_enviados",
+          "returnAll": true,
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "status_resposta",
+                "condition": "eq",
+                "keyValue": "pendente"
+              },
+              {
+                "keyName": "escalado_humano",
+                "condition": "eq",
+                "keyValue": "false"
+              }
+            ]
+          }
+        },
+        "id": "busca-pendentes-antigos",
+        "name": "Busca Lembretes Sem Resposta",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -1008,
+          1104
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "vjxdwL14zFNscRrD",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "cond-4h",
+                "leftValue": "={{ ($now.toMillis() - $json.data_envio.toDateTime().toMillis()) / (1000 * 60 * 60) }}",
+                "rightValue": 4,
+                "operator": {
+                  "type": "number",
+                  "operation": "gte"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "filtra-4h-sem-resposta",
+        "name": "Filtra +4h Sem Resposta",
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2.2,
+        "position": [
+          -800,
+          1104
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "getAll",
+          "tableId": "agendamentos_completos",
+          "returnAll": false,
+          "limit": 1,
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $json.agendamento_id }}"
+              }
+            ]
+          }
+        },
+        "id": "busca-evento-escalar",
+        "name": "Busca Agendamento para Escalar",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -608,
+          1104
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "vjxdwL14zFNscRrD",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "notif-paciente",
+                "name": "paciente_nome",
+                "value": "={{ $json.paciente_nome }}",
+                "type": "string"
+              },
+              {
+                "id": "notif-telefone",
+                "name": "paciente_telefone",
+                "value": "={{ $json.paciente_telefone || $('Filtra +4h Sem Resposta').item.json.telefone }}",
+                "type": "string"
+              },
+              {
+                "id": "notif-consulta",
+                "name": "consulta_data",
+                "value": "={{ $json.data_hora }}",
+                "type": "string"
+              },
+              {
+                "id": "notif-tipo",
+                "name": "tipo_consulta",
+                "value": "={{ $json.tipo_consulta }}",
+                "type": "string"
+              },
+              {
+                "id": "notif-profissional",
+                "name": "profissional",
+                "value": "={{ $json.profissional }}",
+                "type": "string"
+              },
+              {
+                "id": "notif-risco",
+                "name": "risco_noshow",
+                "value": "={{ $('Filtra +4h Sem Resposta').item.json.risco_noshow }}",
+                "type": "number"
+              },
+              {
+                "id": "notif-lembrete-id",
+                "name": "lembrete_id",
+                "value": "={{ $('Filtra +4h Sem Resposta').item.json.id }}",
+                "type": "number"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "prepara-notif-humano",
+        "name": "Prepara Notificacao Humano",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -400,
+          1104
+        ]
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "gpt-4.1-mini",
+            "mode": "list"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "=Gere um alerta para a recepcionista sobre paciente que nao confirmou consulta.\n\nDados:\n- Paciente: {{ $json.paciente_nome }}\n- Telefone: {{ $json.paciente_telefone }}\n- Consulta: {{ $json.consulta_data }}\n- Risco no-show: {{ $json.risco_noshow * 100 }}%\n\nFormato:\n⚠️ PACIENTE NAO CONFIRMOU\n\nPaciente: [nome]\nTelefone: [telefone]\nConsulta: [data formatada]\nRisco: [ALTO/MEDIO/BAIXO] ([%])\n\nAcao sugerida: [sugestao baseada no risco]\n\nRetorne APENAS a mensagem formatada."
+              }
+            ]
+          },
+          "options": {
+            "temperature": 0.3
+          }
+        },
+        "id": "gera-alerta-humano",
+        "name": "IA Gera Alerta Recepcionista",
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 1.8,
+        "position": [
+          -208,
+          1104
+        ],
+        "credentials": {
+          "openAiApi": {
+            "id": "b2f06NWMfx9VK1I2",
+            "name": "OpenAi account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "apikey",
+                "value": "={{ $env.EVOLUTION_API_KEY }}"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n    \"number\": \"{{ $env.TELEFONE_RECEPCIONISTA || '5511999999999@s.whatsapp.net' }}\",\n    \"text\": \"{{ $json.message.content.replace(/\\n/g, '\\\\n').replace(/['\\\"]/g, '') }}\",\n    \"delay\": 1000\n}",
+          "options": {}
+        },
+        "id": "envia-alerta-recepcionista",
+        "name": "Envia Alerta Recepcionista",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          0,
+          1104
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "tableId": "lembretes_enviados",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $('Prepara Notificacao Humano').item.json.lembrete_id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "escalado_humano",
+                "fieldValue": "true"
+              },
+              {
+                "fieldId": "data_escalacao",
+                "fieldValue": "={{ $now.toISO() }}"
+              }
+            ]
+          }
+        },
+        "id": "marca-escalado",
+        "name": "Marca como Escalado",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          208,
+          1104
+        ],
+        "credentials": {
+          "supabaseApi": {
+            "id": "vjxdwL14zFNscRrD",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "content": "## Escalonamento para Humano\nVerifica a cada 1h se tem lembrete sem resposta ha mais de 4h",
+          "height": 100,
+          "width": 450,
+          "color": 7
+        },
+        "id": "sticky-escalacao",
+        "name": "Sticky Note Escalacao",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -1248,
+          960
+        ]
+      },
+      {
+        "id": "node-status-reagenda",
+        "name": "Atualiza Status Reagenda",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          256,
+          720
+        ],
+        "parameters": {
+          "operation": "update",
+          "tableId": "lembretes_enviados",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $json.lembrete_id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "status_resposta",
+                "fieldValue": "reagenda"
+              },
+              {
+                "fieldId": "data_resposta",
+                "fieldValue": "={{ $now.toISO() }}"
+              },
+              {
+                "fieldId": "escalado_humano",
+                "fieldValue": "true"
+              },
+              {
+                "fieldId": "data_escalacao",
+                "fieldValue": "={{ $now.toISO() }}"
+              }
+            ]
+          }
+        },
+        "credentials": {
+          "supabaseApi": {
+            "id": "vjxdwL14zFNscRrD",
+            "name": "Supabase account"
+          }
+        }
+      },
+      {
+        "id": "node-status-duvida",
+        "name": "Atualiza Status Duvida",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          256,
+          880
+        ],
+        "parameters": {
+          "operation": "update",
+          "tableId": "lembretes_enviados",
+          "matchType": "allFilters",
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "id",
+                "condition": "eq",
+                "keyValue": "={{ $json.lembrete_id }}"
+              }
+            ]
+          },
+          "fieldsUi": {
+            "fieldValues": [
+              {
+                "fieldId": "status_resposta",
+                "fieldValue": "duvida"
+              },
+              {
+                "fieldId": "data_resposta",
+                "fieldValue": "={{ $now.toISO() }}"
+              },
+              {
+                "fieldId": "escalado_humano",
+                "fieldValue": "true"
+              },
+              {
+                "fieldId": "data_escalacao",
+                "fieldValue": "={{ $now.toISO() }}"
+              }
+            ]
+          }
+        },
+        "credentials": {
+          "supabaseApi": {
+            "id": "vjxdwL14zFNscRrD",
+            "name": "Supabase account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Verifica Consultas": {
+        "main": [
+          [
+            {
+              "node": "Busca Config Lembretes",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca Config Lembretes": {
+        "main": [
+          [
+            {
+              "node": "Busca Agendamentos 48h",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca Agendamentos 48h": {
+        "main": [
+          [
+            {
+              "node": "Combina Dados",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Combina Dados": {
+        "main": [
+          [
+            {
+              "node": "Calcula Tempo Restante",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Calcula Tempo Restante": {
+        "main": [
+          [
+            {
+              "node": "Timing Correto?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Timing Correto?": {
+        "main": [
+          [
+            {
+              "node": "Ja Enviou Este Lembrete?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "Ja Enviou Este Lembrete?": {
+        "main": [
+          [
+            {
+              "node": "Nao Enviado Ainda?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Nao Enviado Ainda?": {
+        "main": [
+          [
+            {
+              "node": "Busca Historico Paciente",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "Busca Historico Paciente": {
+        "main": [
+          [
+            {
+              "node": "Prepara Dados Analise",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepara Dados Analise": {
+        "main": [
+          [
+            {
+              "node": "IA Analisa Risco No-Show",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IA Analisa Risco No-Show": {
+        "main": [
+          [
+            {
+              "node": "Extrai Score Risco",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extrai Score Risco": {
+        "main": [
+          [
+            {
+              "node": "IA Gera Mensagem",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IA Gera Mensagem": {
+        "main": [
+          [
+            {
+              "node": "Prepara Envio WhatsApp",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepara Envio WhatsApp": {
+        "main": [
+          [
+            {
+              "node": "Envia WhatsApp",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Envia WhatsApp": {
+        "main": [
+          [
+            {
+              "node": "Registra Lembrete Enviado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook Resposta Paciente": {
+        "main": [
+          [
+            {
+              "node": "Extrai Dados Resposta",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extrai Dados Resposta": {
+        "main": [
+          [
+            {
+              "node": "Busca Lembrete Pendente",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca Lembrete Pendente": {
+        "main": [
+          [
+            {
+              "node": "Tem Lembrete Pendente?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Tem Lembrete Pendente?": {
+        "main": [
+          [
+            {
+              "node": "IA Interpreta Resposta",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IA Interpreta Resposta": {
+        "main": [
+          [
+            {
+              "node": "Extrai Categoria",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extrai Categoria": {
+        "main": [
+          [
+            {
+              "node": "Direciona por Categoria",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Direciona por Categoria": {
+        "main": [
+          [
+            {
+              "node": "Atualiza Status Confirmado",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Atualiza Status Cancelado",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Atualiza Status Reagenda",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Atualiza Status Duvida",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualiza Status Confirmado": {
+        "main": [
+          [
+            {
+              "node": "Responde Paciente",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualiza Status Cancelado": {
+        "main": [
+          [
+            {
+              "node": "Responde Paciente",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Busca Lista Espera",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca Lista Espera": {
+        "main": [
+          [
+            {
+              "node": "Tem Pessoas na Espera?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Tem Pessoas na Espera?": {
+        "main": [
+          [
+            {
+              "node": "Busca Dados Agendamento",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Atualiza Agendamento Cancelado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca Dados Agendamento": {
+        "main": [
+          [
+            {
+              "node": "Prepara Oferta Vaga",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepara Oferta Vaga": {
+        "main": [
+          [
+            {
+              "node": "IA Gera Mensagem Vaga",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IA Gera Mensagem Vaga": {
+        "main": [
+          [
+            {
+              "node": "Envia Oferta para Espera",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Envia Oferta para Espera": {
+        "main": [
+          [
+            {
+              "node": "Atualiza Espera Contatado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Verifica Nao Respondidos": {
+        "main": [
+          [
+            {
+              "node": "Busca Lembretes Sem Resposta",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca Lembretes Sem Resposta": {
+        "main": [
+          [
+            {
+              "node": "Filtra +4h Sem Resposta",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filtra +4h Sem Resposta": {
+        "main": [
+          [
+            {
+              "node": "Busca Agendamento para Escalar",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Busca Agendamento para Escalar": {
+        "main": [
+          [
+            {
+              "node": "Prepara Notificacao Humano",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepara Notificacao Humano": {
+        "main": [
+          [
+            {
+              "node": "IA Gera Alerta Recepcionista",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "IA Gera Alerta Recepcionista": {
+        "main": [
+          [
+            {
+              "node": "Envia Alerta Recepcionista",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Envia Alerta Recepcionista": {
+        "main": [
+          [
+            {
+              "node": "Marca como Escalado",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualiza Status Reagenda": {
+        "main": [
+          [
+            {
+              "node": "Responde Paciente",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Atualiza Status Duvida": {
+        "main": [
+          [
+            {
+              "node": "Responde Paciente",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "callerPolicy": "workflowsFromSameOwner",
+      "availableInMCP": false
+    },
+    "staticData": {
+      "node:Verifica Consultas": {
+        "recurrenceRules": []
+      },
+      "node:Verifica Nao Respondidos": {
+        "recurrenceRules": []
+      }
+    },
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "f53d6e1c-08bd-4092-be10-863afed52799",
+    "activeVersionId": "f53d6e1c-08bd-4092-be10-863afed52799",
+    "versionCounter": 64,
+    "triggerCount": 3,
+    "shared": [
+      {
+        "updatedAt": "2026-01-12T23:38:36.791Z",
+        "createdAt": "2026-01-12T23:38:36.791Z",
+        "role": "workflow:owner",
+        "workflowId": "HTR3ITfFDrK6eP2R",
+        "projectId": "ASfue6RWpsJm853c",
+        "project": {
+          "updatedAt": "2025-12-05T22:24:07.951Z",
+          "createdAt": "2025-12-05T22:00:55.676Z",
+          "id": "ASfue6RWpsJm853c",
+          "name": "Gilberto Abrao <ggafbr@gmail.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-05T22:00:55.677Z",
+              "createdAt": "2025-12-05T22:00:55.677Z",
+              "userId": "c33d65c2-d5ef-4f2d-aedf-5c2969300ec6",
+              "projectId": "ASfue6RWpsJm853c",
+              "user": {
+                "updatedAt": "2026-01-13T05:21:41.000Z",
+                "createdAt": "2025-12-05T22:00:54.144Z",
+                "id": "c33d65c2-d5ef-4f2d-aedf-5c2969300ec6",
+                "email": "ggafbr@gmail.com",
+                "firstName": "Gilberto",
+                "lastName": "Abrao",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-05T22:24:49.386Z",
+                  "personalization_survey_n8n_version": "1.122.5",
+                  "companySize": "<20",
+                  "companyType": "saas",
+                  "role": "business-owner",
+                  "reportedSource": "youtube"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "easyAIWorkflowOnboarded": true,
+                  "firstSuccessfulWorkflowId": "bPJamJhBcrVCKgBg",
+                  "userActivatedAt": 1768257177840
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-01-13",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [],
+    "activeVersion": {
+      "updatedAt": "2026-01-13T23:38:31.579Z",
+      "createdAt": "2026-01-13T23:38:31.579Z",
+      "versionId": "f53d6e1c-08bd-4092-be10-863afed52799",
+      "workflowId": "HTR3ITfFDrK6eP2R",
+      "nodes": [
+        {
+          "parameters": {
+            "rule": {
+              "interval": [
+                {
+                  "field": "minutes",
+                  "minutesInterval": 15
+                }
+              ]
+            }
+          },
+          "id": "schedule-trigger",
+          "name": "Verifica Consultas",
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "typeVersion": 1.2,
+          "position": [
+            -1200,
+            304
+          ]
+        },
+        {
+          "parameters": {
+            "operation": "getAll",
+            "tableId": "config_lembretes",
+            "returnAll": true,
+            "matchType": "allFilters",
+            "filters": {
+              "conditions": [
+                {
+                  "keyName": "ativo",
+                  "condition": "eq",
+                  "keyValue": "true"
+                }
+              ]
+            }
+          },
+          "id": "config-lembretes",
+          "name": "Busca Config Lembretes",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            -1008,
+            304
+          ],
+          "credentials": {
+            "supabaseApi": {
+              "id": "vjxdwL14zFNscRrD",
+              "name": "Supabase account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "getAll",
+            "tableId": "agendamentos_completos",
+            "returnAll": true,
+            "matchType": "allFilters",
+            "filters": {
+              "conditions": [
+                {
+                  "keyName": "data_hora",
+                  "condition": "gte",
+                  "keyValue": "={{ $now.toISO() }}"
+                },
+                {
+                  "keyName": "data_hora",
+                  "condition": "lte",
+                  "keyValue": "={{ $now.plus({ hours: 48 }).toISO() }}"
+                },
+                {
+                  "keyName": "status",
+                  "condition": "in",
+                  "keyValue": "agendada,confirmada"
+                }
+              ]
+            }
+          },
+          "id": "google-calendar",
+          "name": "Busca Agendamentos 48h",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            -800,
+            304
+          ],
+          "credentials": {
+            "supabaseApi": {
+              "id": "vjxdwL14zFNscRrD",
+              "name": "Supabase account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "mode": "combine",
+            "options": {}
+          },
+          "id": "merge-data",
+          "name": "Combina Dados",
+          "type": "n8n-nodes-base.merge",
+          "typeVersion": 3,
+          "position": [
+            -608,
+            304
+          ]
+        },
+        {
+          "parameters": {
+            "assignments": {
+              "assignments": [
+                {
+                  "id": "consulta-id",
+                  "name": "consulta_id",
+                  "value": "={{ $json.id }}",
+                  "type": "number"
+                },
+                {
+                  "id": "evento-nome",
+                  "name": "paciente_nome",
+                  "value": "={{ $json.paciente_nome }}",
+                  "type": "string"
+                },
+                {
+                  "id": "evento-telefone",
+                  "name": "paciente_telefone",
+                  "value": "={{ $json.paciente_telefone }}",
+                  "type": "string"
+                },
+                {
+                  "id": "evento-email",
+                  "name": "paciente_email",
+                  "value": "={{ $json.paciente_email || '' }}",
+                  "type": "string"
+                },
+                {
+                  "id": "evento-inicio",
+                  "name": "consulta_inicio",
+                  "value": "={{ $json.data_hora }}",
+                  "type": "string"
+                },
+                {
+                  "id": "tipo-consulta",
+                  "name": "tipo_consulta",
+                  "value": "={{ $json.tipo_consulta }}",
+                  "type": "string"
+                },
+                {
+                  "id": "profissional",
+                  "name": "profissional",
+                  "value": "={{ $json.profissional }}",
+                  "type": "string"
+                },
+                {
+                  "id": "horas-restantes",
+                  "name": "horas_ate_consulta",
+                  "value": "={{ Math.floor(($json.data_hora.toDateTime().toMillis() - $now.toMillis()) / (1000 * 60 * 60)) }}",
+                  "type": "number"
+                },
+                {
+                  "id": "config-nome",
+                  "name": "config_lembrete_nome",
+                  "value": "={{ $('Busca Config Lembretes').item.json.nome }}",
+                  "type": "string"
+                },
+                {
+                  "id": "config-horas",
+                  "name": "config_horas_antes",
+                  "value": "={{ $('Busca Config Lembretes').item.json.horas_antes }}",
+                  "type": "number"
+                },
+                {
+                  "id": "config-tipo",
+                  "name": "config_template_tipo",
+                  "value": "={{ $('Busca Config Lembretes').item.json.template_tipo }}",
+                  "type": "string"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "id": "calcula-tempo",
+          "name": "Calcula Tempo Restante",
+          "type": "n8n-nodes-base.set",
+          "typeVersion": 3.4,
+          "position": [
+            -400,
+            304
+          ]
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "version": 2,
+                "leftValue": "",
+                "caseSensitive": true,
+                "typeValidation": "strict"
+              },
+              "conditions": [
+                {
+                  "id": "cond-timing",
+                  "leftValue": "={{ $json.horas_ate_consulta }}",
+                  "rightValue": "={{ $json.config_horas_antes }}",
+                  "operator": {
+                    "type": "number",
+                    "operation": "lte"
+                  }
+                },
+                {
+                  "id": "cond-timing-min",
+                  "leftValue": "={{ $json.horas_ate_consulta }}",
+                  "rightValue": "={{ $json.config_horas_antes - 2 }}",
+                  "operator": {
+                    "type": "number",
+                    "operation": "gte"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "if-timing",
+          "name": "Timing Correto?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.2,
+          "position": [
+            -208,
+            304
+          ]
+        },
+        {
+          "parameters": {
+            "operation": "getAll",
+            "tableId": "lembretes_enviados",
+            "limit": 1,
+            "matchType": "allFilters",
+            "filters": {
+              "conditions": [
+                {
+                  "keyName": "consulta_id",
+                  "condition": "eq",
+                  "keyValue": "={{ $json.consulta_id }}"
+                },
+                {
+                  "keyName": "tipo_lembrete",
+                  "condition": "eq",
+                  "keyValue": "={{ $json.config_lembrete_nome }}"
+                }
+              ]
+            }
+          },
+          "id": "busca-enviados",
+          "name": "Ja Enviou Este Lembrete?",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            0,
+            208
+          ],
+          "credentials": {
+            "supabaseApi": {
+              "id": "vjxdwL14zFNscRrD",
+              "name": "Supabase account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "version": 2,
+                "leftValue": "",
+                "caseSensitive": true,
+                "typeValidation": "strict"
+              },
+              "conditions": [
+                {
+                  "id": "cond-vazio",
+                  "leftValue": "={{ $json }}",
+                  "rightValue": "",
+                  "operator": {
+                    "type": "object",
+                    "operation": "empty"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "if-nao-enviado",
+          "name": "Nao Enviado Ainda?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.2,
+          "position": [
+            208,
+            208
+          ]
+        },
+        {
+          "parameters": {
+            "operation": "getAll",
+            "tableId": "historico_noshow",
+            "returnAll": true,
+            "matchType": "allFilters",
+            "filters": {
+              "conditions": [
+                {
+                  "keyName": "telefone",
+                  "condition": "eq",
+                  "keyValue": "={{ $('Calcula Tempo Restante').item.json.paciente_email }}"
+                }
+              ]
+            }
+          },
+          "id": "busca-historico",
+          "name": "Busca Historico Paciente",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            400,
+            112
+          ],
+          "credentials": {
+            "supabaseApi": {
+              "id": "vjxdwL14zFNscRrD",
+              "name": "Supabase account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "assignments": {
+              "assignments": [
+                {
+                  "id": "dados-paciente",
+                  "name": "dados_paciente",
+                  "value": "={{ JSON.stringify($('Calcula Tempo Restante').item.json) }}",
+                  "type": "string"
+                },
+                {
+                  "id": "historico",
+                  "name": "historico_noshow",
+                  "value": "={{ $json.length > 0 ? 'Total consultas: ' + $json.length + ', Faltas: ' + $json.filter(h => !h.compareceu).length : 'Sem historico' }}",
+                  "type": "string"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "id": "prepara-analise",
+          "name": "Prepara Dados Analise",
+          "type": "n8n-nodes-base.set",
+          "typeVersion": 3.4,
+          "position": [
+            608,
+            112
+          ]
+        },
+        {
+          "parameters": {
+            "modelId": {
+              "__rl": true,
+              "value": "gpt-4.1-mini",
+              "mode": "list"
+            },
+            "messages": {
+              "values": [
+                {
+                  "content": "Voce e um analista de risco de no-show para clinica de estetica.\n\nAnalise o risco deste paciente faltar na consulta.\n\nDados do paciente e consulta:\n{{ $json.dados_paciente }}\n\nHistorico do paciente:\n{{ $json.historico_noshow }}\n\nRegras de analise:\n- Sexta-feira tarde: +20% risco\n- Segunda-feira manha: +10% risco\n- Paciente sem historico: risco medio (0.3)\n- Cada falta anterior: +15% risco\n- Consulta de retorno: -10% risco\n\nRetorne APENAS um JSON valido (sem markdown):\n{\"risco\": 0.0 a 1.0, \"fatores\": [\"fator1\", \"fator2\"], \"recomendacao\": \"lembrete_normal\" ou \"lembrete_reforcado\" ou \"ligar_antes\"}"
+                }
+              ]
+            },
+            "options": {
+              "temperature": 0.3
+            }
+          },
+          "id": "analise-risco",
+          "name": "IA Analisa Risco No-Show",
+          "type": "@n8n/n8n-nodes-langchain.openAi",
+          "typeVersion": 1.8,
+          "position": [
+            800,
+            112
+          ],
+          "credentials": {
+            "openAiApi": {
+              "id": "b2f06NWMfx9VK1I2",
+              "name": "OpenAi account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "assignments": {
+              "assignments": [
+                {
+                  "id": "risco-obj",
+                  "name": "analise_risco",
+                  "value": "={{ JSON.parse($json.message.content) }}",
+                  "type": "object"
+                },
+                {
+                  "id": "risco-score",
+                  "name": "risco_score",
+                  "value": "={{ JSON.parse($json.message.content).risco }}",
+                  "type": "number"
+                },
+                {
+                  "id": "dados-evento",
+                  "name": "evento",
+                  "value": "={{ $('Calcula Tempo Restante').item.json }}",
+                  "type": "object"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "id": "parse-risco",
+          "name": "Extrai Score Risco",
+          "type": "n8n-nodes-base.set",
+          "typeVersion": 3.4,
+          "position": [
+            1008,
+            112
+          ]
+        },
+        {
+          "parameters": {
+            "modelId": {
+              "__rl": true,
+              "value": "gpt-4.1-mini",
+              "mode": "list"
+            },
+            "messages": {
+              "values": [
+                {
+                  "content": "=Gere uma mensagem de {{ $json.evento.config_template_tipo }} para o paciente.\n\nContexto:\n- Nome: {{ $json.evento.paciente_nome }}\n- Consulta com Dra. Paula\n- Data/Hora: {{ $json.evento.consulta_inicio }}\n- Risco de no-show: {{ $json.risco_score }} (NAO mencione isso ao paciente)\n- Tom: {{ $json.evento.config_template_tipo == 'lembrete' ? 'amigavel e acolhedor' : 'cordial mas objetivo' }}\n\nRegras:\n- Maximo 280 caracteres\n- Inclua opcao de CONFIRMAR ou REAGENDAR\n- Se risco > 0.5, enfatize importancia da presenca\n- NAO mencione risco ou no-show\n- Use emoji com moderacao (max 2)\n- Assine como Marilia, assistente da Dra. Paula\n\nRetorne APENAS a mensagem, sem aspas ou explicacoes."
+                }
+              ]
+            },
+            "options": {
+              "temperature": 0.7
+            }
+          },
+          "id": "gera-mensagem",
+          "name": "IA Gera Mensagem",
+          "type": "@n8n/n8n-nodes-langchain.openAi",
+          "typeVersion": 1.8,
+          "position": [
+            1200,
+            112
+          ],
+          "credentials": {
+            "openAiApi": {
+              "id": "b2f06NWMfx9VK1I2",
+              "name": "OpenAi account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "assignments": {
+              "assignments": [
+                {
+                  "id": "telefone",
+                  "name": "telefone",
+                  "value": "={{ $('Calcula Tempo Restante').item.json.paciente_telefone }}",
+                  "type": "string"
+                },
+                {
+                  "id": "mensagem",
+                  "name": "mensagem",
+                  "value": "={{ $json.message.content }}",
+                  "type": "string"
+                },
+                {
+                  "id": "consulta-id-final",
+                  "name": "consulta_id",
+                  "value": "={{ $('Calcula Tempo Restante').item.json.consulta_id }}",
+                  "type": "number"
+                },
+                {
+                  "id": "tipo-lembrete",
+                  "name": "tipo_lembrete",
+                  "value": "={{ $('Calcula Tempo Restante').item.json.config_lembrete_nome }}",
+                  "type": "string"
+                },
+                {
+                  "id": "risco-final",
+                  "name": "risco_score",
+                  "value": "={{ $('Extrai Score Risco').item.json.risco_score }}",
+                  "type": "number"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "id": "prepara-envio",
+          "name": "Prepara Envio WhatsApp",
+          "type": "n8n-nodes-base.set",
+          "typeVersion": 3.4,
+          "position": [
+            1408,
+            112
+          ]
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "apikey",
+                  "value": "={{ $env.EVOLUTION_API_KEY }}"
+                }
+              ]
+            },
+            "sendBody": true,
+            "specifyBody": "json",
+            "jsonBody": "={\n    \"number\": \"{{ $json.telefone }}\",\n    \"text\": \"{{ $json.mensagem.replace(/\\n/g, '\\\\n').replace(/['\"]/g, '') }}\",\n    \"delay\": 2000\n}",
+            "options": {}
+          },
+          "id": "envia-whatsapp",
+          "name": "Envia WhatsApp",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.2,
+          "position": [
+            1600,
+            112
+          ]
+        },
+        {
+          "parameters": {
+            "tableId": "lembretes_enviados",
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "agendamento_id",
+                  "fieldValue": "={{ $('Busca Agendamentos 48h').item.json.id }}"
+                },
+                {
+                  "fieldId": "telefone",
+                  "fieldValue": "={{ $('Busca Agendamentos 48h').item.json.paciente_telefone }}"
+                },
+                {
+                  "fieldId": "tipo_lembrete",
+                  "fieldValue": "={{ $('Busca Config Lembretes').item.json.nome }}"
+                },
+                {
+                  "fieldId": "mensagem_enviada",
+                  "fieldValue": "={{ $('IA Gera Mensagem').item.json.message.content }}"
+                },
+                {
+                  "fieldId": "risco_noshow",
+                  "fieldValue": "={{ $('Extrai Score Risco').item.json.risco }}"
+                }
+              ]
+            }
+          },
+          "id": "registra-lembrete",
+          "name": "Registra Lembrete Enviado",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            1808,
+            112
+          ],
+          "credentials": {
+            "supabaseApi": {
+              "id": "vjxdwL14zFNscRrD",
+              "name": "Supabase account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "content": "## Botfy - Anti No-Show\nVerifica consultas proximas e envia lembretes inteligentes",
+            "height": 100,
+            "width": 400,
+            "color": 4
+          },
+          "id": "sticky-titulo",
+          "name": "Sticky Note",
+          "type": "n8n-nodes-base.stickyNote",
+          "position": [
+            -1248,
+            160
+          ],
+          "typeVersion": 1
+        },
+        {
+          "parameters": {
+            "content": "## Analise de Risco IA\nCalcula probabilidade de no-show",
+            "height": 80,
+            "width": 300,
+            "color": 2
+          },
+          "id": "sticky-analise",
+          "name": "Sticky Note1",
+          "type": "n8n-nodes-base.stickyNote",
+          "position": [
+            752,
+            -48
+          ],
+          "typeVersion": 1
+        },
+        {
+          "parameters": {
+            "content": "## Envio e Registro\nWhatsApp + Supabase",
+            "height": 80,
+            "width": 300,
+            "color": 6
+          },
+          "id": "sticky-envio",
+          "name": "Sticky Note2",
+          "type": "n8n-nodes-base.stickyNote",
+          "position": [
+            1360,
+            -48
+          ],
+          "typeVersion": 1
+        },
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "anti-noshow-resposta",
+            "options": {}
+          },
+          "id": "webhook-resposta",
+          "name": "Webhook Resposta Paciente",
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2,
+          "position": [
+            -1200,
+            704
+          ],
+          "webhookId": "anti-noshow-webhook-001"
+        },
+        {
+          "parameters": {
+            "jsCode": "// Extrai dados da resposta do Evolution API\nconst body = $input.first().json.body || {};\nconst nestedBody = body.body || body;\n\n// Tenta extrair telefone de diferentes estruturas\nlet telefone = '';\nif (nestedBody.data && nestedBody.data.key && nestedBody.data.key.remoteJid) {\n  telefone = nestedBody.data.key.remoteJid.replace('@s.whatsapp.net', '');\n}\n\n// Tenta extrair mensagem\nlet mensagem = '';\nif (nestedBody.data && nestedBody.data.message) {\n  mensagem = nestedBody.data.message.conversation || \n             (nestedBody.data.message.extendedTextMessage && nestedBody.data.message.extendedTextMessage.text) || \n             '';\n}\n\nreturn [{\n  json: {\n    telefone,\n    mensagem,\n    instancia: nestedBody.instance || '',\n    server_url: nestedBody.server_url || '',\n    apikey: nestedBody.apikey || ''\n  }\n}];"
+          },
+          "id": "extrai-dados-resposta",
+          "name": "Extrai Dados Resposta",
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            -1008,
+            704
+          ]
+        },
+        {
+          "parameters": {
+            "operation": "getAll",
+            "tableId": "lembretes_enviados",
+            "limit": 1,
+            "matchType": "allFilters",
+            "filters": {
+              "conditions": [
+                {
+                  "keyName": "telefone",
+                  "condition": "eq",
+                  "keyValue": "={{ $json.telefone }}"
+                },
+                {
+                  "keyName": "status_resposta",
+                  "condition": "eq",
+                  "keyValue": "pendente"
+                }
+              ]
+            }
+          },
+          "id": "busca-lembrete-pendente",
+          "name": "Busca Lembrete Pendente",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            -800,
+            704
+          ],
+          "credentials": {
+            "supabaseApi": {
+              "id": "vjxdwL14zFNscRrD",
+              "name": "Supabase account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "version": 2,
+                "leftValue": "",
+                "caseSensitive": true,
+                "typeValidation": "loose"
+              },
+              "conditions": [
+                {
+                  "id": "cond-lembrete",
+                  "leftValue": "={{ $json.id }}",
+                  "rightValue": "",
+                  "operator": {
+                    "type": "number",
+                    "operation": "exists"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "looseTypeValidation": true,
+            "options": {}
+          },
+          "id": "if-tem-lembrete",
+          "name": "Tem Lembrete Pendente?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.2,
+          "position": [
+            -608,
+            704
+          ]
+        },
+        {
+          "parameters": {
+            "modelId": {
+              "__rl": true,
+              "value": "gpt-4.1-mini",
+              "mode": "list"
+            },
+            "messages": {
+              "values": [
+                {
+                  "content": "=Voce e um assistente que interpreta respostas de pacientes sobre confirmacao de consulta.\n\nMensagem do paciente: \"{{ $('Extrai Dados Resposta').item.json.mensagem }}\"\n\nClassifique a resposta em UMA das categorias:\n- CONFIRMA: paciente confirmou presenca (sim, ok, confirmado, vou, estarei la, etc)\n- CANCELA: paciente quer cancelar (nao vou, cancela, desmarcar, nao posso, etc)\n- REAGENDA: paciente quer mudar horario (trocar, remarcar, outro horario, etc)\n- DUVIDA: paciente tem duvida ou resposta nao clara\n\nRetorne APENAS um JSON valido:\n{\"categoria\": \"CONFIRMA|CANCELA|REAGENDA|DUVIDA\", \"confianca\": 0.0 a 1.0, \"resposta_sugerida\": \"mensagem curta para responder ao paciente\"}"
+                }
+              ]
+            },
+            "options": {
+              "temperature": 0.2
+            }
+          },
+          "id": "ai-interpreta-resposta",
+          "name": "IA Interpreta Resposta",
+          "type": "@n8n/n8n-nodes-langchain.openAi",
+          "typeVersion": 1.8,
+          "position": [
+            -400,
+            608
+          ],
+          "credentials": {
+            "openAiApi": {
+              "id": "b2f06NWMfx9VK1I2",
+              "name": "OpenAi account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "assignments": {
+              "assignments": [
+                {
+                  "id": "categoria",
+                  "name": "categoria",
+                  "value": "={{ JSON.parse($json.message.content).categoria }}",
+                  "type": "string"
+                },
+                {
+                  "id": "confianca",
+                  "name": "confianca",
+                  "value": "={{ JSON.parse($json.message.content).confianca }}",
+                  "type": "number"
+                },
+                {
+                  "id": "resposta-sugerida",
+                  "name": "resposta_sugerida",
+                  "value": "={{ JSON.parse($json.message.content).resposta_sugerida }}",
+                  "type": "string"
+                },
+                {
+                  "id": "lembrete-id",
+                  "name": "lembrete_id",
+                  "value": "={{ $('Busca Lembrete Pendente').item.json.id }}",
+                  "type": "number"
+                },
+                {
+                  "id": "consulta-id-resp",
+                  "name": "consulta_id",
+                  "value": "={{ $('Busca Lembrete Pendente').item.json.consulta_id }}",
+                  "type": "number"
+                },
+                {
+                  "id": "telefone-final",
+                  "name": "telefone",
+                  "value": "={{ $('Extrai Dados Resposta').item.json.telefone }}",
+                  "type": "string"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "id": "parse-categoria",
+          "name": "Extrai Categoria",
+          "type": "n8n-nodes-base.set",
+          "typeVersion": 3.4,
+          "position": [
+            -208,
+            608
+          ]
+        },
+        {
+          "parameters": {
+            "rules": {
+              "values": [
+                {
+                  "conditions": {
+                    "options": {
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict",
+                      "version": 2
+                    },
+                    "conditions": [
+                      {
+                        "id": "cond-confirma",
+                        "leftValue": "={{ $json.categoria }}",
+                        "rightValue": "CONFIRMA",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        }
+                      }
+                    ],
+                    "combinator": "and"
+                  },
+                  "renameOutput": true,
+                  "outputKey": "CONFIRMA"
+                },
+                {
+                  "conditions": {
+                    "options": {
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict",
+                      "version": 2
+                    },
+                    "conditions": [
+                      {
+                        "id": "cond-cancela",
+                        "leftValue": "={{ $json.categoria }}",
+                        "rightValue": "CANCELA",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        }
+                      }
+                    ],
+                    "combinator": "and"
+                  },
+                  "renameOutput": true,
+                  "outputKey": "CANCELA"
+                },
+                {
+                  "conditions": {
+                    "options": {
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict",
+                      "version": 2
+                    },
+                    "conditions": [
+                      {
+                        "id": "cond-reagenda",
+                        "leftValue": "={{ $json.categoria }}",
+                        "rightValue": "REAGENDA",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        }
+                      }
+                    ],
+                    "combinator": "and"
+                  },
+                  "renameOutput": true,
+                  "outputKey": "REAGENDA"
+                },
+                {
+                  "conditions": {
+                    "options": {
+                      "caseSensitive": true,
+                      "leftValue": "",
+                      "typeValidation": "strict",
+                      "version": 2
+                    },
+                    "conditions": [
+                      {
+                        "id": "cond-duvida",
+                        "leftValue": "={{ $json.categoria }}",
+                        "rightValue": "DUVIDA",
+                        "operator": {
+                          "type": "string",
+                          "operation": "equals"
+                        }
+                      }
+                    ],
+                    "combinator": "and"
+                  },
+                  "renameOutput": true,
+                  "outputKey": "DUVIDA"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "id": "switch-categoria",
+          "name": "Direciona por Categoria",
+          "type": "n8n-nodes-base.switch",
+          "typeVersion": 3.2,
+          "position": [
+            0,
+            608
+          ]
+        },
+        {
+          "parameters": {
+            "operation": "update",
+            "tableId": "lembretes_enviados",
+            "matchType": "allFilters",
+            "filters": {
+              "conditions": [
+                {
+                  "keyName": "id",
+                  "condition": "eq",
+                  "keyValue": "={{ $json.lembrete_id }}"
+                }
+              ]
+            },
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "status_resposta",
+                  "fieldValue": "confirmado"
+                },
+                {
+                  "fieldId": "data_resposta",
+                  "fieldValue": "={{ $now.toISO() }}"
+                }
+              ]
+            }
+          },
+          "id": "atualiza-confirmado",
+          "name": "Atualiza Status Confirmado",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            256,
+            400
+          ],
+          "credentials": {
+            "supabaseApi": {
+              "id": "vjxdwL14zFNscRrD",
+              "name": "Supabase account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "update",
+            "tableId": "lembretes_enviados",
+            "matchType": "allFilters",
+            "filters": {
+              "conditions": [
+                {
+                  "keyName": "id",
+                  "condition": "eq",
+                  "keyValue": "={{ $json.lembrete_id }}"
+                }
+              ]
+            },
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "status_resposta",
+                  "fieldValue": "cancelado"
+                },
+                {
+                  "fieldId": "data_resposta",
+                  "fieldValue": "={{ $now.toISO() }}"
+                }
+              ]
+            }
+          },
+          "id": "atualiza-cancelado",
+          "name": "Atualiza Status Cancelado",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            256,
+            560
+          ],
+          "credentials": {
+            "supabaseApi": {
+              "id": "vjxdwL14zFNscRrD",
+              "name": "Supabase account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "apikey",
+                  "value": "={{ $env.EVOLUTION_API_KEY }}"
+                }
+              ]
+            },
+            "sendBody": true,
+            "specifyBody": "json",
+            "jsonBody": "={\n    \"number\": \"{{ $('Extrai Dados Resposta').item.json.telefone }}\",\n    \"text\": \"{{ $('Extrai Categoria').item.json.resposta_sugerida.replace(/\\n/g, '\\\\n').replace(/['\"]/g, '') }}\",\n    \"delay\": 1000\n}",
+            "options": {}
+          },
+          "id": "responde-paciente",
+          "name": "Responde Paciente",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.2,
+          "position": [
+            512,
+            512
+          ]
+        },
+        {
+          "parameters": {
+            "content": "## Webhook Respostas\nRecebe confirmacao/cancelamento do paciente",
+            "height": 100,
+            "width": 350,
+            "color": 5
+          },
+          "id": "sticky-webhook",
+          "name": "Sticky Note Webhook",
+          "type": "n8n-nodes-base.stickyNote",
+          "typeVersion": 1,
+          "position": [
+            -1248,
+            560
+          ]
+        },
+        {
+          "parameters": {
+            "operation": "getAll",
+            "tableId": "lista_espera",
+            "limit": 3,
+            "matchType": "allFilters",
+            "filters": {
+              "conditions": [
+                {
+                  "keyName": "status",
+                  "condition": "eq",
+                  "keyValue": "aguardando"
+                }
+              ]
+            }
+          },
+          "id": "busca-lista-espera",
+          "name": "Busca Lista Espera",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            256,
+            752
+          ],
+          "credentials": {
+            "supabaseApi": {
+              "id": "vjxdwL14zFNscRrD",
+              "name": "Supabase account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "version": 2,
+                "leftValue": "",
+                "caseSensitive": true,
+                "typeValidation": "strict"
+              },
+              "conditions": [
+                {
+                  "id": "cond-espera",
+                  "leftValue": "={{ $json }}",
+                  "rightValue": "",
+                  "operator": {
+                    "type": "object",
+                    "operation": "notEmpty"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "if-tem-espera",
+          "name": "Tem Pessoas na Espera?",
+          "type": "n8n-nodes-base.if",
+          "typeVersion": 2.2,
+          "position": [
+            464,
+            752
+          ]
+        },
+        {
+          "parameters": {
+            "operation": "getAll",
+            "tableId": "agendamentos_completos",
+            "returnAll": false,
+            "limit": 1,
+            "matchType": "allFilters",
+            "filters": {
+              "conditions": [
+                {
+                  "keyName": "id",
+                  "condition": "eq",
+                  "keyValue": "={{ $('Busca Lembrete Pendente').item.json.agendamento_id }}"
+                }
+              ]
+            }
+          },
+          "id": "busca-evento-cancelado",
+          "name": "Busca Dados Agendamento",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            656,
+            656
+          ],
+          "credentials": {
+            "supabaseApi": {
+              "id": "vjxdwL14zFNscRrD",
+              "name": "Supabase account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "assignments": {
+              "assignments": [
+                {
+                  "id": "espera-telefone",
+                  "name": "telefone_espera",
+                  "value": "={{ $('Busca Lista Espera').item.json.telefone }}",
+                  "type": "string"
+                },
+                {
+                  "id": "espera-nome",
+                  "name": "nome_espera",
+                  "value": "={{ $('Busca Lista Espera').item.json.nome }}",
+                  "type": "string"
+                },
+                {
+                  "id": "espera-id",
+                  "name": "espera_id",
+                  "value": "={{ $('Busca Lista Espera').item.json.id }}",
+                  "type": "number"
+                },
+                {
+                  "id": "consulta-data",
+                  "name": "evento_data",
+                  "value": "={{ $json.data_hora }}",
+                  "type": "string"
+                },
+                {
+                  "id": "consulta-tipo",
+                  "name": "evento_titulo",
+                  "value": "={{ $json.tipo_consulta }}",
+                  "type": "string"
+                },
+                {
+                  "id": "consulta-id",
+                  "name": "consulta_id",
+                  "value": "={{ $json.id }}",
+                  "type": "number"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "id": "prepara-oferta-vaga",
+          "name": "Prepara Oferta Vaga",
+          "type": "n8n-nodes-base.set",
+          "typeVersion": 3.4,
+          "position": [
+            864,
+            656
+          ]
+        },
+        {
+          "parameters": {
+            "modelId": {
+              "__rl": true,
+              "value": "gpt-4.1-mini",
+              "mode": "list"
+            },
+            "messages": {
+              "values": [
+                {
+                  "content": "=Gere uma mensagem curta oferecendo uma vaga que abriu para um paciente na lista de espera.\n\nDados:\n- Nome do paciente: {{ $json.nome_espera }}\n- Data/hora da vaga: {{ $json.evento_data }}\n- Clinica da Dra. Paula\n\nRegras:\n- Maximo 200 caracteres\n- Tom animado mas profissional\n- Pedir para responder SIM se quiser a vaga\n- Mencionar que e por ordem de chegada\n- Assinar como Marilia\n\nRetorne APENAS a mensagem, sem aspas."
+                }
+              ]
+            },
+            "options": {
+              "temperature": 0.7
+            }
+          },
+          "id": "gera-msg-espera",
+          "name": "IA Gera Mensagem Vaga",
+          "type": "@n8n/n8n-nodes-langchain.openAi",
+          "typeVersion": 1.8,
+          "position": [
+            1056,
+            656
+          ],
+          "credentials": {
+            "openAiApi": {
+              "id": "b2f06NWMfx9VK1I2",
+              "name": "OpenAi account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "apikey",
+                  "value": "={{ $env.EVOLUTION_API_KEY }}"
+                }
+              ]
+            },
+            "sendBody": true,
+            "specifyBody": "json",
+            "jsonBody": "={\n    \"number\": \"{{ $('Prepara Oferta Vaga').item.json.telefone_espera }}\",\n    \"text\": \"{{ $json.message.content.replace(/\\n/g, '\\\\n').replace(/['\\\"]/g, '') }}\",\n    \"delay\": 1000\n}",
+            "options": {}
+          },
+          "id": "envia-oferta-espera",
+          "name": "Envia Oferta para Espera",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.2,
+          "position": [
+            1264,
+            656
+          ]
+        },
+        {
+          "parameters": {
+            "operation": "update",
+            "tableId": "lista_espera",
+            "matchType": "allFilters",
+            "filters": {
+              "conditions": [
+                {
+                  "keyName": "id",
+                  "condition": "eq",
+                  "keyValue": "={{ $('Prepara Oferta Vaga').item.json.espera_id }}"
+                }
+              ]
+            },
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "status",
+                  "fieldValue": "contatado"
+                },
+                {
+                  "fieldId": "data_contato",
+                  "fieldValue": "={{ $now.toISO() }}"
+                }
+              ]
+            }
+          },
+          "id": "atualiza-espera-contatado",
+          "name": "Atualiza Espera Contatado",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            1456,
+            656
+          ],
+          "credentials": {
+            "supabaseApi": {
+              "id": "vjxdwL14zFNscRrD",
+              "name": "Supabase account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "update",
+            "tableId": "agendamentos",
+            "matchType": "allFilters",
+            "filters": {
+              "conditions": [
+                {
+                  "keyName": "id",
+                  "condition": "eq",
+                  "keyValue": "={{ $('Busca Lembrete Pendente').item.json.agendamento_id }}"
+                }
+              ]
+            },
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "status",
+                  "fieldValue": "cancelada"
+                },
+                {
+                  "fieldId": "updated_at",
+                  "fieldValue": "={{ $now.toISO() }}"
+                }
+              ]
+            }
+          },
+          "id": "deleta-evento-calendar",
+          "name": "Atualiza Agendamento Cancelado",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            464,
+            912
+          ],
+          "credentials": {
+            "supabaseApi": {
+              "id": "vjxdwL14zFNscRrD",
+              "name": "Supabase account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "content": "## Lista de Espera\nQuando cancela, oferece vaga para quem esta aguardando",
+            "height": 80,
+            "width": 400,
+            "color": 3
+          },
+          "id": "sticky-lista-espera",
+          "name": "Sticky Note Lista Espera",
+          "type": "n8n-nodes-base.stickyNote",
+          "typeVersion": 1,
+          "position": [
+            608,
+            528
+          ]
+        },
+        {
+          "parameters": {
+            "rule": {
+              "interval": [
+                {
+                  "field": "hours"
+                }
+              ]
+            }
+          },
+          "id": "schedule-escalacao",
+          "name": "Verifica Nao Respondidos",
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "typeVersion": 1.2,
+          "position": [
+            -1200,
+            1104
+          ]
+        },
+        {
+          "parameters": {
+            "operation": "getAll",
+            "tableId": "lembretes_enviados",
+            "returnAll": true,
+            "matchType": "allFilters",
+            "filters": {
+              "conditions": [
+                {
+                  "keyName": "status_resposta",
+                  "condition": "eq",
+                  "keyValue": "pendente"
+                },
+                {
+                  "keyName": "escalado_humano",
+                  "condition": "eq",
+                  "keyValue": "false"
+                }
+              ]
+            }
+          },
+          "id": "busca-pendentes-antigos",
+          "name": "Busca Lembretes Sem Resposta",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            -1008,
+            1104
+          ],
+          "credentials": {
+            "supabaseApi": {
+              "id": "vjxdwL14zFNscRrD",
+              "name": "Supabase account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "conditions": {
+              "options": {
+                "caseSensitive": true,
+                "leftValue": "",
+                "typeValidation": "strict",
+                "version": 2
+              },
+              "conditions": [
+                {
+                  "id": "cond-4h",
+                  "leftValue": "={{ ($now.toMillis() - $json.data_envio.toDateTime().toMillis()) / (1000 * 60 * 60) }}",
+                  "rightValue": 4,
+                  "operator": {
+                    "type": "number",
+                    "operation": "gte"
+                  }
+                }
+              ],
+              "combinator": "and"
+            },
+            "options": {}
+          },
+          "id": "filtra-4h-sem-resposta",
+          "name": "Filtra +4h Sem Resposta",
+          "type": "n8n-nodes-base.filter",
+          "typeVersion": 2.2,
+          "position": [
+            -800,
+            1104
+          ]
+        },
+        {
+          "parameters": {
+            "operation": "getAll",
+            "tableId": "agendamentos_completos",
+            "returnAll": false,
+            "limit": 1,
+            "matchType": "allFilters",
+            "filters": {
+              "conditions": [
+                {
+                  "keyName": "id",
+                  "condition": "eq",
+                  "keyValue": "={{ $json.agendamento_id }}"
+                }
+              ]
+            }
+          },
+          "id": "busca-evento-escalar",
+          "name": "Busca Agendamento para Escalar",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            -608,
+            1104
+          ],
+          "credentials": {
+            "supabaseApi": {
+              "id": "vjxdwL14zFNscRrD",
+              "name": "Supabase account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "assignments": {
+              "assignments": [
+                {
+                  "id": "notif-paciente",
+                  "name": "paciente_nome",
+                  "value": "={{ $json.paciente_nome }}",
+                  "type": "string"
+                },
+                {
+                  "id": "notif-telefone",
+                  "name": "paciente_telefone",
+                  "value": "={{ $json.paciente_telefone || $('Filtra +4h Sem Resposta').item.json.telefone }}",
+                  "type": "string"
+                },
+                {
+                  "id": "notif-consulta",
+                  "name": "consulta_data",
+                  "value": "={{ $json.data_hora }}",
+                  "type": "string"
+                },
+                {
+                  "id": "notif-tipo",
+                  "name": "tipo_consulta",
+                  "value": "={{ $json.tipo_consulta }}",
+                  "type": "string"
+                },
+                {
+                  "id": "notif-profissional",
+                  "name": "profissional",
+                  "value": "={{ $json.profissional }}",
+                  "type": "string"
+                },
+                {
+                  "id": "notif-risco",
+                  "name": "risco_noshow",
+                  "value": "={{ $('Filtra +4h Sem Resposta').item.json.risco_noshow }}",
+                  "type": "number"
+                },
+                {
+                  "id": "notif-lembrete-id",
+                  "name": "lembrete_id",
+                  "value": "={{ $('Filtra +4h Sem Resposta').item.json.id }}",
+                  "type": "number"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "id": "prepara-notif-humano",
+          "name": "Prepara Notificacao Humano",
+          "type": "n8n-nodes-base.set",
+          "typeVersion": 3.4,
+          "position": [
+            -400,
+            1104
+          ]
+        },
+        {
+          "parameters": {
+            "modelId": {
+              "__rl": true,
+              "value": "gpt-4.1-mini",
+              "mode": "list"
+            },
+            "messages": {
+              "values": [
+                {
+                  "content": "=Gere um alerta para a recepcionista sobre paciente que nao confirmou consulta.\n\nDados:\n- Paciente: {{ $json.paciente_nome }}\n- Telefone: {{ $json.paciente_telefone }}\n- Consulta: {{ $json.consulta_data }}\n- Risco no-show: {{ $json.risco_noshow * 100 }}%\n\nFormato:\n⚠️ PACIENTE NAO CONFIRMOU\n\nPaciente: [nome]\nTelefone: [telefone]\nConsulta: [data formatada]\nRisco: [ALTO/MEDIO/BAIXO] ([%])\n\nAcao sugerida: [sugestao baseada no risco]\n\nRetorne APENAS a mensagem formatada."
+                }
+              ]
+            },
+            "options": {
+              "temperature": 0.3
+            }
+          },
+          "id": "gera-alerta-humano",
+          "name": "IA Gera Alerta Recepcionista",
+          "type": "@n8n/n8n-nodes-langchain.openAi",
+          "typeVersion": 1.8,
+          "position": [
+            -208,
+            1104
+          ],
+          "credentials": {
+            "openAiApi": {
+              "id": "b2f06NWMfx9VK1I2",
+              "name": "OpenAi account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "apikey",
+                  "value": "={{ $env.EVOLUTION_API_KEY }}"
+                }
+              ]
+            },
+            "sendBody": true,
+            "specifyBody": "json",
+            "jsonBody": "={\n    \"number\": \"{{ $env.TELEFONE_RECEPCIONISTA || '5511999999999@s.whatsapp.net' }}\",\n    \"text\": \"{{ $json.message.content.replace(/\\n/g, '\\\\n').replace(/['\\\"]/g, '') }}\",\n    \"delay\": 1000\n}",
+            "options": {}
+          },
+          "id": "envia-alerta-recepcionista",
+          "name": "Envia Alerta Recepcionista",
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.2,
+          "position": [
+            0,
+            1104
+          ]
+        },
+        {
+          "parameters": {
+            "operation": "update",
+            "tableId": "lembretes_enviados",
+            "matchType": "allFilters",
+            "filters": {
+              "conditions": [
+                {
+                  "keyName": "id",
+                  "condition": "eq",
+                  "keyValue": "={{ $('Prepara Notificacao Humano').item.json.lembrete_id }}"
+                }
+              ]
+            },
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "escalado_humano",
+                  "fieldValue": "true"
+                },
+                {
+                  "fieldId": "data_escalacao",
+                  "fieldValue": "={{ $now.toISO() }}"
+                }
+              ]
+            }
+          },
+          "id": "marca-escalado",
+          "name": "Marca como Escalado",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            208,
+            1104
+          ],
+          "credentials": {
+            "supabaseApi": {
+              "id": "vjxdwL14zFNscRrD",
+              "name": "Supabase account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "content": "## Escalonamento para Humano\nVerifica a cada 1h se tem lembrete sem resposta ha mais de 4h",
+            "height": 100,
+            "width": 450,
+            "color": 7
+          },
+          "id": "sticky-escalacao",
+          "name": "Sticky Note Escalacao",
+          "type": "n8n-nodes-base.stickyNote",
+          "typeVersion": 1,
+          "position": [
+            -1248,
+            960
+          ]
+        },
+        {
+          "id": "node-status-reagenda",
+          "name": "Atualiza Status Reagenda",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            256,
+            720
+          ],
+          "parameters": {
+            "operation": "update",
+            "tableId": "lembretes_enviados",
+            "matchType": "allFilters",
+            "filters": {
+              "conditions": [
+                {
+                  "keyName": "id",
+                  "condition": "eq",
+                  "keyValue": "={{ $json.lembrete_id }}"
+                }
+              ]
+            },
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "status_resposta",
+                  "fieldValue": "reagenda"
+                },
+                {
+                  "fieldId": "data_resposta",
+                  "fieldValue": "={{ $now.toISO() }}"
+                },
+                {
+                  "fieldId": "escalado_humano",
+                  "fieldValue": "true"
+                },
+                {
+                  "fieldId": "data_escalacao",
+                  "fieldValue": "={{ $now.toISO() }}"
+                }
+              ]
+            }
+          },
+          "credentials": {
+            "supabaseApi": {
+              "id": "vjxdwL14zFNscRrD",
+              "name": "Supabase account"
+            }
+          }
+        },
+        {
+          "id": "node-status-duvida",
+          "name": "Atualiza Status Duvida",
+          "type": "n8n-nodes-base.supabase",
+          "typeVersion": 1,
+          "position": [
+            256,
+            880
+          ],
+          "parameters": {
+            "operation": "update",
+            "tableId": "lembretes_enviados",
+            "matchType": "allFilters",
+            "filters": {
+              "conditions": [
+                {
+                  "keyName": "id",
+                  "condition": "eq",
+                  "keyValue": "={{ $json.lembrete_id }}"
+                }
+              ]
+            },
+            "fieldsUi": {
+              "fieldValues": [
+                {
+                  "fieldId": "status_resposta",
+                  "fieldValue": "duvida"
+                },
+                {
+                  "fieldId": "data_resposta",
+                  "fieldValue": "={{ $now.toISO() }}"
+                },
+                {
+                  "fieldId": "escalado_humano",
+                  "fieldValue": "true"
+                },
+                {
+                  "fieldId": "data_escalacao",
+                  "fieldValue": "={{ $now.toISO() }}"
+                }
+              ]
+            }
+          },
+          "credentials": {
+            "supabaseApi": {
+              "id": "vjxdwL14zFNscRrD",
+              "name": "Supabase account"
+            }
+          }
+        }
+      ],
+      "connections": {
+        "Verifica Consultas": {
+          "main": [
+            [
+              {
+                "node": "Busca Config Lembretes",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Busca Config Lembretes": {
+          "main": [
+            [
+              {
+                "node": "Busca Agendamentos 48h",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Busca Agendamentos 48h": {
+          "main": [
+            [
+              {
+                "node": "Combina Dados",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Combina Dados": {
+          "main": [
+            [
+              {
+                "node": "Calcula Tempo Restante",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Calcula Tempo Restante": {
+          "main": [
+            [
+              {
+                "node": "Timing Correto?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Timing Correto?": {
+          "main": [
+            [
+              {
+                "node": "Ja Enviou Este Lembrete?",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            []
+          ]
+        },
+        "Ja Enviou Este Lembrete?": {
+          "main": [
+            [
+              {
+                "node": "Nao Enviado Ainda?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Nao Enviado Ainda?": {
+          "main": [
+            [
+              {
+                "node": "Busca Historico Paciente",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            []
+          ]
+        },
+        "Busca Historico Paciente": {
+          "main": [
+            [
+              {
+                "node": "Prepara Dados Analise",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepara Dados Analise": {
+          "main": [
+            [
+              {
+                "node": "IA Analisa Risco No-Show",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "IA Analisa Risco No-Show": {
+          "main": [
+            [
+              {
+                "node": "Extrai Score Risco",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Extrai Score Risco": {
+          "main": [
+            [
+              {
+                "node": "IA Gera Mensagem",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "IA Gera Mensagem": {
+          "main": [
+            [
+              {
+                "node": "Prepara Envio WhatsApp",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepara Envio WhatsApp": {
+          "main": [
+            [
+              {
+                "node": "Envia WhatsApp",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Envia WhatsApp": {
+          "main": [
+            [
+              {
+                "node": "Registra Lembrete Enviado",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Webhook Resposta Paciente": {
+          "main": [
+            [
+              {
+                "node": "Extrai Dados Resposta",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Extrai Dados Resposta": {
+          "main": [
+            [
+              {
+                "node": "Busca Lembrete Pendente",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Busca Lembrete Pendente": {
+          "main": [
+            [
+              {
+                "node": "Tem Lembrete Pendente?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Tem Lembrete Pendente?": {
+          "main": [
+            [
+              {
+                "node": "IA Interpreta Resposta",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "IA Interpreta Resposta": {
+          "main": [
+            [
+              {
+                "node": "Extrai Categoria",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Extrai Categoria": {
+          "main": [
+            [
+              {
+                "node": "Direciona por Categoria",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Direciona por Categoria": {
+          "main": [
+            [
+              {
+                "node": "Atualiza Status Confirmado",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "Atualiza Status Cancelado",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "Atualiza Status Reagenda",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "Atualiza Status Duvida",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Atualiza Status Confirmado": {
+          "main": [
+            [
+              {
+                "node": "Responde Paciente",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Atualiza Status Cancelado": {
+          "main": [
+            [
+              {
+                "node": "Responde Paciente",
+                "type": "main",
+                "index": 0
+              },
+              {
+                "node": "Busca Lista Espera",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Busca Lista Espera": {
+          "main": [
+            [
+              {
+                "node": "Tem Pessoas na Espera?",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Tem Pessoas na Espera?": {
+          "main": [
+            [
+              {
+                "node": "Busca Dados Agendamento",
+                "type": "main",
+                "index": 0
+              }
+            ],
+            [
+              {
+                "node": "Atualiza Agendamento Cancelado",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Busca Dados Agendamento": {
+          "main": [
+            [
+              {
+                "node": "Prepara Oferta Vaga",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepara Oferta Vaga": {
+          "main": [
+            [
+              {
+                "node": "IA Gera Mensagem Vaga",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "IA Gera Mensagem Vaga": {
+          "main": [
+            [
+              {
+                "node": "Envia Oferta para Espera",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Envia Oferta para Espera": {
+          "main": [
+            [
+              {
+                "node": "Atualiza Espera Contatado",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Verifica Nao Respondidos": {
+          "main": [
+            [
+              {
+                "node": "Busca Lembretes Sem Resposta",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Busca Lembretes Sem Resposta": {
+          "main": [
+            [
+              {
+                "node": "Filtra +4h Sem Resposta",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Filtra +4h Sem Resposta": {
+          "main": [
+            [
+              {
+                "node": "Busca Agendamento para Escalar",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Busca Agendamento para Escalar": {
+          "main": [
+            [
+              {
+                "node": "Prepara Notificacao Humano",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepara Notificacao Humano": {
+          "main": [
+            [
+              {
+                "node": "IA Gera Alerta Recepcionista",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "IA Gera Alerta Recepcionista": {
+          "main": [
+            [
+              {
+                "node": "Envia Alerta Recepcionista",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Envia Alerta Recepcionista": {
+          "main": [
+            [
+              {
+                "node": "Marca como Escalado",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Atualiza Status Reagenda": {
+          "main": [
+            [
+              {
+                "node": "Responde Paciente",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Atualiza Status Duvida": {
+          "main": [
+            [
+              {
+                "node": "Responde Paciente",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "authors": "Gilberto Abrao",
+      "name": null,
+      "description": null
+    }
+  }
+}

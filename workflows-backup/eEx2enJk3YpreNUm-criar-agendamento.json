@@ -1,0 +1,7 @@
+{
+  "id": "eEx2enJk3YpreNUm",
+  "name": "Botfy - Tool: Criar Agendamento",
+  "active": false,
+  "nodeCount": 14,
+  "description": "Workflow para criar agendamentos - busca serviço, busca/cria paciente, cria agendamento"
+}
