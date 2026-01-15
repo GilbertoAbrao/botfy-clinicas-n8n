@@ -184,12 +184,100 @@ Which phases cover which requirements. Updated by create-roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| _To be populated by create-roadmap_ | | |
+| ALERT-01 | Phase 2 | Not Started |
+| ALERT-02 | Phase 2 | Not Started |
+| ALERT-03 | Phase 2 | Not Started |
+| ALERT-04 | Phase 2 | Not Started |
+| ALERT-05 | Phase 2 | Not Started |
+| ALERT-06 | Phase 2 | Not Started |
+| ALERT-07 | Phase 2 | Not Started |
+| ALERT-08 | Phase 2 | Not Started |
+| ALERT-09 | Phase 8 | Not Started |
+| ALERT-10 | Phase 8 | Not Started |
+| ALERT-11 | Phase 6 | Not Started |
+| ALERT-12 | Phase 2 | Not Started |
+| ALERT-13 | Phase 2 | Not Started |
+| ALERT-14 | Phase 2 | Not Started |
+| ALERT-15 | Phase 2 | Not Started |
+| CAL-01 | Phase 4 | Not Started |
+| CAL-02 | Phase 4 | Not Started |
+| CAL-03 | Phase 4 | Not Started |
+| CAL-04 | Phase 4 | Not Started |
+| CAL-05 | Phase 4 | Not Started |
+| CAL-06 | Phase 4 | Not Started |
+| CAL-07 | Phase 4 | Not Started |
+| CAL-08 | Phase 4 | Not Started |
+| CAL-09 | Phase 4 | Not Started |
+| CAL-10 | Phase 4 | Not Started |
+| CAL-11 | Phase 4 | Not Started |
+| CAL-12 | Phase 4 | Not Started |
+| CAL-13 | Phase 4 | Not Started |
+| CAL-14 | Phase 4 | Not Started |
+| CAL-15 | Phase 4 | Not Started |
+| PAT-01 | Phase 3 | Not Started |
+| PAT-02 | Phase 3 | Not Started |
+| PAT-03 | Phase 3 | Not Started |
+| PAT-04 | Phase 3 | Not Started |
+| PAT-05 | Phase 3 | Not Started |
+| PAT-06 | Phase 3 | Not Started |
+| PAT-07 | Phase 3 | Not Started |
+| PAT-08 | Phase 3 | Not Started |
+| PAT-09 | Phase 3 | Not Started |
+| PAT-10 | Phase 3 | Not Started |
+| PAT-11 | Phase 3 | Not Started |
+| PAT-12 | Phase 3 | Not Started |
+| PAT-13 | Phase 3 | Not Started |
+| PAT-14 | Phase 3 | Not Started |
+| CONV-01 | Phase 5 | Not Started |
+| CONV-02 | Phase 5 | Not Started |
+| CONV-03 | Phase 5 | Not Started |
+| CONV-04 | Phase 5 | Not Started |
+| CONV-05 | Phase 5 | Not Started |
+| CONV-06 | Phase 5 | Not Started |
+| CONV-07 | Phase 5 | Not Started |
+| CONV-08 | Phase 5 | Not Started |
+| CONV-09 | Phase 5 | Not Started |
+| CONV-10 | Phase 5 | Not Started |
+| CONF-01 | Phase 7 | Not Started |
+| CONF-02 | Phase 7 | Not Started |
+| CONF-03 | Phase 7 | Not Started |
+| CONF-04 | Phase 7 | Not Started |
+| CONF-05 | Phase 7 | Not Started |
+| CONF-06 | Phase 7 | Not Started |
+| CONF-07 | Phase 7 | Not Started |
+| CONF-08 | Phase 7 | Not Started |
+| CONF-09 | Phase 7 | Not Started |
+| CONF-10 | Phase 7 | Not Started |
+| CONF-11 | Phase 7 | Not Started |
+| CONF-12 | Phase 7 | Not Started |
+| CONF-13 | Phase 7 | Not Started |
+| CONF-14 | Phase 7 | Not Started |
+| AUTH-01 | Phase 1 | Not Started |
+| AUTH-02 | Phase 1 | Not Started |
+| AUTH-03 | Phase 1 | Not Started |
+| AUTH-04 | Phase 1 | Not Started |
+| AUTH-05 | Phase 1 | Not Started |
+| AUTH-06 | Phase 1 | Not Started |
+| AUTH-07 | Phase 1 | Not Started |
+| AUTH-08 | Phase 1 | Not Started |
+| AUTH-09 | Phase 1 | Not Started |
+| AUTH-10 | Phase 1 | Not Started |
+| AUTH-11 | Phase 1 | Not Started |
+| AUTH-12 | Phase 1 | Not Started |
+| UX-01 | Phase 2 | Not Started |
+| UX-02 | Phase 2 | Not Started |
+| UX-03 | Phase 1 | Not Started |
+| UX-04 | Phase 1 | Not Started |
+| UX-05 | Phase 1 | Not Started |
+| UX-06 | Phase 1 | Not Started |
+| UX-07 | Phase 1 | Not Started |
+| UX-08 | Phase 2 | Not Started |
+| UX-09 | Phase 2 | Not Started |
 
 **Coverage:**
 - v1 requirements: 79 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 79 ⚠️
+- Mapped to phases: 79 ✓
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-01-15*
