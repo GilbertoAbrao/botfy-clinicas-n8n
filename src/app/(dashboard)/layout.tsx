@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation'
-import { getCurrentUser } from '@/lib/auth/session'
+import { getCurrentUser, getCurrentUserWithRole } from '@/lib/auth/session'
 import { signOut } from '@/lib/auth/actions'
 import { Button } from '@/components/ui/button'
+import Link from 'next/link'
+import { Role } from '@prisma/client'
 
 export default async function DashboardLayout({
   children,
@@ -9,6 +11,7 @@ export default async function DashboardLayout({
   children: React.ReactNode
 }) {
   const user = await getCurrentUser()
+  const userWithRole = await getCurrentUserWithRole()
 
   if (!user) {
     redirect('/login')
@@ -20,7 +23,17 @@ export default async function DashboardLayout({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <h1 className="text-xl font-semibold">Botfy ClinicOps</h1>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user.email}</span>
+            {userWithRole?.role === Role.ADMIN && (
+              <Link href="/admin/users">
+                <Button variant="ghost" size="sm">
+                  Admin
+                </Button>
+              </Link>
+            )}
+            <span className="text-sm text-gray-600">
+              {user.email}
+              {userWithRole?.role && ` (${userWithRole.role})`}
+            </span>
             <form action={signOut}>
               <Button variant="outline" size="sm">
                 Sair
