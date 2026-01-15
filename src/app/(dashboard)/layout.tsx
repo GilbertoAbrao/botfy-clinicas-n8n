@@ -24,11 +24,18 @@ export default async function DashboardLayout({
           <h1 className="text-xl font-semibold">Botfy ClinicOps</h1>
           <div className="flex items-center gap-4">
             {userWithRole?.role === Role.ADMIN && (
-              <Link href="/admin/users">
-                <Button variant="ghost" size="sm">
-                  Admin
-                </Button>
-              </Link>
+              <>
+                <Link href="/admin/users">
+                  <Button variant="ghost" size="sm">
+                    Usuários
+                  </Button>
+                </Link>
+                <Link href="/admin/audit-logs">
+                  <Button variant="ghost" size="sm">
+                    Audit Logs
+                  </Button>
+                </Link>
+              </>
             )}
             <span className="text-sm text-gray-600">
               {user.email}
