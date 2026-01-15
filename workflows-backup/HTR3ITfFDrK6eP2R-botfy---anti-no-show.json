@@ -2302,7 +2302,7 @@
             "userId": "c33d65c2-d5ef-4f2d-aedf-5c2969300ec6",
             "projectId": "ASfue6RWpsJm853c",
             "user": {
-              "updatedAt": "2026-01-15T12:36:43.000Z",
+              "updatedAt": "2026-01-14T12:08:28.000Z",
               "createdAt": "2025-12-05T22:00:54.144Z",
               "id": "c33d65c2-d5ef-4f2d-aedf-5c2969300ec6",
               "email": "ggafbr@gmail.com",
@@ -2325,7 +2325,7 @@
               },
               "disabled": false,
               "mfaEnabled": false,
-              "lastActiveAt": "2026-01-15",
+              "lastActiveAt": "2026-01-14",
               "isPending": false
             }
           }

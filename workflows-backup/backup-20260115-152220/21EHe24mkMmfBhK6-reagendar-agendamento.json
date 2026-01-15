@@ -1,0 +1,69 @@
+{
+  "id": "21EHe24mkMmfBhK6",
+  "name": "Botfy - Tool: Reagendar Agendamento",
+  "active": false,
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-400, 300],
+      "parameters": { "inputSource": "passthrough" }
+    },
+    {
+      "id": "parse-input",
+      "name": "Parse Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-200, 300],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            { "id": "agendamento_id", "name": "agendamento_id", "value": "={{ JSON.parse($json.query).agendamento_id }}", "type": "number" },
+            { "id": "nova_data_hora", "name": "nova_data_hora", "value": "={{ JSON.parse($json.query).nova_data_hora }}", "type": "string" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "atualiza-agendamento",
+      "name": "Atualiza Agendamento",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [0, 300],
+      "parameters": {
+        "operation": "update",
+        "tableId": "agendamentos",
+        "matchType": "allFilters",
+        "filters": { "conditions": [{ "keyName": "id", "condition": "eq", "keyValue": "={{ $json.agendamento_id }}" }] },
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "data_hora", "fieldValue": "={{ $json.nova_data_hora }}" },
+            { "fieldId": "updated_at", "fieldValue": "={{ $now.toISO() }}" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "retorna-resultado",
+      "name": "Retorna Resultado",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [200, 300],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "resultado", "name": "resultado", "value": "=Agendamento ID {{ $json.id }} reagendado com sucesso para {{ $('Parse Input').first().json.nova_data_hora }}", "type": "string" }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": { "main": [[{ "node": "Parse Input", "type": "main", "index": 0 }]] },
+    "Parse Input": { "main": [[{ "node": "Atualiza Agendamento", "type": "main", "index": 0 }]] },
+    "Atualiza Agendamento": { "main": [[{ "node": "Retorna Resultado", "type": "main", "index": 0 }]] }
+  }
+}

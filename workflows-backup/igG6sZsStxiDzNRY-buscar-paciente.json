@@ -2,6 +2,18 @@
   "id": "igG6sZsStxiDzNRY",
   "name": "Botfy - Tool: Buscar Paciente",
   "active": false,
-  "nodeCount": 5,
-  "description": "Busca paciente por telefone ou nome e retorna agendamentos associados"
+  "nodes": [
+    {"id": "trigger", "name": "When Executed by Another Workflow", "type": "n8n-nodes-base.executeWorkflowTrigger", "typeVersion": 1.1, "position": [-600, 304], "parameters": {"inputSource": "passthrough"}},
+    {"id": "parse-input", "name": "Parse Input", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [-400, 304], "parameters": {"jsCode": "const query = $input.first().json.query || '';\nlet telefone = '';\nlet nome = '';\nlet email = '';\ntry {\n  const parsed = JSON.parse(query);\n  telefone = parsed.telefone || '';\n  nome = parsed.nome || '';\n  email = parsed.email || '';\n} catch (e) {\n  const cleaned = query.replace(/[^0-9a-zA-ZÀ-ú\\s]/g, '').trim();\n  if (/^\\d+$/.test(cleaned)) {\n    telefone = cleaned;\n    if (telefone.length === 11 || telefone.length === 10) {\n      telefone = '55' + telefone;\n    }\n  } else {\n    nome = cleaned;\n  }\n}\nif (telefone && !telefone.startsWith('55') && telefone.length >= 10) {\n  telefone = '55' + telefone;\n}\nreturn [{ json: { telefone, nome, email } }];"}},
+    {"id": "busca-paciente", "name": "Busca Paciente", "type": "n8n-nodes-base.supabase", "typeVersion": 1.2, "position": [-200, 304], "parameters": {"operation": "getAll", "tableId": "pacientes", "returnAll": false, "limit": 5, "filterType": "string", "filterString": "=or(telefone.eq.{{ $json.telefone }},nome.ilike.*{{ $json.nome }}*)"}, "alwaysOutputData": true},
+    {"id": "busca-consultas-paciente", "name": "Busca Agendamentos do Paciente", "type": "n8n-nodes-base.supabase", "typeVersion": 1, "position": [0, 304], "parameters": {"operation": "getAll", "tableId": "agendamentos", "returnAll": true, "matchType": "allFilters", "filters": {"conditions": [{"keyName": "paciente_id", "condition": "eq", "keyValue": "={{ $json.id }}"}, {"keyName": "status", "condition": "neq", "keyValue": "cancelada"}]}}, "alwaysOutputData": true},
+    {"id": "formata-resultado", "name": "Formata Resultado", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [200, 304], "parameters": {"jsCode": "const pacientes = $('Busca Paciente').all();\nconst agendamentos = $input.all();\nconst resultado = [];\nfor (const paciente of pacientes) {\n  const agendamentosDoPaciente = agendamentos.filter(a => a.json.paciente_id === paciente.json.id);\n  resultado.push({ json: { paciente: paciente.json, consultas_agendadas: agendamentosDoPaciente.map(a => a.json) } });\n}\nreturn resultado.length > 0 ? resultado : [{ json: { paciente: null, consultas_agendadas: [] } }];"}}
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {"main": [[{"node": "Parse Input", "type": "main", "index": 0}]]},
+    "Parse Input": {"main": [[{"node": "Busca Paciente", "type": "main", "index": 0}]]},
+    "Busca Paciente": {"main": [[{"node": "Busca Agendamentos do Paciente", "type": "main", "index": 0}]]},
+    "Busca Agendamentos do Paciente": {"main": [[{"node": "Formata Resultado", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1"}
 }

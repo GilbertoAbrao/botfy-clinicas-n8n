@@ -1,0 +1,7 @@
+{
+  "id": "igG6sZsStxiDzNRY",
+  "name": "Botfy - Tool: Buscar Paciente",
+  "active": false,
+  "nodeCount": 5,
+  "description": "Busca paciente por telefone ou nome e retorna agendamentos associados"
+}

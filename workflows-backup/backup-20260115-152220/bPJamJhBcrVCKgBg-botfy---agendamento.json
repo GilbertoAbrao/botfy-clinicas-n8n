@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-01-15T19:48:01.004Z",
+  "updatedAt": "2026-01-14T23:17:26.695Z",
   "createdAt": "2026-01-09T22:31:11.650Z",
   "id": "bPJamJhBcrVCKgBg",
   "name": "Botfy - Agendamento",
@@ -12,7 +12,7 @@
         "promptType": "define",
         "text": "={{ $('listaMensagens').first().json.listaMensagens.replace(/\\n/g, '\\\\n').replace(/['\"]/g, '') }}",
         "options": {
-          "systemMessage": "=# 🚨🚨🚨 REGRA ABSOLUTA - LEIA PRIMEIRO 🚨🚨🚨\n\n## VOCÊ DEVE CHAMAR buscar_slots_disponiveis\nQuando o paciente perguntar sobre horários disponíveis:\n1. VOCÊ DEVE chamar a tool buscar_slots_disponiveis\n2. IGNORE qualquer informação de memória sobre disponibilidade\n3. A agenda muda constantemente - SEMPRE consulte em tempo real\n4. NÃO responda sobre disponibilidade sem chamar a tool\n5. Se você disser \"não há horários\" sem chamar a tool, isso é um ERRO GRAVE\n\n## VALIDAÇÃO OBRIGATÓRIA:\nAntes de dizer QUALQUER coisa sobre horários disponíveis ou indisponíveis:\n- ✅ Chamei buscar_slots_disponiveis? Se NÃO → CHAME AGORA\n- ✅ A tool retornou resultado? Se NÃO → Aguarde o resultado\n- ❌ NUNCA use informação de conversas anteriores sobre slots\n\n---\n\n# 🚨 REGRA CRÍTICA: DADOS DO PACIENTE\n\n## NUNCA AUTOCOMPLETE NOMES!\n- Se o paciente digitar \"Maria Aparecida Rodr\", NÃO complete para \"Rodrigues\"\n- Use EXATAMENTE o que foi digitado ou peça para completar\n- Pergunte: \"Pode completar seu sobrenome, por favor?\"\n\n## NUNCA PEÇA DADOS QUE JÁ TEM!\n- Antes de pedir nome: verifique se já foi informado na conversa\n- Antes de pedir telefone: verifique se já foi informado na conversa\n- Se o paciente enviou o dado, NÃO peça novamente\n\n## AGUARDE INFORMAÇÕES COMPLETAS\n- Se o paciente enviar nome em uma mensagem e telefone em outra, AGUARDE ambos\n- NÃO responda pedindo dado que pode estar chegando na próxima mensagem\n- Se receber dado parcial (nome incompleto), peça para completar\n\n---\n\nHoje é {{ $now.weekdayLong }}, dia {{ $now.setZone('America/Sao_Paulo').format('dd-MM-yyyy') }} ({{ $now.setZone('America/Sao_Paulo').format('HH:mm') }})\n\n# ⚠️ REGRA CRÍTICA: CÁLCULO DE DATAS\n\nHoje é {{ $now.weekdayLong }}, {{ $now.setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}.\n\n## Referência dos próximos dias:\n- HOJE ({{ $now.weekdayLong }}): {{ $now.setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- AMANHÃ ({{ $now.plus({days:1}).weekdayLong }}): {{ $now.plus({days:1}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- {{ $now.plus({days:2}).weekdayLong }}: {{ $now.plus({days:2}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- {{ $now.plus({days:3}).weekdayLong }}: {{ $now.plus({days:3}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- {{ $now.plus({days:4}).weekdayLong }}: {{ $now.plus({days:4}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- {{ $now.plus({days:5}).weekdayLong }}: {{ $now.plus({days:5}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- {{ $now.plus({days:6}).weekdayLong }}: {{ $now.plus({days:6}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n\n## REGRAS de interpretação:\n- \"hoje\" = {{ $now.setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- \"amanhã\" = {{ $now.plus({days:1}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- \"segunda/terça/quarta/etc\" = CONSULTE a lista acima para a data correta\n- NUNCA assuma que amanhã é um dia específico da semana - VERIFIQUE\n- Se o paciente pedir um dia da semana que já passou esta semana, use a PRÓXIMA semana\n\n# CONFIGURAÇÕES DA CLÍNICA\n- Nome: Clínica de Estética Dra. Paula\n- Horário de funcionamento: 08:00 às 20:00\n- Dias de funcionamento: segunda, terça, quarta, quinta, sexta\n- Intervalo de almoço: 12:00 às 13:00\n- Antecedência mínima para agendamento: 2 horas\n- Profissional: Dra. Paula\n\n# PERSONA\nVocê se chama Marília, atendente virtual da clínica de estética da Doutora Paula.\n\n# FUNÇÃO\nAgendar, remarcar e cancelar consultas. Confirmar presença de pacientes.\n\n# SERVIÇOS DISPONÍVEIS\n- Avaliação Facial (30 min)\n- Limpeza de Pele (60 min)\n- Peeling (45 min)\n- Botox (30 min)\n- Preenchimento (45 min)\n\n# ⚠️ REGRA CRÍTICA: BUSCAR HORÁRIOS DISPONÍVEIS\n\n## OBRIGATÓRIO: Use a tool 'buscar_slots_disponiveis' SEMPRE!\n- NUNCA invente, assuma ou adivinhe horários disponíveis\n- SEMPRE chame buscar_slots_disponiveis ANTES de oferecer qualquer horário\n- A tool recebe: data (YYYY-MM-DD) e periodo (manha/tarde/qualquer)\n- A tool retorna os horários REALMENTE livres na agenda\n- SOMENTE ofereça horários que a tool retornou\n\n## PROIBIDO:\n- NUNCA diga horários sem chamar a tool primeiro\n- NUNCA assuma que '08:00, 09:00, 10:00' estão livres\n- NUNCA diga \"não há horários\" sem ter chamado a tool\n\n# REGRA: USO DO CONTEXTO DA CONVERSA\n\n- Se você já sabe o nome/telefone do paciente, NÃO peça novamente\n- Quando o paciente diz 'minha consulta', use os dados que você já tem\n- ⚠️ EXCEÇÃO: Informação sobre SLOTS deve SEMPRE vir da tool, não da memória\n\n# REGRA: INFORMAÇÕES INTERNAS DA AGENDA\n\n## NUNCA exponha detalhes internos!\n- NÃO diga quantos agendamentos existem\n- NÃO diga se a agenda está vazia ou lotada\n- APENAS ofereça horários disponíveis\n\n# REGRAS DE COMUNICAÇÃO\n\n## NUNCA:\n- Invente horários sem chamar buscar_slots_disponiveis\n- Peça dados que já tem\n- Autocomplete nomes ou sobrenomes\n- Ofereça mais de 3 horários de uma vez\n- Agende fora do horário (08:00-20:00) ou almoço (12:00-13:00)\n- Agende em sábados/domingos\n\n## SEMPRE:\n- CONSULTE a lista de datas acima antes de confirmar qualquer dia\n- Chame buscar_slots_disponiveis para saber horários\n- Pergunte preferência de período (manhã/tarde) ANTES de buscar\n- Seja gentil e profissional\n- Use EXATAMENTE o nome que o paciente informou\n\n## TELEFONE\n- Ao chamar tools, adicione 55 na frente e remova caracteres especiais\n- Paciente informa '11 99999-8888' → use '5511999998888'\n\n# FLUXO DE AGENDAMENTO\n\n1. Identifique o serviço desejado\n2. Pergunte preferência: 'Manhã ou tarde?' e qual dia\n3. VERIFIQUE a data correta na lista de referência acima\n4. 🚨 OBRIGATÓRIO: Chame buscar_slots_disponiveis com a DATA CORRETA\n5. Ofereça até 3 horários (SOMENTE os retornados pela tool)\n6. Colete nome/telefone SE não tiver\n7. Use criar_agendamento\n\n# CONFIRMAÇÃO DE PRESENÇA\nSe o paciente confirma presença:\n1. Use confirmar_presenca com o telefone\n2. Confirme que foi registrado"
+          "systemMessage": "=Hoje é {{ $now.weekdayLong }}, dia {{ $now.setZone('America/Sao_Paulo').format('dd-MM-yyyy') }} ({{ $now.setZone('America/Sao_Paulo').format('HH:mm') }})\n\n# ⚠️ REGRA CRÍTICA: CÁLCULO DE DATAS\n\nHoje é {{ $now.weekdayLong }}, {{ $now.setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}.\n\n## Referência dos próximos dias:\n- HOJE ({{ $now.weekdayLong }}): {{ $now.setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- AMANHÃ ({{ $now.plus({days:1}).weekdayLong }}): {{ $now.plus({days:1}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- {{ $now.plus({days:2}).weekdayLong }}: {{ $now.plus({days:2}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- {{ $now.plus({days:3}).weekdayLong }}: {{ $now.plus({days:3}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- {{ $now.plus({days:4}).weekdayLong }}: {{ $now.plus({days:4}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- {{ $now.plus({days:5}).weekdayLong }}: {{ $now.plus({days:5}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- {{ $now.plus({days:6}).weekdayLong }}: {{ $now.plus({days:6}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n\n## REGRAS de interpretação:\n- \"hoje\" = {{ $now.setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- \"amanhã\" = {{ $now.plus({days:1}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- \"segunda/terça/quarta/etc\" = CONSULTE a lista acima para a data correta\n- NUNCA assuma que amanhã é um dia específico da semana - VERIFIQUE\n- Se o paciente pedir um dia da semana que já passou esta semana, use a PRÓXIMA semana\n\n# CONFIGURAÇÕES DA CLÍNICA\n- Nome: Clínica de Estética Dra. Paula\n- Horário de funcionamento: 08:00 às 20:00\n- Dias de funcionamento: segunda, terça, quarta, quinta, sexta\n- Intervalo de almoço: 12:00 às 13:00\n- Antecedência mínima para agendamento: 2 horas\n- Profissional: Dra. Paula\n\n# PERSONA\nVocê se chama Marília, atendente virtual da clínica de estética da Doutora Paula.\n\n# FUNÇÃO\nAgendar, remarcar e cancelar consultas. Confirmar presença de pacientes.\n\n# SERVIÇOS DISPONÍVEIS\n- Avaliação Facial (30 min)\n- Limpeza de Pele (60 min)\n- Peeling (45 min)\n- Botox (30 min)\n- Preenchimento (45 min)\n\n# ⚠️ REGRA CRÍTICA: BUSCAR HORÁRIOS DISPONÍVEIS\n\n## OBRIGATÓRIO: Use a tool 'buscar_slots_disponiveis' SEMPRE!\n- NUNCA invente, assuma ou adivinhe horários disponíveis\n- SEMPRE chame buscar_slots_disponiveis ANTES de oferecer qualquer horário\n- A tool recebe: data (YYYY-MM-DD) e periodo (manha/tarde/qualquer)\n- A tool retorna os horários REALMENTE livres na agenda\n- SOMENTE ofereça horários que a tool retornou\n\n## PROIBIDO:\n- NUNCA diga horários sem chamar a tool primeiro\n- NUNCA assuma que '08:00, 09:00, 10:00' estão livres\n\n# REGRA: USO DO CONTEXTO DA CONVERSA\n\n- Se você já sabe o nome/telefone do paciente, NÃO peça novamente\n- Quando o paciente diz 'minha consulta', use os dados que você já tem\n\n# REGRA: INFORMAÇÕES INTERNAS DA AGENDA\n\n## NUNCA exponha detalhes internos!\n- NÃO diga quantos agendamentos existem\n- NÃO diga se a agenda está vazia ou lotada\n- APENAS ofereça horários disponíveis\n\n# REGRAS DE COMUNICAÇÃO\n\n## NUNCA:\n- Invente horários sem chamar buscar_slots_disponiveis\n- Peça dados que já tem\n- Ofereça mais de 3 horários de uma vez\n- Agende fora do horário (08:00-20:00) ou almoço (12:00-13:00)\n- Agende em sábados/domingos\n\n## SEMPRE:\n- CONSULTE a lista de datas acima antes de confirmar qualquer dia\n- Chame buscar_slots_disponiveis para saber horários\n- Pergunte preferência de período (manhã/tarde) ANTES de buscar\n- Seja gentil e profissional\n\n## TELEFONE\n- Ao chamar tools, adicione 55 na frente e remova caracteres especiais\n- Paciente informa '11 99999-8888' → use '5511999998888'\n\n# FLUXO DE AGENDAMENTO\n\n1. Identifique o serviço desejado\n2. Pergunte preferência: 'Manhã ou tarde?' e qual dia\n3. VERIFIQUE a data correta na lista de referência acima\n4. Chame buscar_slots_disponiveis com a DATA CORRETA\n5. Ofereça até 3 horários\n6. Colete nome/telefone SE não tiver\n7. Use criar_agendamento\n\n# CONFIRMAÇÃO DE PRESENÇA\nSe o paciente confirma presença:\n1. Use confirmar_presenca com o telefone\n2. Confirme que foi registrado"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -28,9 +28,9 @@
       "parameters": {
         "model": {
           "__rl": true,
-          "value": "gpt-5",
+          "value": "gpt-4.1-mini",
           "mode": "list",
-          "cachedResultName": "gpt-5"
+          "cachedResultName": "gpt-4.1-mini"
         },
         "options": {}
       },
@@ -1406,7 +1406,7 @@
     },
     {
       "parameters": {
-        "amount": 15
+        "amount": 7
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
@@ -1513,7 +1513,7 @@
                   {
                     "id": "1846612e-0136-490e-9d0f-1086a79361cb",
                     "leftValue": "={{ JSON.parse($json.messages.last()).timestamp }}",
-                    "rightValue": "={{ $now.minus(15,'seconds') }}",
+                    "rightValue": "={{ $now.minus(1,'seconds') }}",
                     "operator": {
                       "type": "dateTime",
                       "operation": "before"
@@ -1554,7 +1554,7 @@
     },
     {
       "parameters": {
-        "amount": 15
+        "amount": 7
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
@@ -1736,11 +1736,6 @@
       "name": "Sticky Note4"
     },
     {
-      "parameters": {
-        "name": "buscar_instrucoes",
-        "description": "Busca instrucoes de preparo para procedimentos/consultas. Use quando o paciente perguntar sobre preparo, jejum, medicamentos, ou instrucoes antes de um procedimento. Parametros: query (pergunta do paciente), servico_id (opcional, ID do servico agendado), limite (opcional, default 5)",
-        "workflowId": "NUZv1Gt15LKyiiKz"
-      },
       "id": "94ae13d6-d563-4557-8a98-92a1ab1a7afa",
       "name": "buscar_instrucoes",
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
@@ -1748,14 +1743,14 @@
       "position": [
         -1584,
         640
-      ]
+      ],
+      "parameters": {
+        "name": "buscar_instrucoes",
+        "description": "Busca instrucoes de preparo para procedimentos/consultas. Use quando o paciente perguntar sobre preparo, jejum, medicamentos, ou instrucoes antes de um procedimento. Parametros: query (pergunta do paciente), servico_id (opcional, ID do servico agendado), limite (opcional, default 5)",
+        "workflowId": "NUZv1Gt15LKyiiKz"
+      }
     },
     {
-      "parameters": {
-        "name": "status_pre_checkin",
-        "description": "Consulta o status do pre-check-in de um paciente. Use para verificar se dados foram confirmados, documentos enviados, ou instrucoes recebidas. Parametros: telefone (telefone do paciente) ou agendamento_id",
-        "workflowId": "holwGQuksZPsSb19"
-      },
       "id": "5d5f0dcf-7391-4e98-acd1-c76363fdd698",
       "name": "status_pre_checkin",
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
@@ -1763,14 +1758,14 @@
       "position": [
         -1456,
         640
-      ]
+      ],
+      "parameters": {
+        "name": "status_pre_checkin",
+        "description": "Consulta o status do pre-check-in de um paciente. Use para verificar se dados foram confirmados, documentos enviados, ou instrucoes recebidas. Parametros: telefone (telefone do paciente) ou agendamento_id",
+        "workflowId": "holwGQuksZPsSb19"
+      }
     },
     {
-      "parameters": {
-        "name": "atualizar_dados_paciente",
-        "description": "Atualiza dados cadastrais do paciente. Use quando o paciente quiser corrigir nome, email, telefone, CPF, data de nascimento, endereco, convenio ou numero da carteirinha. Parametros: paciente_id, campo (nome do campo), valor (novo valor)",
-        "workflowId": "4DNyXp5fPPfsFOnR"
-      },
       "id": "1e4599ce-f7f4-436b-a816-a5cc3dabfc66",
       "name": "atualizar_dados_paciente",
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
@@ -1778,14 +1773,14 @@
       "position": [
         -1328,
         640
-      ]
+      ],
+      "parameters": {
+        "name": "atualizar_dados_paciente",
+        "description": "Atualiza dados cadastrais do paciente. Use quando o paciente quiser corrigir nome, email, telefone, CPF, data de nascimento, endereco, convenio ou numero da carteirinha. Parametros: paciente_id, campo (nome do campo), valor (novo valor)",
+        "workflowId": "4DNyXp5fPPfsFOnR"
+      }
     },
     {
-      "parameters": {
-        "name": "processar_documento",
-        "description": "Processa documento enviado pelo paciente (RG, CNH, carteirinha de convenio, guia de autorizacao). Extrai dados via OCR/IA. Parametros: pre_checkin_id, paciente_id, tipo (rg/cnh/carteirinha_convenio/guia_autorizacao/outros), arquivo_url (URL da imagem)",
-        "workflowId": "Pc0PyATrZaGefiSJ"
-      },
       "id": "731b3578-27b2-40ec-8cbb-651803edecc8",
       "name": "processar_documento",
       "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
@@ -1793,9 +1788,22 @@
       "position": [
         -1200,
         640
-      ]
+      ],
+      "parameters": {
+        "name": "processar_documento",
+        "description": "Processa documento enviado pelo paciente (RG, CNH, carteirinha de convenio, guia de autorizacao). Extrai dados via OCR/IA. Parametros: pre_checkin_id, paciente_id, tipo (rg/cnh/carteirinha_convenio/guia_autorizacao/outros), arquivo_url (URL da imagem)",
+        "workflowId": "Pc0PyATrZaGefiSJ"
+      }
     },
     {
+      "id": "node-busca-lembrete",
+      "name": "Busca Lembrete Pendente",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2560,
+        368
+      ],
       "parameters": {
         "operation": "getAll",
         "tableId": "lembretes_enviados",
@@ -1814,25 +1822,28 @@
               "keyValue": "pendente"
             }
           ]
+        },
+        "options": {
+          "returnAll": false
         }
       },
-      "id": "node-busca-lembrete",
-      "name": "Busca Lembrete Pendente",
-      "type": "n8n-nodes-base.supabase",
-      "typeVersion": 1,
-      "position": [
-        -2560,
-        368
-      ],
-      "alwaysOutputData": true,
       "credentials": {
         "supabaseApi": {
           "id": "vjxdwL14zFNscRrD",
           "name": "Supabase account"
         }
-      }
+      },
+      "alwaysOutputData": true
     },
     {
+      "id": "node-tem-lembrete",
+      "name": "Tem Lembrete Pendente?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -2400,
+        368
+      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -1855,17 +1866,17 @@
           "combinator": "and"
         },
         "options": {}
-      },
-      "id": "node-tem-lembrete",
-      "name": "Tem Lembrete Pendente?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        -2400,
-        368
-      ]
+      }
     },
     {
+      "id": "node-ia-interpreta",
+      "name": "IA Interpreta Resposta Lembrete",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -2240,
+        200
+      ],
       "parameters": {
         "modelId": {
           "__rl": true,
@@ -1883,14 +1894,6 @@
           "temperature": 0.3
         }
       },
-      "id": "node-ia-interpreta",
-      "name": "IA Interpreta Resposta Lembrete",
-      "type": "@n8n/n8n-nodes-langchain.openAi",
-      "typeVersion": 1.8,
-      "position": [
-        -2240,
-        208
-      ],
       "credentials": {
         "openAiApi": {
           "id": "b2f06NWMfx9VK1I2",
@@ -1899,7 +1902,17 @@
       }
     },
     {
+      "id": "node-extrai-cat",
+      "name": "Extrai Categoria Lembrete",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2000,
+        200
+      ],
       "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
         "assignments": {
           "assignments": [
             {
@@ -1935,21 +1948,22 @@
           ]
         },
         "options": {}
-      },
-      "id": "node-extrai-cat",
-      "name": "Extrai Categoria Lembrete",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -2000,
-        208
-      ]
+      }
     },
     {
+      "id": "node-switch-cat",
+      "name": "Switch Categoria Lembrete",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1760,
+        200
+      ],
       "parameters": {
         "rules": {
           "values": [
             {
+              "outputKey": "CONFIRMA",
               "conditions": {
                 "conditions": [
                   {
@@ -1964,6 +1978,7 @@
               }
             },
             {
+              "outputKey": "CANCELA",
               "conditions": {
                 "conditions": [
                   {
@@ -1978,6 +1993,7 @@
               }
             },
             {
+              "outputKey": "REAGENDA",
               "conditions": {
                 "conditions": [
                   {
@@ -1992,6 +2008,7 @@
               }
             },
             {
+              "outputKey": "DUVIDA",
               "conditions": {
                 "conditions": [
                   {
@@ -2008,17 +2025,17 @@
           ]
         },
         "options": {}
-      },
-      "id": "node-switch-cat",
-      "name": "Switch Categoria Lembrete",
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3.2,
-      "position": [
-        -1760,
-        208
-      ]
+      }
     },
     {
+      "id": "node-status-conf",
+      "name": "Atualiza Lembrete Confirmado",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1520,
+        40
+      ],
       "parameters": {
         "operation": "update",
         "tableId": "lembretes_enviados",
@@ -2045,14 +2062,6 @@
           ]
         }
       },
-      "id": "node-status-conf",
-      "name": "Atualiza Lembrete Confirmado",
-      "type": "n8n-nodes-base.supabase",
-      "typeVersion": 1,
-      "position": [
-        -1520,
-        48
-      ],
       "credentials": {
         "supabaseApi": {
           "id": "vjxdwL14zFNscRrD",
@@ -2061,6 +2070,14 @@
       }
     },
     {
+      "id": "node-status-canc",
+      "name": "Atualiza Lembrete Cancelado",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1520,
+        160
+      ],
       "parameters": {
         "operation": "update",
         "tableId": "lembretes_enviados",
@@ -2087,14 +2104,6 @@
           ]
         }
       },
-      "id": "node-status-canc",
-      "name": "Atualiza Lembrete Cancelado",
-      "type": "n8n-nodes-base.supabase",
-      "typeVersion": 1,
-      "position": [
-        -1520,
-        160
-      ],
       "credentials": {
         "supabaseApi": {
           "id": "vjxdwL14zFNscRrD",
@@ -2103,6 +2112,14 @@
       }
     },
     {
+      "id": "node-status-reag",
+      "name": "Atualiza Lembrete Reagenda",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1520,
+        280
+      ],
       "parameters": {
         "operation": "update",
         "tableId": "lembretes_enviados",
@@ -2137,14 +2154,6 @@
           ]
         }
       },
-      "id": "node-status-reag",
-      "name": "Atualiza Lembrete Reagenda",
-      "type": "n8n-nodes-base.supabase",
-      "typeVersion": 1,
-      "position": [
-        -1520,
-        288
-      ],
       "credentials": {
         "supabaseApi": {
           "id": "vjxdwL14zFNscRrD",
@@ -2153,6 +2162,14 @@
       }
     },
     {
+      "id": "node-status-duv",
+      "name": "Atualiza Lembrete Duvida",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1520,
+        400
+      ],
       "parameters": {
         "operation": "update",
         "tableId": "lembretes_enviados",
@@ -2187,14 +2204,6 @@
           ]
         }
       },
-      "id": "node-status-duv",
-      "name": "Atualiza Lembrete Duvida",
-      "type": "n8n-nodes-base.supabase",
-      "typeVersion": 1,
-      "position": [
-        -1520,
-        400
-      ],
       "credentials": {
         "supabaseApi": {
           "id": "vjxdwL14zFNscRrD",
@@ -2203,6 +2212,14 @@
       }
     },
     {
+      "id": "node-responde-lemb",
+      "name": "Responde Lembrete",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1280,
+        200
+      ],
       "parameters": {
         "method": "POST",
         "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
@@ -2219,17 +2236,17 @@
         "specifyBody": "json",
         "jsonBody": "={\n    \"number\": \"{{ $('Variáveis Globais').first().json.telefone }}\",\n    \"text\": \"{{ $('Extrai Categoria Lembrete').first().json.resposta_sugerida.replace(/\\n/g, '\\\\n').replace(/['\\\"]/g, '') }}\",\n    \"delay\": 1000\n}",
         "options": {}
-      },
-      "id": "node-responde-lemb",
-      "name": "Responde Lembrete",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        -1280,
-        208
-      ]
+      }
     },
     {
+      "id": "node-agend-conf",
+      "name": "Confirma Agendamento",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1520,
+        -80
+      ],
       "parameters": {
         "operation": "update",
         "tableId": "agendamentos",
@@ -2256,14 +2273,6 @@
           ]
         }
       },
-      "id": "node-agend-conf",
-      "name": "Confirma Agendamento",
-      "type": "n8n-nodes-base.supabase",
-      "typeVersion": 1,
-      "position": [
-        -1520,
-        -80
-      ],
       "credentials": {
         "supabaseApi": {
           "id": "vjxdwL14zFNscRrD",
@@ -2272,6 +2281,14 @@
       }
     },
     {
+      "id": "node-agend-canc",
+      "name": "Cancela Agendamento Lembrete",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1360,
+        160
+      ],
       "parameters": {
         "operation": "update",
         "tableId": "agendamentos",
@@ -2298,14 +2315,6 @@
           ]
         }
       },
-      "id": "node-agend-canc",
-      "name": "Cancela Agendamento Lembrete",
-      "type": "n8n-nodes-base.supabase",
-      "typeVersion": 1,
-      "position": [
-        -1360,
-        160
-      ],
       "credentials": {
         "supabaseApi": {
           "id": "vjxdwL14zFNscRrD",
@@ -2314,70 +2323,34 @@
       }
     },
     {
-      "parameters": {
-        "description": "Confirma a presenca do paciente em uma consulta agendada. Use quando o paciente responder confirmando que ira comparecer.",
-        "jsCode": "// Confirma presenca do paciente - atualiza lembretes pendentes\n// IMPORTANTE: No Code Tool, os parametros vem via 'query' (objeto JSON quando specifyInputSchema=true)\n\nconst telefone = query.telefone;\n\nif (!telefone) {\n  return 'Erro: telefone nao informado';\n}\n\nconst supabaseUrl = 'https://gkweofpjwzsvlvnvfbom.supabase.co';\nconst supabaseKey = $env.SUPABASE_KEY || $env.SUPABASE_ANON_KEY;\n\ntry {\n  const buscaResp = await fetch(\n    `${supabaseUrl}/rest/v1/lembretes_enviados?telefone=eq.${telefone}&status_resposta=eq.pendente&select=id,agendamento_id`,\n    { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }\n  );\n  const lembretes = await buscaResp.json();\n  \n  if (!lembretes || lembretes.length === 0) {\n    return 'Nenhum lembrete pendente encontrado para confirmacao.';\n  }\n  \n  const updateResp = await fetch(\n    `${supabaseUrl}/rest/v1/lembretes_enviados?telefone=eq.${telefone}&status_resposta=eq.pendente`,\n    {\n      method: 'PATCH',\n      headers: {\n        'apikey': supabaseKey,\n        'Authorization': `Bearer ${supabaseKey}`,\n        'Content-Type': 'application/json',\n        'Prefer': 'return=minimal'\n      },\n      body: JSON.stringify({\n        status_resposta: 'confirmado',\n        data_resposta: new Date().toISOString()\n      })\n    }\n  );\n  \n  return `Presenca confirmada com sucesso! ${lembretes.length} lembrete(s) atualizado(s).`;\n} catch (e) {\n  return `Erro ao confirmar presenca: ${e.message}`;\n}",
-        "specifyInputSchema": true,
-        "schemaType": "manual",
-        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"telefone\": {\n      \"type\": \"string\",\n      \"description\": \"Telefone do paciente com DDD, apenas numeros. Exemplo: 5511999998888\"\n    }\n  },\n  \"required\": [\"telefone\"]\n}"
-      },
       "id": "tool-confirmar-presenca",
       "name": "confirmar_presenca",
       "type": "@n8n/n8n-nodes-langchain.toolCode",
-      "typeVersion": 1.3,
+      "typeVersion": 1.1,
       "position": [
-        704,
-        704
-      ]
+        700,
+        700
+      ],
+      "parameters": {
+        "name": "confirmar_presenca",
+        "description": "Confirma a presenca do paciente em uma consulta agendada. Use quando o paciente responder confirmando que ira comparecer a consulta. Parametros: telefone (string com DDD, ex: 5511999998888)",
+        "jsCode": "// Confirma presença do paciente - atualiza lembretes pendentes\nconst telefone = $input.item.json.telefone;\n\nif (!telefone) {\n  return 'Erro: telefone nao informado';\n}\n\nconst supabaseUrl = 'https://gkweofpjwzsvlvnvfbom.supabase.co';\nconst supabaseKey = $env.SUPABASE_KEY || $env.SUPABASE_ANON_KEY;\n\ntry {\n  // Busca lembretes pendentes para esse telefone\n  const buscaResp = await fetch(\n    `${supabaseUrl}/rest/v1/lembretes_enviados?telefone=eq.${telefone}&status_resposta=eq.pendente&select=id,agendamento_id`,\n    { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }\n  );\n  const lembretes = await buscaResp.json();\n  \n  if (!lembretes || lembretes.length === 0) {\n    return 'Nenhum lembrete pendente encontrado para confirmacao.';\n  }\n  \n  // Atualiza todos os lembretes pendentes para confirmado\n  const updateResp = await fetch(\n    `${supabaseUrl}/rest/v1/lembretes_enviados?telefone=eq.${telefone}&status_resposta=eq.pendente`,\n    {\n      method: 'PATCH',\n      headers: {\n        'apikey': supabaseKey,\n        'Authorization': `Bearer ${supabaseKey}`,\n        'Content-Type': 'application/json',\n        'Prefer': 'return=minimal'\n      },\n      body: JSON.stringify({\n        status_resposta: 'confirmado',\n        data_resposta: new Date().toISOString()\n      })\n    }\n  );\n  \n  return `Presenca confirmada com sucesso! ${lembretes.length} lembrete(s) atualizado(s).`;\n} catch (e) {\n  return `Erro ao confirmar presenca: ${e.message}`;\n}"
+      }
     },
     {
+      "id": "tool-buscar-slots",
+      "name": "buscar_slots_disponiveis",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.1,
+      "position": [
+        900,
+        700
+      ],
       "parameters": {
         "name": "buscar_slots_disponiveis",
-        "description": "Busca horários DISPONÍVEIS para agendamento. SEMPRE use esta ferramenta ANTES de dizer qualquer horário ao paciente.",
-        "workflowId": {
-          "__rl": true,
-          "value": "8Bke6sYr7r51aeEq",
-          "mode": "id"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "data": "={{ $fromAI('data', 'Data no formato YYYY-MM-DD para buscar horários', 'string') }}",
-            "periodo": "={{ $fromAI('periodo', 'Período do dia: manha, tarde ou qualquer', 'string') }}"
-          },
-          "matchingColumns": [],
-          "schema": [
-            {
-              "id": "data",
-              "displayName": "data",
-              "required": true,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string"
-            },
-            {
-              "id": "periodo",
-              "displayName": "periodo",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "canBeUsedToMatch": true,
-              "type": "string"
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        }
-      },
-      "id": "tool-buscar-slots-workflow",
-      "name": "buscar_slots_disponiveis",
-      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
-      "typeVersion": 2,
-      "position": [
-        912,
-        704
-      ]
+        "description": "Busca horarios DISPONIVEIS para agendamento. Retorna lista de horarios LIVRES. SEMPRE use esta ferramenta antes de oferecer horarios ao paciente.",
+        "toolSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"data\": {\n      \"type\": \"string\",\n      \"description\": \"Data para buscar horarios no formato YYYY-MM-DD. Exemplo: 2026-01-21\"\n    },\n    \"periodo\": {\n      \"type\": \"string\",\n      \"enum\": [\"manha\", \"tarde\", \"qualquer\"],\n      \"description\": \"Periodo do dia: manha (08:00-11:30), tarde (13:00-19:30) ou qualquer\"\n    }\n  },\n  \"required\": [\"data\"]\n}"
+      }
     }
   ],
   "connections": {
@@ -3322,9 +3295,9 @@
       }
     ]
   },
-  "versionId": "ae9eb371-3409-49b7-9875-6689b1bd6676",
-  "activeVersionId": "ae9eb371-3409-49b7-9875-6689b1bd6676",
-  "versionCounter": 157,
+  "versionId": "c5517514-22a9-4f94-83d1-dd8cc3414482",
+  "activeVersionId": "c5517514-22a9-4f94-83d1-dd8cc3414482",
+  "versionCounter": 113,
   "triggerCount": 1,
   "shared": [
     {
@@ -3348,7 +3321,7 @@
             "userId": "c33d65c2-d5ef-4f2d-aedf-5c2969300ec6",
             "projectId": "ASfue6RWpsJm853c",
             "user": {
-              "updatedAt": "2026-01-15T12:36:43.000Z",
+              "updatedAt": "2026-01-14T12:08:28.000Z",
               "createdAt": "2025-12-05T22:00:54.144Z",
               "id": "c33d65c2-d5ef-4f2d-aedf-5c2969300ec6",
               "email": "ggafbr@gmail.com",
@@ -3371,7 +3344,7 @@
               },
               "disabled": false,
               "mfaEnabled": false,
-              "lastActiveAt": "2026-01-15",
+              "lastActiveAt": "2026-01-14",
               "isPending": false
             }
           }
@@ -3388,9 +3361,9 @@
     }
   ],
   "activeVersion": {
-    "updatedAt": "2026-01-15T19:48:00.987Z",
-    "createdAt": "2026-01-15T19:48:00.987Z",
-    "versionId": "ae9eb371-3409-49b7-9875-6689b1bd6676",
+    "updatedAt": "2026-01-14T23:17:26.677Z",
+    "createdAt": "2026-01-14T23:17:26.677Z",
+    "versionId": "c5517514-22a9-4f94-83d1-dd8cc3414482",
     "workflowId": "bPJamJhBcrVCKgBg",
     "nodes": [
       {
@@ -3398,7 +3371,7 @@
           "promptType": "define",
           "text": "={{ $('listaMensagens').first().json.listaMensagens.replace(/\\n/g, '\\\\n').replace(/['\"]/g, '') }}",
           "options": {
-            "systemMessage": "=# 🚨🚨🚨 REGRA ABSOLUTA - LEIA PRIMEIRO 🚨🚨🚨\n\n## VOCÊ DEVE CHAMAR buscar_slots_disponiveis\nQuando o paciente perguntar sobre horários disponíveis:\n1. VOCÊ DEVE chamar a tool buscar_slots_disponiveis\n2. IGNORE qualquer informação de memória sobre disponibilidade\n3. A agenda muda constantemente - SEMPRE consulte em tempo real\n4. NÃO responda sobre disponibilidade sem chamar a tool\n5. Se você disser \"não há horários\" sem chamar a tool, isso é um ERRO GRAVE\n\n## VALIDAÇÃO OBRIGATÓRIA:\nAntes de dizer QUALQUER coisa sobre horários disponíveis ou indisponíveis:\n- ✅ Chamei buscar_slots_disponiveis? Se NÃO → CHAME AGORA\n- ✅ A tool retornou resultado? Se NÃO → Aguarde o resultado\n- ❌ NUNCA use informação de conversas anteriores sobre slots\n\n---\n\n# 🚨 REGRA CRÍTICA: DADOS DO PACIENTE\n\n## NUNCA AUTOCOMPLETE NOMES!\n- Se o paciente digitar \"Maria Aparecida Rodr\", NÃO complete para \"Rodrigues\"\n- Use EXATAMENTE o que foi digitado ou peça para completar\n- Pergunte: \"Pode completar seu sobrenome, por favor?\"\n\n## NUNCA PEÇA DADOS QUE JÁ TEM!\n- Antes de pedir nome: verifique se já foi informado na conversa\n- Antes de pedir telefone: verifique se já foi informado na conversa\n- Se o paciente enviou o dado, NÃO peça novamente\n\n## AGUARDE INFORMAÇÕES COMPLETAS\n- Se o paciente enviar nome em uma mensagem e telefone em outra, AGUARDE ambos\n- NÃO responda pedindo dado que pode estar chegando na próxima mensagem\n- Se receber dado parcial (nome incompleto), peça para completar\n\n---\n\nHoje é {{ $now.weekdayLong }}, dia {{ $now.setZone('America/Sao_Paulo').format('dd-MM-yyyy') }} ({{ $now.setZone('America/Sao_Paulo').format('HH:mm') }})\n\n# ⚠️ REGRA CRÍTICA: CÁLCULO DE DATAS\n\nHoje é {{ $now.weekdayLong }}, {{ $now.setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}.\n\n## Referência dos próximos dias:\n- HOJE ({{ $now.weekdayLong }}): {{ $now.setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- AMANHÃ ({{ $now.plus({days:1}).weekdayLong }}): {{ $now.plus({days:1}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- {{ $now.plus({days:2}).weekdayLong }}: {{ $now.plus({days:2}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- {{ $now.plus({days:3}).weekdayLong }}: {{ $now.plus({days:3}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- {{ $now.plus({days:4}).weekdayLong }}: {{ $now.plus({days:4}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- {{ $now.plus({days:5}).weekdayLong }}: {{ $now.plus({days:5}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- {{ $now.plus({days:6}).weekdayLong }}: {{ $now.plus({days:6}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n\n## REGRAS de interpretação:\n- \"hoje\" = {{ $now.setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- \"amanhã\" = {{ $now.plus({days:1}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- \"segunda/terça/quarta/etc\" = CONSULTE a lista acima para a data correta\n- NUNCA assuma que amanhã é um dia específico da semana - VERIFIQUE\n- Se o paciente pedir um dia da semana que já passou esta semana, use a PRÓXIMA semana\n\n# CONFIGURAÇÕES DA CLÍNICA\n- Nome: Clínica de Estética Dra. Paula\n- Horário de funcionamento: 08:00 às 20:00\n- Dias de funcionamento: segunda, terça, quarta, quinta, sexta\n- Intervalo de almoço: 12:00 às 13:00\n- Antecedência mínima para agendamento: 2 horas\n- Profissional: Dra. Paula\n\n# PERSONA\nVocê se chama Marília, atendente virtual da clínica de estética da Doutora Paula.\n\n# FUNÇÃO\nAgendar, remarcar e cancelar consultas. Confirmar presença de pacientes.\n\n# SERVIÇOS DISPONÍVEIS\n- Avaliação Facial (30 min)\n- Limpeza de Pele (60 min)\n- Peeling (45 min)\n- Botox (30 min)\n- Preenchimento (45 min)\n\n# ⚠️ REGRA CRÍTICA: BUSCAR HORÁRIOS DISPONÍVEIS\n\n## OBRIGATÓRIO: Use a tool 'buscar_slots_disponiveis' SEMPRE!\n- NUNCA invente, assuma ou adivinhe horários disponíveis\n- SEMPRE chame buscar_slots_disponiveis ANTES de oferecer qualquer horário\n- A tool recebe: data (YYYY-MM-DD) e periodo (manha/tarde/qualquer)\n- A tool retorna os horários REALMENTE livres na agenda\n- SOMENTE ofereça horários que a tool retornou\n\n## PROIBIDO:\n- NUNCA diga horários sem chamar a tool primeiro\n- NUNCA assuma que '08:00, 09:00, 10:00' estão livres\n- NUNCA diga \"não há horários\" sem ter chamado a tool\n\n# REGRA: USO DO CONTEXTO DA CONVERSA\n\n- Se você já sabe o nome/telefone do paciente, NÃO peça novamente\n- Quando o paciente diz 'minha consulta', use os dados que você já tem\n- ⚠️ EXCEÇÃO: Informação sobre SLOTS deve SEMPRE vir da tool, não da memória\n\n# REGRA: INFORMAÇÕES INTERNAS DA AGENDA\n\n## NUNCA exponha detalhes internos!\n- NÃO diga quantos agendamentos existem\n- NÃO diga se a agenda está vazia ou lotada\n- APENAS ofereça horários disponíveis\n\n# REGRAS DE COMUNICAÇÃO\n\n## NUNCA:\n- Invente horários sem chamar buscar_slots_disponiveis\n- Peça dados que já tem\n- Autocomplete nomes ou sobrenomes\n- Ofereça mais de 3 horários de uma vez\n- Agende fora do horário (08:00-20:00) ou almoço (12:00-13:00)\n- Agende em sábados/domingos\n\n## SEMPRE:\n- CONSULTE a lista de datas acima antes de confirmar qualquer dia\n- Chame buscar_slots_disponiveis para saber horários\n- Pergunte preferência de período (manhã/tarde) ANTES de buscar\n- Seja gentil e profissional\n- Use EXATAMENTE o nome que o paciente informou\n\n## TELEFONE\n- Ao chamar tools, adicione 55 na frente e remova caracteres especiais\n- Paciente informa '11 99999-8888' → use '5511999998888'\n\n# FLUXO DE AGENDAMENTO\n\n1. Identifique o serviço desejado\n2. Pergunte preferência: 'Manhã ou tarde?' e qual dia\n3. VERIFIQUE a data correta na lista de referência acima\n4. 🚨 OBRIGATÓRIO: Chame buscar_slots_disponiveis com a DATA CORRETA\n5. Ofereça até 3 horários (SOMENTE os retornados pela tool)\n6. Colete nome/telefone SE não tiver\n7. Use criar_agendamento\n\n# CONFIRMAÇÃO DE PRESENÇA\nSe o paciente confirma presença:\n1. Use confirmar_presenca com o telefone\n2. Confirme que foi registrado"
+            "systemMessage": "=Hoje é {{ $now.weekdayLong }}, dia {{ $now.setZone('America/Sao_Paulo').format('dd-MM-yyyy') }} ({{ $now.setZone('America/Sao_Paulo').format('HH:mm') }})\n\n# ⚠️ REGRA CRÍTICA: CÁLCULO DE DATAS\n\nHoje é {{ $now.weekdayLong }}, {{ $now.setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}.\n\n## Referência dos próximos dias:\n- HOJE ({{ $now.weekdayLong }}): {{ $now.setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- AMANHÃ ({{ $now.plus({days:1}).weekdayLong }}): {{ $now.plus({days:1}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- {{ $now.plus({days:2}).weekdayLong }}: {{ $now.plus({days:2}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- {{ $now.plus({days:3}).weekdayLong }}: {{ $now.plus({days:3}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- {{ $now.plus({days:4}).weekdayLong }}: {{ $now.plus({days:4}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- {{ $now.plus({days:5}).weekdayLong }}: {{ $now.plus({days:5}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- {{ $now.plus({days:6}).weekdayLong }}: {{ $now.plus({days:6}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n\n## REGRAS de interpretação:\n- \"hoje\" = {{ $now.setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- \"amanhã\" = {{ $now.plus({days:1}).setZone('America/Sao_Paulo').format('dd/MM/yyyy') }}\n- \"segunda/terça/quarta/etc\" = CONSULTE a lista acima para a data correta\n- NUNCA assuma que amanhã é um dia específico da semana - VERIFIQUE\n- Se o paciente pedir um dia da semana que já passou esta semana, use a PRÓXIMA semana\n\n# CONFIGURAÇÕES DA CLÍNICA\n- Nome: Clínica de Estética Dra. Paula\n- Horário de funcionamento: 08:00 às 20:00\n- Dias de funcionamento: segunda, terça, quarta, quinta, sexta\n- Intervalo de almoço: 12:00 às 13:00\n- Antecedência mínima para agendamento: 2 horas\n- Profissional: Dra. Paula\n\n# PERSONA\nVocê se chama Marília, atendente virtual da clínica de estética da Doutora Paula.\n\n# FUNÇÃO\nAgendar, remarcar e cancelar consultas. Confirmar presença de pacientes.\n\n# SERVIÇOS DISPONÍVEIS\n- Avaliação Facial (30 min)\n- Limpeza de Pele (60 min)\n- Peeling (45 min)\n- Botox (30 min)\n- Preenchimento (45 min)\n\n# ⚠️ REGRA CRÍTICA: BUSCAR HORÁRIOS DISPONÍVEIS\n\n## OBRIGATÓRIO: Use a tool 'buscar_slots_disponiveis' SEMPRE!\n- NUNCA invente, assuma ou adivinhe horários disponíveis\n- SEMPRE chame buscar_slots_disponiveis ANTES de oferecer qualquer horário\n- A tool recebe: data (YYYY-MM-DD) e periodo (manha/tarde/qualquer)\n- A tool retorna os horários REALMENTE livres na agenda\n- SOMENTE ofereça horários que a tool retornou\n\n## PROIBIDO:\n- NUNCA diga horários sem chamar a tool primeiro\n- NUNCA assuma que '08:00, 09:00, 10:00' estão livres\n\n# REGRA: USO DO CONTEXTO DA CONVERSA\n\n- Se você já sabe o nome/telefone do paciente, NÃO peça novamente\n- Quando o paciente diz 'minha consulta', use os dados que você já tem\n\n# REGRA: INFORMAÇÕES INTERNAS DA AGENDA\n\n## NUNCA exponha detalhes internos!\n- NÃO diga quantos agendamentos existem\n- NÃO diga se a agenda está vazia ou lotada\n- APENAS ofereça horários disponíveis\n\n# REGRAS DE COMUNICAÇÃO\n\n## NUNCA:\n- Invente horários sem chamar buscar_slots_disponiveis\n- Peça dados que já tem\n- Ofereça mais de 3 horários de uma vez\n- Agende fora do horário (08:00-20:00) ou almoço (12:00-13:00)\n- Agende em sábados/domingos\n\n## SEMPRE:\n- CONSULTE a lista de datas acima antes de confirmar qualquer dia\n- Chame buscar_slots_disponiveis para saber horários\n- Pergunte preferência de período (manhã/tarde) ANTES de buscar\n- Seja gentil e profissional\n\n## TELEFONE\n- Ao chamar tools, adicione 55 na frente e remova caracteres especiais\n- Paciente informa '11 99999-8888' → use '5511999998888'\n\n# FLUXO DE AGENDAMENTO\n\n1. Identifique o serviço desejado\n2. Pergunte preferência: 'Manhã ou tarde?' e qual dia\n3. VERIFIQUE a data correta na lista de referência acima\n4. Chame buscar_slots_disponiveis com a DATA CORRETA\n5. Ofereça até 3 horários\n6. Colete nome/telefone SE não tiver\n7. Use criar_agendamento\n\n# CONFIRMAÇÃO DE PRESENÇA\nSe o paciente confirma presença:\n1. Use confirmar_presenca com o telefone\n2. Confirme que foi registrado"
           }
         },
         "type": "@n8n/n8n-nodes-langchain.agent",
@@ -3414,9 +3387,9 @@
         "parameters": {
           "model": {
             "__rl": true,
-            "value": "gpt-5",
+            "value": "gpt-4.1-mini",
             "mode": "list",
-            "cachedResultName": "gpt-5"
+            "cachedResultName": "gpt-4.1-mini"
           },
           "options": {}
         },
@@ -4792,7 +4765,7 @@
       },
       {
         "parameters": {
-          "amount": 15
+          "amount": 7
         },
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
@@ -4899,7 +4872,7 @@
                     {
                       "id": "1846612e-0136-490e-9d0f-1086a79361cb",
                       "leftValue": "={{ JSON.parse($json.messages.last()).timestamp }}",
-                      "rightValue": "={{ $now.minus(15,'seconds') }}",
+                      "rightValue": "={{ $now.minus(1,'seconds') }}",
                       "operator": {
                         "type": "dateTime",
                         "operation": "before"
@@ -4940,7 +4913,7 @@
       },
       {
         "parameters": {
-          "amount": 15
+          "amount": 7
         },
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
@@ -5122,11 +5095,6 @@
         "name": "Sticky Note4"
       },
       {
-        "parameters": {
-          "name": "buscar_instrucoes",
-          "description": "Busca instrucoes de preparo para procedimentos/consultas. Use quando o paciente perguntar sobre preparo, jejum, medicamentos, ou instrucoes antes de um procedimento. Parametros: query (pergunta do paciente), servico_id (opcional, ID do servico agendado), limite (opcional, default 5)",
-          "workflowId": "NUZv1Gt15LKyiiKz"
-        },
         "id": "94ae13d6-d563-4557-8a98-92a1ab1a7afa",
         "name": "buscar_instrucoes",
         "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
@@ -5134,14 +5102,14 @@
         "position": [
           -1584,
           640
-        ]
+        ],
+        "parameters": {
+          "name": "buscar_instrucoes",
+          "description": "Busca instrucoes de preparo para procedimentos/consultas. Use quando o paciente perguntar sobre preparo, jejum, medicamentos, ou instrucoes antes de um procedimento. Parametros: query (pergunta do paciente), servico_id (opcional, ID do servico agendado), limite (opcional, default 5)",
+          "workflowId": "NUZv1Gt15LKyiiKz"
+        }
       },
       {
-        "parameters": {
-          "name": "status_pre_checkin",
-          "description": "Consulta o status do pre-check-in de um paciente. Use para verificar se dados foram confirmados, documentos enviados, ou instrucoes recebidas. Parametros: telefone (telefone do paciente) ou agendamento_id",
-          "workflowId": "holwGQuksZPsSb19"
-        },
         "id": "5d5f0dcf-7391-4e98-acd1-c76363fdd698",
         "name": "status_pre_checkin",
         "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
@@ -5149,14 +5117,14 @@
         "position": [
           -1456,
           640
-        ]
+        ],
+        "parameters": {
+          "name": "status_pre_checkin",
+          "description": "Consulta o status do pre-check-in de um paciente. Use para verificar se dados foram confirmados, documentos enviados, ou instrucoes recebidas. Parametros: telefone (telefone do paciente) ou agendamento_id",
+          "workflowId": "holwGQuksZPsSb19"
+        }
       },
       {
-        "parameters": {
-          "name": "atualizar_dados_paciente",
-          "description": "Atualiza dados cadastrais do paciente. Use quando o paciente quiser corrigir nome, email, telefone, CPF, data de nascimento, endereco, convenio ou numero da carteirinha. Parametros: paciente_id, campo (nome do campo), valor (novo valor)",
-          "workflowId": "4DNyXp5fPPfsFOnR"
-        },
         "id": "1e4599ce-f7f4-436b-a816-a5cc3dabfc66",
         "name": "atualizar_dados_paciente",
         "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
@@ -5164,14 +5132,14 @@
         "position": [
           -1328,
           640
-        ]
+        ],
+        "parameters": {
+          "name": "atualizar_dados_paciente",
+          "description": "Atualiza dados cadastrais do paciente. Use quando o paciente quiser corrigir nome, email, telefone, CPF, data de nascimento, endereco, convenio ou numero da carteirinha. Parametros: paciente_id, campo (nome do campo), valor (novo valor)",
+          "workflowId": "4DNyXp5fPPfsFOnR"
+        }
       },
       {
-        "parameters": {
-          "name": "processar_documento",
-          "description": "Processa documento enviado pelo paciente (RG, CNH, carteirinha de convenio, guia de autorizacao). Extrai dados via OCR/IA. Parametros: pre_checkin_id, paciente_id, tipo (rg/cnh/carteirinha_convenio/guia_autorizacao/outros), arquivo_url (URL da imagem)",
-          "workflowId": "Pc0PyATrZaGefiSJ"
-        },
         "id": "731b3578-27b2-40ec-8cbb-651803edecc8",
         "name": "processar_documento",
         "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
@@ -5179,9 +5147,22 @@
         "position": [
           -1200,
           640
-        ]
+        ],
+        "parameters": {
+          "name": "processar_documento",
+          "description": "Processa documento enviado pelo paciente (RG, CNH, carteirinha de convenio, guia de autorizacao). Extrai dados via OCR/IA. Parametros: pre_checkin_id, paciente_id, tipo (rg/cnh/carteirinha_convenio/guia_autorizacao/outros), arquivo_url (URL da imagem)",
+          "workflowId": "Pc0PyATrZaGefiSJ"
+        }
       },
       {
+        "id": "node-busca-lembrete",
+        "name": "Busca Lembrete Pendente",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -2560,
+          368
+        ],
         "parameters": {
           "operation": "getAll",
           "tableId": "lembretes_enviados",
@@ -5200,25 +5181,28 @@
                 "keyValue": "pendente"
               }
             ]
+          },
+          "options": {
+            "returnAll": false
           }
         },
-        "id": "node-busca-lembrete",
-        "name": "Busca Lembrete Pendente",
-        "type": "n8n-nodes-base.supabase",
-        "typeVersion": 1,
-        "position": [
-          -2560,
-          368
-        ],
-        "alwaysOutputData": true,
         "credentials": {
           "supabaseApi": {
             "id": "vjxdwL14zFNscRrD",
             "name": "Supabase account"
           }
-        }
+        },
+        "alwaysOutputData": true
       },
       {
+        "id": "node-tem-lembrete",
+        "name": "Tem Lembrete Pendente?",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -2400,
+          368
+        ],
         "parameters": {
           "conditions": {
             "options": {
@@ -5241,17 +5225,17 @@
             "combinator": "and"
           },
           "options": {}
-        },
-        "id": "node-tem-lembrete",
-        "name": "Tem Lembrete Pendente?",
-        "type": "n8n-nodes-base.if",
-        "typeVersion": 2,
-        "position": [
-          -2400,
-          368
-        ]
+        }
       },
       {
+        "id": "node-ia-interpreta",
+        "name": "IA Interpreta Resposta Lembrete",
+        "type": "@n8n/n8n-nodes-langchain.openAi",
+        "typeVersion": 1.8,
+        "position": [
+          -2240,
+          200
+        ],
         "parameters": {
           "modelId": {
             "__rl": true,
@@ -5269,14 +5253,6 @@
             "temperature": 0.3
           }
         },
-        "id": "node-ia-interpreta",
-        "name": "IA Interpreta Resposta Lembrete",
-        "type": "@n8n/n8n-nodes-langchain.openAi",
-        "typeVersion": 1.8,
-        "position": [
-          -2240,
-          208
-        ],
         "credentials": {
           "openAiApi": {
             "id": "b2f06NWMfx9VK1I2",
@@ -5285,7 +5261,17 @@
         }
       },
       {
+        "id": "node-extrai-cat",
+        "name": "Extrai Categoria Lembrete",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -2000,
+          200
+        ],
         "parameters": {
+          "mode": "manual",
+          "duplicateItem": false,
           "assignments": {
             "assignments": [
               {
@@ -5321,21 +5307,22 @@
             ]
           },
           "options": {}
-        },
-        "id": "node-extrai-cat",
-        "name": "Extrai Categoria Lembrete",
-        "type": "n8n-nodes-base.set",
-        "typeVersion": 3.4,
-        "position": [
-          -2000,
-          208
-        ]
+        }
       },
       {
+        "id": "node-switch-cat",
+        "name": "Switch Categoria Lembrete",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          -1760,
+          200
+        ],
         "parameters": {
           "rules": {
             "values": [
               {
+                "outputKey": "CONFIRMA",
                 "conditions": {
                   "conditions": [
                     {
@@ -5350,6 +5337,7 @@
                 }
               },
               {
+                "outputKey": "CANCELA",
                 "conditions": {
                   "conditions": [
                     {
@@ -5364,6 +5352,7 @@
                 }
               },
               {
+                "outputKey": "REAGENDA",
                 "conditions": {
                   "conditions": [
                     {
@@ -5378,6 +5367,7 @@
                 }
               },
               {
+                "outputKey": "DUVIDA",
                 "conditions": {
                   "conditions": [
                     {
@@ -5394,17 +5384,17 @@
             ]
           },
           "options": {}
-        },
-        "id": "node-switch-cat",
-        "name": "Switch Categoria Lembrete",
-        "type": "n8n-nodes-base.switch",
-        "typeVersion": 3.2,
-        "position": [
-          -1760,
-          208
-        ]
+        }
       },
       {
+        "id": "node-status-conf",
+        "name": "Atualiza Lembrete Confirmado",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -1520,
+          40
+        ],
         "parameters": {
           "operation": "update",
           "tableId": "lembretes_enviados",
@@ -5431,14 +5421,6 @@
             ]
           }
         },
-        "id": "node-status-conf",
-        "name": "Atualiza Lembrete Confirmado",
-        "type": "n8n-nodes-base.supabase",
-        "typeVersion": 1,
-        "position": [
-          -1520,
-          48
-        ],
         "credentials": {
           "supabaseApi": {
             "id": "vjxdwL14zFNscRrD",
@@ -5447,6 +5429,14 @@
         }
       },
       {
+        "id": "node-status-canc",
+        "name": "Atualiza Lembrete Cancelado",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -1520,
+          160
+        ],
         "parameters": {
           "operation": "update",
           "tableId": "lembretes_enviados",
@@ -5473,14 +5463,6 @@
             ]
           }
         },
-        "id": "node-status-canc",
-        "name": "Atualiza Lembrete Cancelado",
-        "type": "n8n-nodes-base.supabase",
-        "typeVersion": 1,
-        "position": [
-          -1520,
-          160
-        ],
         "credentials": {
           "supabaseApi": {
             "id": "vjxdwL14zFNscRrD",
@@ -5489,6 +5471,14 @@
         }
       },
       {
+        "id": "node-status-reag",
+        "name": "Atualiza Lembrete Reagenda",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -1520,
+          280
+        ],
         "parameters": {
           "operation": "update",
           "tableId": "lembretes_enviados",
@@ -5523,14 +5513,6 @@
             ]
           }
         },
-        "id": "node-status-reag",
-        "name": "Atualiza Lembrete Reagenda",
-        "type": "n8n-nodes-base.supabase",
-        "typeVersion": 1,
-        "position": [
-          -1520,
-          288
-        ],
         "credentials": {
           "supabaseApi": {
             "id": "vjxdwL14zFNscRrD",
@@ -5539,6 +5521,14 @@
         }
       },
       {
+        "id": "node-status-duv",
+        "name": "Atualiza Lembrete Duvida",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -1520,
+          400
+        ],
         "parameters": {
           "operation": "update",
           "tableId": "lembretes_enviados",
@@ -5573,14 +5563,6 @@
             ]
           }
         },
-        "id": "node-status-duv",
-        "name": "Atualiza Lembrete Duvida",
-        "type": "n8n-nodes-base.supabase",
-        "typeVersion": 1,
-        "position": [
-          -1520,
-          400
-        ],
         "credentials": {
           "supabaseApi": {
             "id": "vjxdwL14zFNscRrD",
@@ -5589,6 +5571,14 @@
         }
       },
       {
+        "id": "node-responde-lemb",
+        "name": "Responde Lembrete",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          -1280,
+          200
+        ],
         "parameters": {
           "method": "POST",
           "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
@@ -5605,17 +5595,17 @@
           "specifyBody": "json",
           "jsonBody": "={\n    \"number\": \"{{ $('Variáveis Globais').first().json.telefone }}\",\n    \"text\": \"{{ $('Extrai Categoria Lembrete').first().json.resposta_sugerida.replace(/\\n/g, '\\\\n').replace(/['\\\"]/g, '') }}\",\n    \"delay\": 1000\n}",
           "options": {}
-        },
-        "id": "node-responde-lemb",
-        "name": "Responde Lembrete",
-        "type": "n8n-nodes-base.httpRequest",
-        "typeVersion": 4.2,
-        "position": [
-          -1280,
-          208
-        ]
+        }
       },
       {
+        "id": "node-agend-conf",
+        "name": "Confirma Agendamento",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -1520,
+          -80
+        ],
         "parameters": {
           "operation": "update",
           "tableId": "agendamentos",
@@ -5642,14 +5632,6 @@
             ]
           }
         },
-        "id": "node-agend-conf",
-        "name": "Confirma Agendamento",
-        "type": "n8n-nodes-base.supabase",
-        "typeVersion": 1,
-        "position": [
-          -1520,
-          -80
-        ],
         "credentials": {
           "supabaseApi": {
             "id": "vjxdwL14zFNscRrD",
@@ -5658,6 +5640,14 @@
         }
       },
       {
+        "id": "node-agend-canc",
+        "name": "Cancela Agendamento Lembrete",
+        "type": "n8n-nodes-base.supabase",
+        "typeVersion": 1,
+        "position": [
+          -1360,
+          160
+        ],
         "parameters": {
           "operation": "update",
           "tableId": "agendamentos",
@@ -5684,14 +5674,6 @@
             ]
           }
         },
-        "id": "node-agend-canc",
-        "name": "Cancela Agendamento Lembrete",
-        "type": "n8n-nodes-base.supabase",
-        "typeVersion": 1,
-        "position": [
-          -1360,
-          160
-        ],
         "credentials": {
           "supabaseApi": {
             "id": "vjxdwL14zFNscRrD",
@@ -5700,70 +5682,34 @@
         }
       },
       {
-        "parameters": {
-          "description": "Confirma a presenca do paciente em uma consulta agendada. Use quando o paciente responder confirmando que ira comparecer.",
-          "jsCode": "// Confirma presenca do paciente - atualiza lembretes pendentes\n// IMPORTANTE: No Code Tool, os parametros vem via 'query' (objeto JSON quando specifyInputSchema=true)\n\nconst telefone = query.telefone;\n\nif (!telefone) {\n  return 'Erro: telefone nao informado';\n}\n\nconst supabaseUrl = 'https://gkweofpjwzsvlvnvfbom.supabase.co';\nconst supabaseKey = $env.SUPABASE_KEY || $env.SUPABASE_ANON_KEY;\n\ntry {\n  const buscaResp = await fetch(\n    `${supabaseUrl}/rest/v1/lembretes_enviados?telefone=eq.${telefone}&status_resposta=eq.pendente&select=id,agendamento_id`,\n    { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }\n  );\n  const lembretes = await buscaResp.json();\n  \n  if (!lembretes || lembretes.length === 0) {\n    return 'Nenhum lembrete pendente encontrado para confirmacao.';\n  }\n  \n  const updateResp = await fetch(\n    `${supabaseUrl}/rest/v1/lembretes_enviados?telefone=eq.${telefone}&status_resposta=eq.pendente`,\n    {\n      method: 'PATCH',\n      headers: {\n        'apikey': supabaseKey,\n        'Authorization': `Bearer ${supabaseKey}`,\n        'Content-Type': 'application/json',\n        'Prefer': 'return=minimal'\n      },\n      body: JSON.stringify({\n        status_resposta: 'confirmado',\n        data_resposta: new Date().toISOString()\n      })\n    }\n  );\n  \n  return `Presenca confirmada com sucesso! ${lembretes.length} lembrete(s) atualizado(s).`;\n} catch (e) {\n  return `Erro ao confirmar presenca: ${e.message}`;\n}",
-          "specifyInputSchema": true,
-          "schemaType": "manual",
-          "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"telefone\": {\n      \"type\": \"string\",\n      \"description\": \"Telefone do paciente com DDD, apenas numeros. Exemplo: 5511999998888\"\n    }\n  },\n  \"required\": [\"telefone\"]\n}"
-        },
         "id": "tool-confirmar-presenca",
         "name": "confirmar_presenca",
         "type": "@n8n/n8n-nodes-langchain.toolCode",
-        "typeVersion": 1.3,
+        "typeVersion": 1.1,
         "position": [
-          704,
-          704
-        ]
+          700,
+          700
+        ],
+        "parameters": {
+          "name": "confirmar_presenca",
+          "description": "Confirma a presenca do paciente em uma consulta agendada. Use quando o paciente responder confirmando que ira comparecer a consulta. Parametros: telefone (string com DDD, ex: 5511999998888)",
+          "jsCode": "// Confirma presença do paciente - atualiza lembretes pendentes\nconst telefone = $input.item.json.telefone;\n\nif (!telefone) {\n  return 'Erro: telefone nao informado';\n}\n\nconst supabaseUrl = 'https://gkweofpjwzsvlvnvfbom.supabase.co';\nconst supabaseKey = $env.SUPABASE_KEY || $env.SUPABASE_ANON_KEY;\n\ntry {\n  // Busca lembretes pendentes para esse telefone\n  const buscaResp = await fetch(\n    `${supabaseUrl}/rest/v1/lembretes_enviados?telefone=eq.${telefone}&status_resposta=eq.pendente&select=id,agendamento_id`,\n    { headers: { 'apikey': supabaseKey, 'Authorization': `Bearer ${supabaseKey}` } }\n  );\n  const lembretes = await buscaResp.json();\n  \n  if (!lembretes || lembretes.length === 0) {\n    return 'Nenhum lembrete pendente encontrado para confirmacao.';\n  }\n  \n  // Atualiza todos os lembretes pendentes para confirmado\n  const updateResp = await fetch(\n    `${supabaseUrl}/rest/v1/lembretes_enviados?telefone=eq.${telefone}&status_resposta=eq.pendente`,\n    {\n      method: 'PATCH',\n      headers: {\n        'apikey': supabaseKey,\n        'Authorization': `Bearer ${supabaseKey}`,\n        'Content-Type': 'application/json',\n        'Prefer': 'return=minimal'\n      },\n      body: JSON.stringify({\n        status_resposta: 'confirmado',\n        data_resposta: new Date().toISOString()\n      })\n    }\n  );\n  \n  return `Presenca confirmada com sucesso! ${lembretes.length} lembrete(s) atualizado(s).`;\n} catch (e) {\n  return `Erro ao confirmar presenca: ${e.message}`;\n}"
+        }
       },
       {
+        "id": "tool-buscar-slots",
+        "name": "buscar_slots_disponiveis",
+        "type": "@n8n/n8n-nodes-langchain.toolCode",
+        "typeVersion": 1.1,
+        "position": [
+          900,
+          700
+        ],
         "parameters": {
           "name": "buscar_slots_disponiveis",
-          "description": "Busca horários DISPONÍVEIS para agendamento. SEMPRE use esta ferramenta ANTES de dizer qualquer horário ao paciente.",
-          "workflowId": {
-            "__rl": true,
-            "value": "8Bke6sYr7r51aeEq",
-            "mode": "id"
-          },
-          "workflowInputs": {
-            "mappingMode": "defineBelow",
-            "value": {
-              "data": "={{ $fromAI('data', 'Data no formato YYYY-MM-DD para buscar horários', 'string') }}",
-              "periodo": "={{ $fromAI('periodo', 'Período do dia: manha, tarde ou qualquer', 'string') }}"
-            },
-            "matchingColumns": [],
-            "schema": [
-              {
-                "id": "data",
-                "displayName": "data",
-                "required": true,
-                "defaultMatch": false,
-                "display": true,
-                "canBeUsedToMatch": true,
-                "type": "string"
-              },
-              {
-                "id": "periodo",
-                "displayName": "periodo",
-                "required": false,
-                "defaultMatch": false,
-                "display": true,
-                "canBeUsedToMatch": true,
-                "type": "string"
-              }
-            ],
-            "attemptToConvertTypes": false,
-            "convertFieldsToString": false
-          }
-        },
-        "id": "tool-buscar-slots-workflow",
-        "name": "buscar_slots_disponiveis",
-        "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
-        "typeVersion": 2,
-        "position": [
-          912,
-          704
-        ]
+          "description": "Busca horarios DISPONIVEIS para agendamento. Retorna lista de horarios LIVRES. SEMPRE use esta ferramenta antes de oferecer horarios ao paciente.",
+          "toolSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"data\": {\n      \"type\": \"string\",\n      \"description\": \"Data para buscar horarios no formato YYYY-MM-DD. Exemplo: 2026-01-21\"\n    },\n    \"periodo\": {\n      \"type\": \"string\",\n      \"enum\": [\"manha\", \"tarde\", \"qualquer\"],\n      \"description\": \"Periodo do dia: manha (08:00-11:30), tarde (13:00-19:30) ou qualquer\"\n    }\n  },\n  \"required\": [\"data\"]\n}"
+        }
       }
     ],
     "connections": {
