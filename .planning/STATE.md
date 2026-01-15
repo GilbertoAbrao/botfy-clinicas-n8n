@@ -2,16 +2,16 @@
 
 **Last Updated:** 2026-01-15
 **Status:** In Progress
-**Current Phase:** Phase 1 - Secure Foundation (Wave 1 Complete)
+**Current Phase:** Phase 1 - Secure Foundation (Wave 2 Complete)
 **Current Milestone:** v1.0
 
 ---
 
 ## Current State
 
-**Stage:** Phase 1 - Wave 2 Complete ✓ (Plans 01-01, 01-02, 01-03 done)
-**Action:** Continue with Plan 01-04 (RLS Policies and Database Security)
-**Blockers:** User must verify authentication flow works (Plan 01-03 human checkpoint)
+**Stage:** Phase 1 - Wave 2 Complete ✓ (Plans 01-01, 01-02, 01-03, 01-04 done)
+**Action:** Continue with Plan 01-05 (Session Management & Audit Logging) - Wave 3
+**Blockers:** User must run database migration for RBAC (Prisma schema updated, need to push/migrate)
 
 **Recently Completed:**
 - [x] Project initialized with PROJECT.md
@@ -22,15 +22,16 @@
 - [x] **Plan 01-01: Next.js + TypeScript + Tailwind + shadcn/ui + Brand Identity** ✅
 - [x] **Plan 01-02: Supabase Client Configuration** ✅
 - [x] **Plan 01-03: Authentication UI and Flow** ✅
+- [x] **Plan 01-04: Role-Based Access Control (RBAC)** ✅
 
 **Next Steps:**
-1. **USER ACTION REQUIRED:** Verify authentication flow (see Plan 01-03-SUMMARY.md)
-   - Create test user in Supabase Dashboard (test@botfy.ai)
-   - Test login, logout, session persistence, and redirection
-   - Confirm all verification steps pass
-2. Execute Plan 01-04: RLS Policies and Database Security
-3. Execute Plan 01-05: Real-time Cleanup and Performance
-4. Validate Phase 1 success criteria before proceeding to Phase 2
+1. **USER ACTION REQUIRED:** Run database migration for RBAC
+   - Check if users table exists in Supabase Database
+   - If not exists: Run `npx prisma db push`
+   - If exists: Run `npx prisma migrate dev --name add_role_to_users`
+   - Create test users with ADMIN and ATENDENTE roles for testing
+2. Execute Plan 01-05: Session Management & Audit Logging (Wave 3)
+3. Validate Phase 1 success criteria before proceeding to Phase 2
 
 ---
 
@@ -38,7 +39,7 @@
 
 | Phase | Status | Requirements | Completed | Progress |
 |-------|--------|--------------|-----------|----------|
-| Phase 1: Secure Foundation | In Progress (Plans 01-01, 01-02, 01-03 ✅, 2 remaining) | 17 | 9 | 53% |
+| Phase 1: Secure Foundation | In Progress (Plans 01-01, 01-02, 01-03, 01-04 ✅, 1 remaining) | 17 | 12 | 71% |
 | Phase 2: Alert Dashboard | Not Started | 16 | 0 | 0% |
 | Phase 3: Patient Management | Not Started | 14 | 0 | 0% |
 | Phase 4: Calendar & Scheduling | Not Started | 15 | 0 | 0% |
@@ -47,7 +48,7 @@
 | Phase 7: System Configuration | Not Started | 14 | 0 | 0% |
 | Phase 8: Analytics & Smart Features | Not Started | 2 | 0 | 0% |
 
-**Overall Progress:** 9/79 requirements (11%)
+**Overall Progress:** 12/79 requirements (15%)
 
 ---
 
@@ -61,10 +62,13 @@
 3. ✅ Botfy brand identity implemented (colors, fonts, logo)
 4. ✅ Supabase client factories (Browser, Server, Middleware)
 5. ✅ Next.js middleware for session refresh
-6. ✅ Prisma schema with User model
+6. ✅ Prisma schema with User model and Role enum
 7. ✅ Authentication Server Actions (signIn, signOut)
 8. ✅ Login page with email/password form (shadcn/ui)
 9. ✅ Protected dashboard layout with route-level authorization
+10. ✅ Role-based access control (RBAC) with Admin and Atendente roles
+11. ✅ Permission system with role-permission mapping
+12. ✅ Admin-only routes with RBAC middleware protection
 
 ### In Progress Requirements
 
@@ -104,10 +108,10 @@ None yet (greenfield project).
 | Risk | Impact | Mitigation | Status |
 |------|--------|------------|--------|
 | React RCE vulnerabilities (CVE-2025-55182, CVE-2025-66478) | Critical | Upgrade React immediately in Phase 1 | ✅ Mitigated (React 19.2.3) |
-| Next.js middleware bypass (CVE-2025-29927) | Critical | Defense-in-depth authorization (middleware + route + RLS) | ✅ Mitigated (Route-level checks in dashboard layout) |
-| Supabase real-time memory leaks | High | Mandatory cleanup patterns in Phase 1 | Pending (Plan 01-04) |
+| Next.js middleware bypass (CVE-2025-29927) | Critical | Defense-in-depth authorization (middleware + route + RLS) | ✅ Mitigated (Route + RBAC checks) |
+| Supabase real-time memory leaks | High | Mandatory cleanup patterns in Phase 1 | Pending (Plan 01-05) |
 | RLS performance at scale | High | Query optimization from day one | Pending (Plan 01-05) |
-| HIPAA compliance gaps | Critical | Audit logs + encryption from Phase 1 | Pending (Plan 01-04) |
+| HIPAA compliance gaps | Critical | Audit logs + encryption from Phase 1 | Pending (Plan 01-05) |
 
 ---
 
@@ -131,6 +135,25 @@ None yet (greenfield project).
 ---
 
 ## Recent Activity
+
+**2026-01-15 20:15 - Plan 01-04 Completed**
+- ✅ Role enum added to Prisma schema (ADMIN, ATENDENTE)
+- ✅ RBAC permission system created with role-permission mapping
+- ✅ Permission utilities (checkPermission, requirePermission)
+- ✅ Route protection middleware (requireRole)
+- ✅ Prisma Client singleton with PostgreSQL adapter (Prisma 7)
+- ✅ Session utilities updated with getCurrentUserWithRole
+- ✅ Admin-only layout created with RBAC protection
+- ✅ Admin users page (placeholder for Phase 7)
+- ✅ Dashboard layout shows admin link only for admins
+- ✅ User role displayed in dashboard header
+- 📦 4 atomic commits created
+- 🎯 Build verification passed
+- ⚠️ USER ACTION REQUIRED: Run database migration
+  - Check users table in Supabase
+  - Run `npx prisma db push` or `npx prisma migrate dev`
+  - Create test users with different roles
+  - See 01-04-SUMMARY.md for detailed testing instructions
 
 **2026-01-15 19:45 - Plan 01-03 Completed**
 - ✅ Authentication Server Actions created (signIn, signOut)
@@ -173,5 +196,5 @@ None yet (greenfield project).
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-15 after Plan 01-03 execution*
-*Next state update: After Plan 01-04 execution*
+*Last updated: 2026-01-15 after Plan 01-04 execution*
+*Next state update: After Plan 01-05 execution*
