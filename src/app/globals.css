@@ -4,9 +4,10 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --color-botfy-primary: #7C3AED;
-  --color-botfy-secondary: #6366F1;
-  --color-botfy-accent: #EC4899;
+  --color-botfy-primary: #0048FF;
+  --color-botfy-primary-light: #E8F0FF;
+  --color-botfy-dark: #0A1628;
+  --color-botfy-accent: #00D4FF;
 }
 
 @layer utilities {
