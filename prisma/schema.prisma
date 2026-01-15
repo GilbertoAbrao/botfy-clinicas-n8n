@@ -11,11 +11,12 @@ datasource db {
 
 // Supabase Auth users table (managed by Supabase Auth, reference only)
 model User {
-  id        String   @id @default(uuid()) @db.Uuid
-  email     String   @unique
-  role      Role     @default(ATENDENTE)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id        String     @id @default(uuid()) @db.Uuid
+  email     String     @unique
+  role      Role       @default(ATENDENTE)
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  auditLogs AuditLog[]
 
   @@map("users")
 }
@@ -23,4 +24,24 @@ model User {
 enum Role {
   ADMIN
   ATENDENTE
+}
+
+// HIPAA-compliant audit logging (6-year retention required)
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  action     String   // "VIEW_PATIENT", "UPDATE_APPOINTMENT", "DELETE_RECORD"
+  resource   String   // "patients", "appointments", "chats"
+  resourceId String?  @map("resource_id") // ID of the accessed resource
+  details    Json?    // Additional context (what changed, etc.)
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([resource])
+  @@map("audit_logs")
 }
