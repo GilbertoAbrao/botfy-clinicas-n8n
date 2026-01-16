@@ -74,7 +74,7 @@ CREATE TABLE "alerts" (
     "conversation_id" UUID,
     "metadata" JSONB,
     "resolved_at" TIMESTAMP(3),
-    "resolved_by" UUID,
+    "resolved_by" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 

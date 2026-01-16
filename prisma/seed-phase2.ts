@@ -10,9 +10,7 @@
  * Run: npm run seed:phase2
  */
 
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../src/lib/prisma';
 
 async function main() {
   console.log('🌱 Seeding Phase 2 data...\n');
