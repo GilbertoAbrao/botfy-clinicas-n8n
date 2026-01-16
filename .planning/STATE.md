@@ -1,17 +1,17 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-16
-**Status:** Phase 2 Wave 1 Complete ✅
-**Current Phase:** Phase 2 - Alert Dashboard (IN PROGRESS - Wave 1 done, Wave 2 ready)
+**Status:** Phase 2 Wave 2 In Progress ⏳
+**Current Phase:** Phase 2 - Alert Dashboard (IN PROGRESS - Wave 1 done, Wave 2 executing)
 **Current Milestone:** v1.0
 
 ---
 
 ## Current State
 
-**Stage:** Phase 2 Wave 1 Complete ✓ (Plan 02-01 executed)
-**Action:** Ready for Wave 2 - execute Plans 02-02 and 02-03 in parallel
-**Blockers:** Manual DB migration required (see Plan 02-01 SUMMARY)
+**Stage:** Phase 2 Wave 2 In Progress (Plan 02-02 complete, Plan 02-03 ready)
+**Action:** Execute Plan 02-03 (Alert Detail View)
+**Blockers:** Manual DB migration required for full testing (see Plan 02-01 SUMMARY)
 
 **Recently Completed:**
 - [x] Project initialized with PROJECT.md
@@ -43,14 +43,22 @@
   - ✅ Migration SQL generated (manual application required)
   - ✅ RLS policies created for all PHI tables
   - ✅ Seed script with 8 test alerts
+- [x] **Plan 02-02: Alert List UI & Filtering** ✅
+  - ✅ Alert API layer with Server Actions
+  - ✅ Alert list component (responsive: table + card layouts)
+  - ✅ Filter component (type, status, date range, sort)
+  - ✅ Alert list page at /dashboard/alerts
+  - ✅ Navigation integration with unresolved count badge
+  - ✅ Mobile-first design with 44px tap targets
 
 **Next Steps:**
-1. **REQUIRED:** Apply migration SQL via Supabase SQL Editor
+1. **REQUIRED:** Apply migration SQL via Supabase SQL Editor (blocking for E2E testing)
    - File: `prisma/migrations/20260116_add_alert_system/migration.sql`
    - Then: `prisma/rls-policies-phase2.sql`
    - Then: `npm run seed:phase2`
-2. Execute Plans 02-02 and 02-03 in parallel (Wave 2)
-3. Test E2E: Open two browser windows, verify real-time alert sync
+2. Execute Plan 02-03 (Alert Detail View)
+3. Then Plan 02-04 (Real-time Updates & Metrics Dashboard)
+4. Test E2E: Verify alert list, filters, sorting, navigation
 
 ---
 
@@ -59,7 +67,7 @@
 | Phase | Status | Requirements | Completed | Progress |
 |-------|--------|--------------|-----------|----------|
 | Phase 1: Secure Foundation | ✅ Complete (All 5 plans done) | 17 | 17 | 100% |
-| Phase 2: Alert Dashboard | 🔄 In Progress (1/4 plans done) | 16 | 4 | 25% |
+| Phase 2: Alert Dashboard | 🔄 In Progress (2/4 plans done) | 16 | 10 | 63% |
 | Phase 3: Patient Management | Not Started | 14 | 0 | 0% |
 | Phase 4: Calendar & Scheduling | Not Started | 15 | 0 | 0% |
 | Phase 5: Conversation Monitoring | Not Started | 10 | 0 | 0% |
@@ -67,7 +75,7 @@
 | Phase 7: System Configuration | Not Started | 14 | 0 | 0% |
 | Phase 8: Analytics & Smart Features | Not Started | 2 | 0 | 0% |
 
-**Overall Progress:** 21/79 requirements (27%)
+**Overall Progress:** 27/79 requirements (34%)
 
 ---
 
@@ -99,6 +107,12 @@
 19. ✅ Patient model with PHI fields
 20. ✅ Appointment model with status tracking
 21. ✅ Conversation model with WhatsApp integration
+22. ✅ Alert API layer with fetchAlerts(), getAlertById(), updateAlertStatus()
+23. ✅ Alert list component with responsive design (table + card layouts)
+24. ✅ Filter system (type, status, date range, sort)
+25. ✅ Alert list page at /dashboard/alerts
+26. ✅ Navigation integration with unresolved count badge
+27. ✅ Mobile-first design with 44px tap targets
 
 ### In Progress Requirements
 
@@ -120,6 +134,10 @@ None currently.
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-01-16 | Server Actions for alert API | Better RSC integration, simpler auth context |
+| 2026-01-16 | URL-based filter persistence | Shareable links, browser history, refresh persistence |
+| 2026-01-16 | 44px minimum tap targets | iOS/Android guidelines, accessibility |
+| 2026-01-16 | Priority-first default sort | Urgent alerts always at top |
 | 2026-01-16 | JSONB for conversation messages | Avoid N+1 queries, simplify real-time updates |
 | 2026-01-16 | Nullable alert relations | Support edge cases (alerts without patients) |
 | 2026-01-16 | Manual migration SQL | Prisma CLI hanging on pooler connection |
@@ -168,6 +186,21 @@ None yet (greenfield project).
 ---
 
 ## Recent Activity
+
+**2026-01-16 16:20 - Plan 02-02 Complete (Wave 2 - 1/2) 🎉**
+- ✅ Alert list page at /dashboard/alerts with responsive design
+- ✅ Alert API layer with Server Actions (fetchAlerts, getAlertById, updateAlertStatus, getUnresolvedAlertCount)
+- ✅ Alert list component: Desktop table + mobile card layouts
+- ✅ Filter component: Type, status, date range, sort controls
+- ✅ URL-based filter persistence for shareable links
+- ✅ Navigation integration: "Alertas" link with unresolved count badge
+- ✅ Mobile-first design: 44px tap targets, collapsible filters
+- ✅ Loading and empty states implemented
+- ✅ RBAC protection and audit logging on all API functions
+- 📦 7 atomic commits created (7 min execution)
+- 🎯 Build verification passed
+- ⚠️ **USER ACTION STILL REQUIRED:** Apply migration SQL (see Plan 02-01) for full E2E testing
+- 🚀 Ready for Plan 02-03 (Alert Detail View)
 
 **2026-01-16 16:09 - Plan 02-01 Complete (Wave 1) 🎉**
 - ✅ Complete database schema for alert system
