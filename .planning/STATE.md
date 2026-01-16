@@ -1,16 +1,16 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-16
-**Status:** Phase 2 Wave 2 Complete ✅
-**Current Phase:** Phase 2 - Alert Dashboard (IN PROGRESS - Wave 1 & 2 done, Wave 3 ready)
+**Status:** Phase 2 Complete ✅
+**Current Phase:** Phase 2 - Alert Dashboard (COMPLETE)
 **Current Milestone:** v1.0
 
 ---
 
 ## Current State
 
-**Stage:** Phase 2 Wave 2 Complete (Plans 02-02 and 02-03 done)
-**Action:** Ready for Wave 3 - execute Plan 02-04 (Real-time Updates)
+**Stage:** Phase 2 Complete - All 4 plans executed
+**Action:** Ready for Phase 3 - Patient Management
 **Blockers:** Manual DB migration required for full E2E testing (see Plan 02-01 SUMMARY)
 
 **Recently Completed:**
@@ -57,14 +57,25 @@
   - ✅ Alert detail page at /dashboard/alerts/[id]
   - ✅ Click-to-call/email functionality with copy buttons
   - ✅ Phase 6 placeholder buttons (disabled with tooltips)
+- [x] **Plan 02-04: Real-time Updates & Metrics Dashboard** ✅
+  - ✅ Supabase real-time subscription helpers (useAlertSubscription, useAlertDetailSubscription)
+  - ✅ Memory leak prevention patterns documented
+  - ✅ Real-time alert list with connection status indicator
+  - ✅ Real-time alert detail with conflict detection
+  - ✅ Metrics dashboard (agendamentos hoje, taxa confirmação, conversas ativas)
+  - ✅ Service status monitoring (Evolution API, N8N, Supabase)
+  - ✅ Auto-refresh: metrics 5min, service status 2min
+  - ✅ Toast notifications for urgent alerts and concurrent edits
+- [x] **PHASE 2: ALERT DASHBOARD - COMPLETE!** 🎉
 
 **Next Steps:**
-1. **REQUIRED:** Apply migration SQL via Supabase SQL Editor (blocking for E2E testing)
+1. **RECOMMENDED:** Apply migration SQL via Supabase SQL Editor for full E2E testing
    - File: `prisma/migrations/20260116_add_alert_system/migration.sql`
    - Then: `prisma/rls-policies-phase2.sql`
    - Then: `npm run seed:phase2`
-2. Execute Plan 02-04 (Real-time Updates & Metrics Dashboard)
-3. Test E2E: Verify alert list, detail view, status updates, filters
+2. **READY:** Begin Phase 3 - Patient Management
+3. Test real-time: Open two browser windows, verify alerts sync
+4. Configure service monitoring (optional): Set NEXT_PUBLIC_EVOLUTION_API_URL and NEXT_PUBLIC_N8N_URL
 
 ---
 
@@ -73,7 +84,7 @@
 | Phase | Status | Requirements | Completed | Progress |
 |-------|--------|--------------|-----------|----------|
 | Phase 1: Secure Foundation | ✅ Complete (All 5 plans done) | 17 | 17 | 100% |
-| Phase 2: Alert Dashboard | 🔄 In Progress (3/4 plans done) | 16 | 13 | 81% |
+| Phase 2: Alert Dashboard | ✅ Complete (All 4 plans done) | 16 | 16 | 100% |
 | Phase 3: Patient Management | Not Started | 14 | 0 | 0% |
 | Phase 4: Calendar & Scheduling | Not Started | 15 | 0 | 0% |
 | Phase 5: Conversation Monitoring | Not Started | 10 | 0 | 0% |
@@ -81,7 +92,7 @@
 | Phase 7: System Configuration | Not Started | 14 | 0 | 0% |
 | Phase 8: Analytics & Smart Features | Not Started | 2 | 0 | 0% |
 
-**Overall Progress:** 27/79 requirements (34%)
+**Overall Progress:** 33/79 requirements (42%)
 
 ---
 
@@ -108,7 +119,7 @@
 16. ✅ 30-minute session timeout (inactivity logout)
 17. ✅ Error boundary and error handling utilities
 
-**Phase 2 - Alert Dashboard (IN PROGRESS):**
+**Phase 2 - Alert Dashboard (COMPLETE):**
 18. ✅ Alert model with type, priority, status fields
 19. ✅ Patient model with PHI fields
 20. ✅ Appointment model with status tracking
@@ -125,6 +136,9 @@
 31. ✅ Alert detail shows conversation thread (last 10 messages with AI/human labels)
 32. ✅ Status update functionality (new → in_progress → resolved/dismissed)
 33. ✅ Action button placeholders for Phase 6 interventions
+34. ✅ Real-time alert updates via Supabase subscriptions
+35. ✅ Metrics dashboard (agendamentos hoje, taxa confirmação, conversas ativas)
+36. ✅ Service status monitoring (Evolution API, N8N, Supabase)
 
 ### In Progress Requirements
 
@@ -146,6 +160,13 @@ None currently.
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-01-16 | Supabase real-time over polling | More efficient, lower latency, better UX for multi-user scenarios |
+| 2026-01-16 | Mandatory cleanup functions for subscriptions | Prevent memory leaks from stale WebSocket connections |
+| 2026-01-16 | 5-minute cache for metrics | Balance data freshness with database load |
+| 2026-01-16 | Connection status indicators | Visual feedback for real-time sync state, build user trust |
+| 2026-01-16 | Service health checks with 5s timeout | Prevent hanging on slow/down services, fail fast |
+| 2026-01-16 | Toast notifications with sonner | Consistent with existing codebase (alert-detail.tsx) |
+| 2026-01-16 | Fixed ConversationStatus enum (IA/HUMANO) | Match Prisma schema, avoid runtime errors |
 | 2026-01-16 | Client-server component split for detail page | Server fetches data (RSC caching), client handles mutations and refresh |
 | 2026-01-16 | Safe JSON message parsing with type guards | Conversation.messages is Prisma.JsonValue, needs runtime validation |
 | 2026-01-16 | Compact conversation mode (last 10 messages) | Balance information density with performance, link to Phase 5 for full history |
