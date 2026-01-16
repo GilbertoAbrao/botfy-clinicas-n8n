@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUserWithRole } from '@/lib/auth/session';
 import { checkPermission, PERMISSIONS } from '@/lib/rbac/permissions';
 import { prisma } from '@/lib/prisma';
-import { logAudit } from '@/lib/audit/logger';
+import { logAudit, AuditAction } from '@/lib/audit/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -74,9 +74,9 @@ export async function GET(request: NextRequest) {
     // Log PHI access
     await logAudit({
       userId: user.id,
-      action: 'VIEW_PATIENT',
+      action: AuditAction.VIEW_PATIENT,
       resource: 'patients',
-      resourceId: null,
+      resourceId: undefined,
       details: {
         searchParams: { q, telefone, cpf },
         resultCount: patients.length,
