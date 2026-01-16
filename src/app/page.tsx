@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Logo } from "@/components/ui/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,9 +15,11 @@ export default function Home() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <Button className="w-full bg-botfy-primary hover:bg-botfy-primary/90">
-            Acessar Sistema
-          </Button>
+          <Link href="/login">
+            <Button className="w-full bg-botfy-primary hover:bg-botfy-primary/90">
+              Acessar Sistema
+            </Button>
+          </Link>
           <p className="text-xs text-center text-muted-foreground">
             Botfy ClinicOps v0.1.0
           </p>
