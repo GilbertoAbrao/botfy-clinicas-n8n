@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { getCurrentUser } from '@/lib/auth/session';
+import { getCurrentUserWithRole } from '@/lib/auth/session';
 import { checkPermission, PERMISSIONS } from '@/lib/rbac/permissions';
 import { PatientSearch } from '@/components/patients/patient-search';
 import { PatientTable } from '@/components/patients/patient-table';
@@ -38,7 +38,7 @@ function TableSkeleton() {
 
 export default async function PacientesPage({ searchParams }: PageProps) {
   // Verify authentication
-  const user = await getCurrentUser();
+  const user = await getCurrentUserWithRole();
   if (!user) {
     redirect('/entrar');
   }
