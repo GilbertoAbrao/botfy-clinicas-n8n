@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { AlertDetail } from '@/components/alerts/alert-detail'
 import { AlertWithRelations } from '@/lib/api/alerts'
 import { useAlertDetailSubscription, type SubscriptionState } from '@/lib/realtime/alerts'
-import { useToast } from '@/hooks/use-toast'
+import { toast } from 'sonner'
 import { Alert as AlertType } from '@prisma/client'
 import { Badge } from '@/components/ui/badge'
 
@@ -15,7 +15,6 @@ interface AlertDetailClientProps {
 
 export function AlertDetailClient({ alert: initialAlert }: AlertDetailClientProps) {
   const router = useRouter()
-  const { toast } = useToast()
   const [alert, setAlert] = useState<AlertWithRelations>(initialAlert)
   const [connectionStatus, setConnectionStatus] = useState<SubscriptionState>({
     status: 'disconnected',
@@ -29,18 +28,10 @@ export function AlertDetailClient({ alert: initialAlert }: AlertDetailClientProp
     // Check if user is currently editing status
     if (isUserEditing) {
       // Show warning about concurrent edit
-      toast({
-        title: 'Alerta Atualizado',
-        description: 'Outro usuário modificou este alerta. As alterações mais recentes estão sendo exibidas.',
-        variant: 'default',
-      })
+      toast.warning('Outro usuário modificou este alerta. As alterações mais recentes estão sendo exibidas.')
     } else {
       // Show subtle notification
-      toast({
-        title: 'Alerta Atualizado',
-        description: 'Este alerta foi atualizado em tempo real',
-        variant: 'default',
-      })
+      toast.info('Este alerta foi atualizado em tempo real')
     }
 
     // Update alert state with new data (keep existing relations)
@@ -56,7 +47,7 @@ export function AlertDetailClient({ alert: initialAlert }: AlertDetailClientProp
 
     // Also refresh the page to get full data with relations
     router.refresh()
-  }, [isUserEditing, toast, router])
+  }, [isUserEditing, router])
 
   // Handle connection status changes
   const handleStatusChange = useCallback((state: SubscriptionState) => {
@@ -65,13 +56,9 @@ export function AlertDetailClient({ alert: initialAlert }: AlertDetailClientProp
 
     // Show error toast if connection fails
     if (state.status === 'error') {
-      toast({
-        title: 'Erro de Conexão',
-        description: state.error || 'Falha ao conectar atualizações em tempo real',
-        variant: 'destructive',
-      })
+      toast.error(state.error || 'Falha ao conectar atualizações em tempo real')
     }
-  }, [toast])
+  }, [])
 
   // Subscribe to real-time updates for this alert
   useAlertDetailSubscription(alert.id, handleAlertUpdate, handleStatusChange)

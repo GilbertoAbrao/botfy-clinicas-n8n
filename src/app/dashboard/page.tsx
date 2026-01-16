@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { Role } from '@prisma/client'
+import { MetricsDashboard } from '@/components/dashboard/metrics-dashboard'
+import { ServiceStatus } from '@/components/dashboard/service-status'
 
 export default async function DashboardPage() {
   const user = await getCurrentUser()
@@ -65,11 +67,27 @@ export default async function DashboardPage() {
         </div>
       </header>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div>
-          <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
-          <p className="text-gray-600">
-            Bem-vindo ao console administrativo Botfy ClinicOps.
-          </p>
+        <div className="space-y-8">
+          {/* Page header */}
+          <div>
+            <h1 className="text-2xl font-bold mb-2">Dashboard</h1>
+            <p className="text-gray-600">
+              Visão geral do sistema e métricas operacionais
+            </p>
+          </div>
+
+          {/* Metrics Dashboard */}
+          <section>
+            <h2 className="text-lg font-semibold mb-4 text-gray-900">
+              Métricas em Tempo Real
+            </h2>
+            <MetricsDashboard />
+          </section>
+
+          {/* Service Status */}
+          <section>
+            <ServiceStatus />
+          </section>
         </div>
       </main>
     </div>

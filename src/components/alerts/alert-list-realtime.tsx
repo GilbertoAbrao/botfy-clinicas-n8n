@@ -5,7 +5,7 @@ import { AlertWithRelations } from '@/lib/api/alerts'
 import { AlertList } from './alert-list'
 import { useAlertSubscription, type AlertChangeEvent, type SubscriptionState } from '@/lib/realtime/alerts'
 import { Badge } from '@/components/ui/badge'
-import { useToast } from '@/hooks/use-toast'
+import { toast } from 'sonner'
 import { AlertPriority } from '@prisma/client'
 
 interface AlertListRealtimeProps {
@@ -23,7 +23,6 @@ export function AlertListRealtime({ initialAlerts }: AlertListRealtimeProps) {
   const [connectionStatus, setConnectionStatus] = useState<SubscriptionState>({
     status: 'disconnected',
   })
-  const { toast } = useToast()
 
   // Handle alert changes from real-time subscription
   const handleAlertChange = useCallback((event: AlertChangeEvent) => {
@@ -40,7 +39,7 @@ export function AlertListRealtime({ initialAlerts }: AlertListRealtimeProps) {
 
         // Add new alert at the beginning
         const newAlert: AlertWithRelations = {
-          ...event.new,
+          ...event.new!,
           patient: null, // Will be populated by refetch if needed
           appointment: null,
           conversation: null,
@@ -48,12 +47,8 @@ export function AlertListRealtime({ initialAlerts }: AlertListRealtimeProps) {
         }
 
         // Show toast notification for urgent alerts
-        if (event.new.priority === 'urgent') {
-          toast({
-            title: 'Novo Alerta Urgente!',
-            description: `Um alerta urgente foi criado`,
-            variant: 'destructive',
-          })
+        if (event.new!.priority === 'urgent') {
+          toast.error('Novo Alerta Urgente!')
 
           // Optional: Play subtle sound (disabled by default)
           // playNotificationSound()
@@ -83,7 +78,7 @@ export function AlertListRealtime({ initialAlerts }: AlertListRealtimeProps) {
       // Remove deleted alert from list
       setAlerts((prev) => prev.filter((alert) => alert.id !== event.old!.id))
     }
-  }, [toast])
+  }, [])
 
   // Handle connection status changes
   const handleStatusChange = useCallback((state: SubscriptionState) => {
@@ -92,13 +87,9 @@ export function AlertListRealtime({ initialAlerts }: AlertListRealtimeProps) {
 
     // Show error toast if connection fails
     if (state.status === 'error') {
-      toast({
-        title: 'Erro de Conexão',
-        description: state.error || 'Falha ao conectar atualizações em tempo real',
-        variant: 'destructive',
-      })
+      toast.error(state.error || 'Falha ao conectar atualizações em tempo real')
     }
-  }, [toast])
+  }, [])
 
   // Subscribe to real-time updates
   useAlertSubscription(handleAlertChange, handleStatusChange)

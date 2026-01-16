@@ -125,7 +125,7 @@ export async function getConversasAtivas(): Promise<number> {
     const count = await prisma.conversation.count({
       where: {
         status: {
-          in: ['ai_handling', 'human_required'],
+          in: ['IA', 'HUMANO'],
         },
       },
     })

@@ -72,7 +72,7 @@ export function useAlertSubscription(
           }
         }
       )
-      .on('system', (payload: any) => {
+      .on('system', {}, (payload: any) => {
         // Handle connection status changes
         if (payload.status) {
           const newStatus: SubscriptionStatus =
@@ -168,7 +168,7 @@ export function useAlertDetailSubscription(
           }
         }
       )
-      .on('system', (payload: any) => {
+      .on('system', {}, (payload: any) => {
         if (payload.status) {
           const newStatus: SubscriptionStatus =
             payload.status === 'ok' ? 'subscribed' :
