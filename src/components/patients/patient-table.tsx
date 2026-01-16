@@ -8,7 +8,15 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Eye, UserPlus } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Eye, UserPlus, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { PaginationControls } from './pagination-controls';
 
 interface Patient {
   id: string;
@@ -204,6 +212,16 @@ export async function PatientTable(props: PatientTableProps) {
           </Link>
         ))}
       </div>
+
+      {/* Pagination controls */}
+      {pagination.totalPages > 1 && (
+        <PaginationControls
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
+          currentLimit={props.limit}
+          searchParams={{ q: props.q, telefone: props.telefone, cpf: props.cpf }}
+        />
+      )}
 
       {/* Pagination info */}
       <div className="text-sm text-gray-600 text-center">
