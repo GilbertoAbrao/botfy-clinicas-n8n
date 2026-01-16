@@ -178,3 +178,22 @@ model Alert {
   @@index([patientId])
   @@map("alerts")
 }
+
+// Patient document storage (links to Supabase Storage)
+model PatientDocument {
+  id          String   @id @default(uuid()) @db.Uuid
+  patientId   String   @map("patient_id") @db.Uuid
+  filename    String
+  fileType    String   @map("file_type")
+  fileSize    Int      @map("file_size")
+  storagePath String   @map("storage_path")
+  uploadedBy  String   @map("uploaded_by")
+  uploadedAt  DateTime @default(now()) @map("uploaded_at")
+
+  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  uploader    User     @relation(fields: [uploadedBy], references: [id])
+
+  @@index([patientId])
+  @@index([uploadedAt])
+  @@map("patient_documents")
+}
