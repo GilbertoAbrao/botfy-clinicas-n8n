@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth/session';
+import { getCurrentUserWithRole } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
 import { logAudit } from '@/lib/audit/logger';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
@@ -7,20 +7,21 @@ import { validateFile } from '@/lib/validations/document';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Await params (Next.js 15+)
+    const { id: patientId } = await params;
+
     // Check authentication and authorization
-    const session = await getSession();
-    if (!session?.user) {
+    const user = await getCurrentUserWithRole();
+    if (!user) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'ATENDENTE') {
+    if (user.role !== 'ADMIN' && user.role !== 'ATENDENTE') {
       return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
-
-    const patientId = params.id;
 
     // Fetch documents for patient
     const documents = await prisma.patientDocument.findMany({
@@ -35,7 +36,7 @@ export async function GET(
 
     // Log audit entry
     await logAudit({
-      userId: session.user.id,
+      userId: user.id,
       action: 'VIEW_DOCUMENTS',
       resource: 'patient_documents',
       resourceId: patientId,
@@ -56,20 +57,21 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Await params (Next.js 15+)
+    const { id: patientId } = await params;
+
     // Check authentication and authorization
-    const session = await getSession();
-    if (!session?.user) {
+    const user = await getCurrentUserWithRole();
+    if (!user) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
     }
 
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'ATENDENTE') {
+    if (user.role !== 'ADMIN' && user.role !== 'ATENDENTE') {
       return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
     }
-
-    const patientId = params.id;
 
     // Parse multipart form data
     const formData = await req.formData();
@@ -118,7 +120,7 @@ export async function POST(
         fileType: file.type,
         fileSize: file.size,
         storagePath,
-        uploadedBy: session.user.id
+        uploadedBy: user.id
       },
       include: {
         uploader: {
@@ -129,7 +131,7 @@ export async function POST(
 
     // Log audit entry
     await logAudit({
-      userId: session.user.id,
+      userId: user.id,
       action: 'UPLOAD_DOCUMENT',
       resource: 'patient_documents',
       resourceId: patientId,
