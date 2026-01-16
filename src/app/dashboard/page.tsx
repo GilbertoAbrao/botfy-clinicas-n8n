@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation'
 import { getCurrentUser, getCurrentUserWithRole } from '@/lib/auth/session'
 import { signOut } from '@/lib/auth/actions'
+import { getUnresolvedAlertCount } from '@/lib/api/alerts'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { Role } from '@prisma/client'
 
@@ -13,11 +15,28 @@ export default async function DashboardPage() {
     redirect('/login')
   }
 
+  // Get unresolved alert count for badge
+  const unresolvedCount = await getUnresolvedAlertCount()
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-semibold">Botfy ClinicOps</h1>
+          <div className="flex items-center gap-6">
+            <h1 className="text-xl font-semibold">Botfy ClinicOps</h1>
+            <nav className="flex items-center gap-2">
+              <Link href="/dashboard/alerts">
+                <Button variant="ghost" size="sm" className="relative">
+                  Alertas
+                  {unresolvedCount > 0 && (
+                    <Badge className="ml-2 bg-blue-500 hover:bg-blue-600 text-white">
+                      {unresolvedCount}
+                    </Badge>
+                  )}
+                </Button>
+              </Link>
+            </nav>
+          </div>
           <div className="flex items-center gap-4">
             {userWithRole?.role === Role.ADMIN && (
               <>
