@@ -11,12 +11,13 @@ datasource db {
 
 // Supabase Auth users table (managed by Supabase Auth, reference only)
 model User {
-  id        String     @id @default(uuid()) @db.Uuid
-  email     String     @unique
-  role      Role       @default(ATENDENTE)
-  createdAt DateTime   @default(now()) @map("created_at")
-  updatedAt DateTime   @updatedAt @map("updated_at")
-  auditLogs AuditLog[]
+  id             String     @id @default(uuid()) @db.Uuid
+  email          String     @unique
+  role           Role       @default(ATENDENTE)
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+  auditLogs      AuditLog[]
+  resolvedAlerts Alert[]
 
   @@map("users")
 }
@@ -24,6 +25,42 @@ model User {
 enum Role {
   ADMIN
   ATENDENTE
+}
+
+// Alert type enums
+enum AlertType {
+  conversas_travadas
+  pre_checkins_pendentes
+  agendamentos_nao_confirmados
+  handoff_normal
+  handoff_erro
+}
+
+enum AlertPriority {
+  urgent
+  high
+  low
+}
+
+enum AlertStatus {
+  new
+  in_progress
+  resolved
+  dismissed
+}
+
+enum AppointmentStatus {
+  confirmed
+  tentative
+  no_show
+  cancelled
+  completed
+}
+
+enum ConversationStatus {
+  IA
+  HUMANO
+  FINALIZADO
 }
 
 // HIPAA-compliant audit logging (6-year retention required)
@@ -44,4 +81,100 @@ model AuditLog {
   @@index([createdAt])
   @@index([resource])
   @@map("audit_logs")
+}
+
+// Patient information (PHI - Protected Health Information)
+model Patient {
+  id                String         @id @default(uuid()) @db.Uuid
+  nome              String
+  telefone          String
+  email             String?
+  cpf               String?        @unique
+  dataNascimento    DateTime?      @map("data_nascimento")
+  endereco          String?
+  convenio          String?
+  numeroCarteirinha String?        @map("numero_carteirinha")
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+
+  appointments      Appointment[]
+  conversations     Conversation[]
+  alerts            Alert[]
+
+  @@index([telefone])
+  @@index([cpf])
+  @@index([nome])
+  @@map("patients")
+}
+
+// Appointment scheduling
+model Appointment {
+  id          String            @id @default(uuid()) @db.Uuid
+  patientId   String            @map("patient_id") @db.Uuid
+  providerId  String?           @map("provider_id") @db.Uuid
+  serviceType String            @map("service_type")
+  scheduledAt DateTime          @map("scheduled_at")
+  duration    Int               // minutes
+  status      AppointmentStatus @default(tentative)
+  confirmedAt DateTime?         @map("confirmed_at")
+  notes       String?
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+
+  patient     Patient           @relation(fields: [patientId], references: [id])
+  alerts      Alert[]
+
+  @@index([patientId])
+  @@index([scheduledAt])
+  @@index([status])
+  @@map("appointments")
+}
+
+// WhatsApp conversation tracking
+model Conversation {
+  id            String             @id @default(uuid()) @db.Uuid
+  patientId     String             @map("patient_id") @db.Uuid
+  whatsappId    String             @map("whatsapp_id")
+  status        ConversationStatus @default(IA)
+  messages      Json[]             // Array of message objects
+  lastMessageAt DateTime           @map("last_message_at")
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
+
+  patient       Patient            @relation(fields: [patientId], references: [id])
+  alerts        Alert[]
+
+  @@index([patientId])
+  @@index([lastMessageAt])
+  @@index([status])
+  @@map("conversations")
+}
+
+// Alert system
+model Alert {
+  id             String        @id @default(uuid()) @db.Uuid
+  type           AlertType
+  priority       AlertPriority
+  status         AlertStatus   @default(new)
+  title          String
+  description    String?
+  patientId      String?       @map("patient_id") @db.Uuid
+  appointmentId  String?       @map("appointment_id") @db.Uuid
+  conversationId String?       @map("conversation_id") @db.Uuid
+  metadata       Json?         // Additional context like error messages
+  resolvedAt     DateTime?     @map("resolved_at")
+  resolvedBy     String?       @map("resolved_by") @db.Uuid
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  patient        Patient?      @relation(fields: [patientId], references: [id])
+  appointment    Appointment?  @relation(fields: [appointmentId], references: [id])
+  conversation   Conversation? @relation(fields: [conversationId], references: [id])
+  resolver       User?         @relation(fields: [resolvedBy], references: [id])
+
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt])
+  @@index([patientId])
+  @@map("alerts")
 }
