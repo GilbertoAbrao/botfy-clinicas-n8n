@@ -7,12 +7,12 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
-    <div className="flex min-h-screen">
-      {/* Sidebar */}
-      <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:border-r lg:bg-white">
-        <div className="flex h-16 items-center border-b px-6">
-          <h1 className="text-xl font-bold">
-            <span className="text-primary">Botfy</span> ClinicOps
+    <div className="flex min-h-screen bg-gray-50">
+      {/* Sidebar - Always visible on desktop */}
+      <aside className="hidden md:flex md:flex-col md:w-64 md:border-r md:bg-white md:shadow-sm">
+        <div className="flex h-16 items-center border-b px-6 bg-blue-600">
+          <h1 className="text-xl font-bold text-white">
+            Botfy ClinicOps
           </h1>
         </div>
         <div className="flex-1 overflow-y-auto p-4">
@@ -21,15 +21,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="sticky top-0 z-10 flex h-16 items-center border-b bg-white px-6">
+        <header className="sticky top-0 z-10 flex h-16 items-center border-b bg-white px-6 shadow-sm">
           <div className="flex-1" />
           <UserNav />
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 bg-gray-50 p-6">
+        <main className="flex-1 p-6">
           <div className="mx-auto max-w-7xl">
             {children}
           </div>

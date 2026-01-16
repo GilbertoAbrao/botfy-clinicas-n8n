@@ -6,7 +6,7 @@ import { checkPermission, PERMISSIONS } from '@/lib/rbac/permissions';
 import { PatientSearch } from '@/components/patients/patient-search';
 import { PatientTable } from '@/components/patients/patient-table';
 import { Button } from '@/components/ui/button';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, ArrowLeft } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
 
@@ -63,6 +63,16 @@ export default async function PacientesPage({ searchParams }: PageProps) {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {/* Back Button */}
+        <div>
+          <Link href="/dashboard">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar para Dashboard
+            </Button>
+          </Link>
+        </div>
+
         {/* Page header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>

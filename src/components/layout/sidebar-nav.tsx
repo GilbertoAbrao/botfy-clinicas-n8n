@@ -11,7 +11,6 @@ import {
   Settings,
   FileText
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 const navigation = [
   {
@@ -63,12 +62,11 @@ export function SidebarNav() {
           <Link
             key={item.name}
             href={item.href}
-            className={cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+            className={
               isActive
-                ? 'bg-primary text-primary-foreground'
-                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-            )}
+                ? 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium bg-blue-50 text-blue-700 transition-colors'
+                : 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors'
+            }
           >
             <item.icon className="h-5 w-5" />
             {item.name}

@@ -1,95 +1,40 @@
 import { redirect } from 'next/navigation'
-import { getCurrentUser, getCurrentUserWithRole } from '@/lib/auth/session'
-import { signOut } from '@/lib/auth/actions'
-import { getUnresolvedAlertCount } from '@/lib/api/alerts'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import Link from 'next/link'
-import { Role } from '@prisma/client'
+import { getCurrentUser } from '@/lib/auth/session'
 import { MetricsDashboard } from '@/components/dashboard/metrics-dashboard'
 import { ServiceStatus } from '@/components/dashboard/service-status'
+import { DashboardLayout } from '@/components/layout/dashboard-layout'
 
 export default async function DashboardPage() {
   const user = await getCurrentUser()
-  const userWithRole = await getCurrentUserWithRole()
 
   if (!user) {
     redirect('/login')
   }
 
-  // Get unresolved alert count for badge
-  const unresolvedCount = await getUnresolvedAlertCount()
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-6">
-            <h1 className="text-xl font-semibold">Botfy ClinicOps</h1>
-            <nav className="flex items-center gap-2">
-              <Link href="/dashboard/alerts">
-                <Button variant="ghost" size="sm" className="relative">
-                  Alertas
-                  {unresolvedCount > 0 && (
-                    <Badge className="ml-2 bg-blue-500 hover:bg-blue-600 text-white">
-                      {unresolvedCount}
-                    </Badge>
-                  )}
-                </Button>
-              </Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-4">
-            {userWithRole?.role === Role.ADMIN && (
-              <>
-                <Link href="/admin/users">
-                  <Button variant="ghost" size="sm">
-                    Usuários
-                  </Button>
-                </Link>
-                <Link href="/admin/audit-logs">
-                  <Button variant="ghost" size="sm">
-                    Audit Logs
-                  </Button>
-                </Link>
-              </>
-            )}
-            <span className="text-sm text-gray-600">
-              {user.email}
-              {userWithRole?.role && ` (${userWithRole.role})`}
-            </span>
-            <form action={signOut}>
-              <Button variant="outline" size="sm">
-                Sair
-              </Button>
-            </form>
-          </div>
+    <DashboardLayout>
+      <div className="space-y-8">
+        {/* Page header */}
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="text-gray-600 mt-1">
+            Visão geral do sistema e métricas operacionais
+          </p>
         </div>
-      </header>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-8">
-          {/* Page header */}
-          <div>
-            <h1 className="text-2xl font-bold mb-2">Dashboard</h1>
-            <p className="text-gray-600">
-              Visão geral do sistema e métricas operacionais
-            </p>
-          </div>
 
-          {/* Metrics Dashboard */}
-          <section>
-            <h2 className="text-lg font-semibold mb-4 text-gray-900">
-              Métricas em Tempo Real
-            </h2>
-            <MetricsDashboard />
-          </section>
+        {/* Metrics Dashboard */}
+        <section>
+          <h2 className="text-lg font-semibold mb-4 text-gray-900">
+            Métricas em Tempo Real
+          </h2>
+          <MetricsDashboard />
+        </section>
 
-          {/* Service Status */}
-          <section>
-            <ServiceStatus />
-          </section>
-        </div>
-      </main>
-    </div>
+        {/* Service Status */}
+        <section>
+          <ServiceStatus />
+        </section>
+      </div>
+    </DashboardLayout>
   )
 }

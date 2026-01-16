@@ -1,4 +1,5 @@
 import { Suspense } from 'react'
+import Link from 'next/link'
 import { fetchAlerts, getUnresolvedAlertCount } from '@/lib/api/alerts'
 import { AlertList } from '@/components/alerts/alert-list'
 import { AlertListRealtime } from '@/components/alerts/alert-list-realtime'
@@ -7,8 +8,11 @@ import { getCurrentUserWithRole } from '@/lib/auth/session'
 import { logAudit, AuditAction } from '@/lib/audit/logger'
 import { redirect } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { ArrowLeft } from 'lucide-react'
 import { AlertType, AlertStatus } from '@prisma/client'
 import { AlertSortBy, AlertFilters as AlertFiltersType } from '@/lib/api/alerts'
+import { DashboardLayout } from '@/components/layout/dashboard-layout'
 
 type FilterValues = Partial<AlertFiltersType>
 
@@ -82,21 +86,32 @@ export default async function AlertsPage({ searchParams }: PageProps) {
   })
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Page header */}
-      <div>
-        <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-3xl font-bold text-gray-900">Alertas</h1>
-          {unresolvedCount > 0 && (
-            <Badge className="bg-blue-500 hover:bg-blue-600 text-white">
-              {unresolvedCount} {unresolvedCount === 1 ? 'novo' : 'novos'}
-            </Badge>
-          )}
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Back Button */}
+        <div>
+          <Link href="/dashboard">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar para Dashboard
+            </Button>
+          </Link>
         </div>
-        <p className="text-gray-600">
-          Todos os problemas que precisam de atenção
-        </p>
-      </div>
+
+        {/* Page header */}
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-bold text-gray-900">Alertas</h1>
+            {unresolvedCount > 0 && (
+              <Badge className="bg-blue-500 hover:bg-blue-600 text-white">
+                {unresolvedCount} {unresolvedCount === 1 ? 'novo' : 'novos'}
+              </Badge>
+            )}
+          </div>
+          <p className="text-gray-600">
+            Todos os problemas que precisam de atenção
+          </p>
+        </div>
 
       {/* Filters (sticky on desktop) */}
       <div className="md:sticky md:top-0 md:z-10 md:bg-white md:pt-4 md:pb-4 md:-mx-6 md:px-6 md:border-b">
@@ -105,13 +120,14 @@ export default async function AlertsPage({ searchParams }: PageProps) {
         </Suspense>
       </div>
 
-      {/* Alert list with real-time updates */}
-      <div>
-        <Suspense fallback={<AlertList alerts={[]} loading />}>
-          <AlertListRealtime initialAlerts={alerts} />
-        </Suspense>
+        {/* Alert list with real-time updates */}
+        <div>
+          <Suspense fallback={<AlertList alerts={[]} loading />}>
+            <AlertListRealtime initialAlerts={alerts} />
+          </Suspense>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   )
 }
 
