@@ -1,4 +1,5 @@
 import { notFound, redirect } from 'next/navigation'
+import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUserWithRole } from '@/lib/auth/session'
 import { logAudit, AuditAction } from '@/lib/audit/logger'
@@ -9,6 +10,9 @@ import { AppointmentHistory } from '@/components/patients/appointment-history'
 import { ConversationHistory } from '@/components/patients/conversation-history'
 import { DocumentSection } from '@/components/patients/document-section'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { DashboardLayout } from '@/components/layout/dashboard-layout'
+import { Button } from '@/components/ui/button'
+import { ArrowLeft } from 'lucide-react'
 
 interface PageProps {
   params: {
@@ -68,9 +72,20 @@ export default async function PatientProfilePage({ params }: PageProps) {
   })
 
   return (
-    <div className="space-y-6">
-      {/* Patient Header */}
-      <PatientHeader patient={patient} />
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Back Button */}
+        <div>
+          <Link href="/pacientes">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Voltar para Pacientes
+            </Button>
+          </Link>
+        </div>
+
+        {/* Patient Header */}
+        <PatientHeader patient={patient} />
 
       {/* Tabs Navigation */}
       <Tabs defaultValue="overview" className="space-y-6">
@@ -109,6 +124,7 @@ export default async function PatientProfilePage({ params }: PageProps) {
           <DocumentSection patientId={patient.id} />
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </DashboardLayout>
   )
 }

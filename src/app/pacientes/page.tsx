@@ -8,6 +8,7 @@ import { PatientTable } from '@/components/patients/patient-table';
 import { Button } from '@/components/ui/button';
 import { UserPlus } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DashboardLayout } from '@/components/layout/dashboard-layout';
 
 interface PageProps {
   searchParams: Promise<{
@@ -60,36 +61,38 @@ export default async function PacientesPage({ searchParams }: PageProps) {
   const params = await searchParams;
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-7xl">
-      {/* Page header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gerenciamento de Pacientes</h1>
-          <p className="text-gray-600 mt-1">Busque e gerencie informações dos pacientes</p>
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Page header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Gerenciamento de Pacientes</h1>
+            <p className="text-gray-600 mt-1">Busque e gerencie informações dos pacientes</p>
+          </div>
+          <Link href="/pacientes/novo" className="mt-4 sm:mt-0">
+            <Button className="w-full sm:w-auto">
+              <UserPlus className="mr-2 h-4 w-4" />
+              Novo Paciente
+            </Button>
+          </Link>
         </div>
-        <Link href="/pacientes/novo" className="mt-4 sm:mt-0">
-          <Button className="w-full sm:w-auto">
-            <UserPlus className="mr-2 h-4 w-4" />
-            Novo Paciente
-          </Button>
-        </Link>
-      </div>
 
-      {/* Search component */}
-      <div className="mb-6">
-        <PatientSearch />
-      </div>
+        {/* Search component */}
+        <div>
+          <PatientSearch />
+        </div>
 
-      {/* Patient table with Suspense boundary */}
-      <Suspense fallback={<TableSkeleton />}>
-        <PatientTable
-          q={params.q}
-          telefone={params.telefone}
-          cpf={params.cpf}
-          page={params.page ? parseInt(params.page) : 1}
-          limit={params.limit ? parseInt(params.limit) : 20}
-        />
-      </Suspense>
-    </div>
+        {/* Patient table with Suspense boundary */}
+        <Suspense fallback={<TableSkeleton />}>
+          <PatientTable
+            q={params.q}
+            telefone={params.telefone}
+            cpf={params.cpf}
+            page={params.page ? parseInt(params.page) : 1}
+            limit={params.limit ? parseInt(params.limit) : 20}
+          />
+        </Suspense>
+      </div>
+    </DashboardLayout>
   );
 }
