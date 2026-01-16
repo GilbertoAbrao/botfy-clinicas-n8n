@@ -1,17 +1,17 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-16
-**Status:** Phase 1 Complete & Tested ✅
-**Current Phase:** Phase 1 - Secure Foundation (COMPLETE & VERIFIED ✅)
+**Status:** Phase 2 Wave 1 Complete ✅
+**Current Phase:** Phase 2 - Alert Dashboard (IN PROGRESS - Wave 1 done, Wave 2 ready)
 **Current Milestone:** v1.0
 
 ---
 
 ## Current State
 
-**Stage:** Phase 1 Complete & Tested ✓ (All 5 plans executed + E2E tests passed)
-**Action:** Ready for Phase 2 (Alert Dashboard)
-**Blockers:** None (All database migrations and RLS policies applied)
+**Stage:** Phase 2 Wave 1 Complete ✓ (Plan 02-01 executed)
+**Action:** Ready for Wave 2 - execute Plans 02-02 and 02-03 in parallel
+**Blockers:** Manual DB migration required (see Plan 02-01 SUMMARY)
 
 **Recently Completed:**
 - [x] Project initialized with PROJECT.md
@@ -37,11 +37,20 @@
   - ✅ Test users created via Supabase Admin API
   - ✅ RLS policies applied to PHI tables
 - [x] **PHASE 1: SECURE FOUNDATION - COMPLETE & TESTED!** 🎉
+- [x] **Plan 02-01: Database Schema & Core Models** ✅
+  - ✅ Prisma schema with 4 new models (Alert, Patient, Appointment, Conversation)
+  - ✅ 5 enums for type safety
+  - ✅ Migration SQL generated (manual application required)
+  - ✅ RLS policies created for all PHI tables
+  - ✅ Seed script with 8 test alerts
 
 **Next Steps:**
-1. Run production build to verify deployment readiness: `npm run build`
-2. Begin Phase 2: Alert Dashboard
-3. Optional: Run `/gsd:verify-work 1` for manual acceptance testing
+1. **REQUIRED:** Apply migration SQL via Supabase SQL Editor
+   - File: `prisma/migrations/20260116_add_alert_system/migration.sql`
+   - Then: `prisma/rls-policies-phase2.sql`
+   - Then: `npm run seed:phase2`
+2. Execute Plans 02-02 and 02-03 in parallel (Wave 2)
+3. Test E2E: Open two browser windows, verify real-time alert sync
 
 ---
 
@@ -50,7 +59,7 @@
 | Phase | Status | Requirements | Completed | Progress |
 |-------|--------|--------------|-----------|----------|
 | Phase 1: Secure Foundation | ✅ Complete (All 5 plans done) | 17 | 17 | 100% |
-| Phase 2: Alert Dashboard | Not Started | 16 | 0 | 0% |
+| Phase 2: Alert Dashboard | 🔄 In Progress (1/4 plans done) | 16 | 4 | 25% |
 | Phase 3: Patient Management | Not Started | 14 | 0 | 0% |
 | Phase 4: Calendar & Scheduling | Not Started | 15 | 0 | 0% |
 | Phase 5: Conversation Monitoring | Not Started | 10 | 0 | 0% |
@@ -58,7 +67,7 @@
 | Phase 7: System Configuration | Not Started | 14 | 0 | 0% |
 | Phase 8: Analytics & Smart Features | Not Started | 2 | 0 | 0% |
 
-**Overall Progress:** 17/79 requirements (22%)
+**Overall Progress:** 21/79 requirements (27%)
 
 ---
 
@@ -85,6 +94,12 @@
 16. ✅ 30-minute session timeout (inactivity logout)
 17. ✅ Error boundary and error handling utilities
 
+**Phase 2 - Alert Dashboard (IN PROGRESS):**
+18. ✅ Alert model with type, priority, status fields
+19. ✅ Patient model with PHI fields
+20. ✅ Appointment model with status tracking
+21. ✅ Conversation model with WhatsApp integration
+
 ### In Progress Requirements
 
 None yet.
@@ -105,6 +120,9 @@ None currently.
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-01-16 | JSONB for conversation messages | Avoid N+1 queries, simplify real-time updates |
+| 2026-01-16 | Nullable alert relations | Support edge cases (alerts without patients) |
+| 2026-01-16 | Manual migration SQL | Prisma CLI hanging on pooler connection |
 | 2026-01-15 | Security-first approach (Phase 1 before features) | CVEs are framework-level, HIPAA compliance non-negotiable |
 | 2026-01-15 | Alert dashboard as Phase 2 | Core differentiator, highest user value |
 | 2026-01-15 | 8-phase structure | Dependency-managed sequencing with research insights |
@@ -150,6 +168,33 @@ None yet (greenfield project).
 ---
 
 ## Recent Activity
+
+**2026-01-16 16:09 - Plan 02-01 Complete (Wave 1) 🎉**
+- ✅ Complete database schema for alert system
+- ✅ 4 new models: Alert, Patient, Appointment, Conversation
+- ✅ 5 enums for type safety (AlertType, AlertPriority, AlertStatus, AppointmentStatus, ConversationStatus)
+- ✅ Migration SQL generated (142 lines)
+- ✅ RLS policies for all PHI tables (223 lines)
+- ✅ Seed script with 3 patients, 5 appointments, 3 conversations, 8 alerts
+- 📦 4 atomic commits created (15 min execution)
+- 🎯 All indexes and foreign key constraints in place
+- ⚠️ **USER ACTION REQUIRED:**
+  - Apply migration SQL: `prisma/migrations/20260116_add_alert_system/migration.sql`
+  - Apply RLS policies: `prisma/rls-policies-phase2.sql`
+  - Run seed script: `npm run seed:phase2`
+- 🚀 Ready for Wave 2 (Plans 02-02 and 02-03 in parallel)
+
+**2026-01-16 11:00 - Phase 2 Planning Complete 📋**
+- ✅ Phase 2 planned with 4 executable plans
+- 📝 Plan 02-01: Database Schema & Core Models (Wave 1)
+- 📝 Plan 02-02: Alert List UI & Filtering (Wave 2)
+- 📝 Plan 02-03: Alert Detail View (Wave 2)
+- 📝 Plan 02-04: Real-time Updates & Metrics Dashboard (Wave 3)
+- 📊 16 requirements mapped to plans (ALERT-01 to ALERT-15, UX-01, UX-02, UX-08, UX-09)
+- 🏗️ Wave structure enables parallel execution (Plans 02-02 and 02-03)
+- 🎯 Estimated completion: ~4-6 hours with parallel execution
+- 📄 Phase summary created: `.planning/phases/02-alert-dashboard/02-PHASE-SUMMARY.md`
+- ⚡ Ready to execute: `/gsd:execute-phase 2`
 
 **2026-01-15 21:00 - Plan 01-05 Completed & PHASE 1 COMPLETE! 🎉**
 - ✅ HIPAA-compliant audit logging system implemented
