@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/auth/session';
+import { getCurrentUserWithRole } from '@/lib/auth/session';
 import { checkPermission, PERMISSIONS } from '@/lib/rbac/permissions';
 import { prisma } from '@/lib/prisma';
 import { logAudit } from '@/lib/audit/logger';
@@ -7,7 +7,7 @@ import { logAudit } from '@/lib/audit/logger';
 export async function GET(request: NextRequest) {
   try {
     // Authentication check
-    const user = await getCurrentUser();
+    const user = await getCurrentUserWithRole();
     if (!user) {
       return NextResponse.json(
         { error: 'Não autenticado' },
