@@ -9,7 +9,6 @@ export async function signIn(formData: FormData): Promise<void> {
   const password = formData.get('password') as string
 
   if (!email || !password) {
-    // For now, just stay on page - error handling will be added with toast in later phase
     return
   }
 
@@ -21,7 +20,6 @@ export async function signIn(formData: FormData): Promise<void> {
   })
 
   if (error) {
-    // For now, just stay on page - error handling will be added with toast in later phase
     return
   }
 
