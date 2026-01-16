@@ -17,6 +17,9 @@ interface PageProps {
 }
 
 export default async function PatientProfilePage({ params }: PageProps) {
+  // Await params (Next.js 15+)
+  const { id } = await params;
+
   // Authentication check
   const user = await getCurrentUserWithRole()
 
@@ -40,7 +43,7 @@ export default async function PatientProfilePage({ params }: PageProps) {
 
   // Fetch patient with relations
   const patient = await prisma.patient.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       appointments: {
         orderBy: { scheduledAt: 'desc' },
