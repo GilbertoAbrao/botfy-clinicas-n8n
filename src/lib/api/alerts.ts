@@ -11,6 +11,7 @@ export type AlertWithRelations = Alert & {
   patient: Patient | null
   appointment: Appointment | null
   conversation: Conversation | null
+  resolver?: { email: string } | null
 }
 
 export interface AlertFilters {
@@ -129,7 +130,7 @@ export async function getAlertById(id: string): Promise<AlertWithRelations | nul
         patient: true,
         appointment: true,
         conversation: true,
-        resolvedByUser: {
+        resolver: {
           select: {
             email: true,
           },
@@ -177,10 +178,12 @@ export async function updateAlertStatus(
       status,
     }
 
-    // Set resolvedAt and resolvedBy if status is resolved or dismissed
+    // Set resolvedAt and connect resolver if status is resolved or dismissed
     if (status === 'resolved' || status === 'dismissed') {
       updateData.resolvedAt = new Date()
-      updateData.resolvedBy = user.id
+      updateData.resolver = {
+        connect: { id: user.id }
+      }
     }
 
     const updatedAlert = await prisma.alert.update({
