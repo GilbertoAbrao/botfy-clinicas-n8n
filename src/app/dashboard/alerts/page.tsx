@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { fetchAlerts, getUnresolvedAlertCount } from '@/lib/api/alerts'
 import { AlertList } from '@/components/alerts/alert-list'
+import { AlertListRealtime } from '@/components/alerts/alert-list-realtime'
 import { AlertFiltersWrapper } from '@/components/alerts/alert-filters-wrapper'
 import { getCurrentUserWithRole } from '@/lib/auth/session'
 import { logAudit, AuditAction } from '@/lib/audit/logger'
@@ -104,10 +105,10 @@ export default async function AlertsPage({ searchParams }: PageProps) {
         </Suspense>
       </div>
 
-      {/* Alert list */}
+      {/* Alert list with real-time updates */}
       <div>
         <Suspense fallback={<AlertList alerts={[]} loading />}>
-          <AlertList alerts={alerts} />
+          <AlertListRealtime initialAlerts={alerts} />
         </Suspense>
       </div>
     </div>
