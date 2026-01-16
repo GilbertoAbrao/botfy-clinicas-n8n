@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/session';
-import { hasPermission } from '@/lib/rbac';
+import { getCurrentUser } from '@/lib/auth/session';
+import { checkPermission, PERMISSIONS } from '@/lib/rbac/permissions';
 import { prisma } from '@/lib/prisma';
-import { logAudit } from '@/lib/audit';
+import { logAudit } from '@/lib/audit/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Authorization check (ADMIN or ATENDENTE)
-    if (!hasPermission(user.role, 'view_patients')) {
+    if (!checkPermission(user.role, PERMISSIONS.VIEW_PATIENTS)) {
       return NextResponse.json(
         { error: 'Sem permissão para acessar pacientes' },
         { status: 403 }

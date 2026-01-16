@@ -1,8 +1,8 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { getCurrentUser } from '@/lib/session';
-import { hasPermission } from '@/lib/rbac';
+import { getCurrentUser } from '@/lib/auth/session';
+import { checkPermission, PERMISSIONS } from '@/lib/rbac/permissions';
 import { PatientSearch } from '@/components/patients/patient-search';
 import { PatientTable } from '@/components/patients/patient-table';
 import { Button } from '@/components/ui/button';
@@ -44,7 +44,7 @@ export default async function PacientesPage({ searchParams }: PageProps) {
   }
 
   // Verify authorization (ADMIN or ATENDENTE)
-  const canViewPatients = hasPermission(user.role, 'view_patients');
+  const canViewPatients = checkPermission(user.role, PERMISSIONS.VIEW_PATIENTS);
   if (!canViewPatients) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
