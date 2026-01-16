@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 interface AlertDetailProps {
   alert: AlertWithRelations
   onStatusChange?: () => void
+  onStatusChangeStart?: () => void
 }
 
 const alertTypeLabels: Record<string, string> = {
@@ -55,7 +56,7 @@ function copyToClipboard(text: string, label: string) {
   toast.success(`${label} copiado`)
 }
 
-export function AlertDetail({ alert, onStatusChange }: AlertDetailProps) {
+export function AlertDetail({ alert, onStatusChange, onStatusChangeStart }: AlertDetailProps) {
   const createdAt = new Date(alert.createdAt)
 
   // Parse conversation messages if available
@@ -128,6 +129,7 @@ export function AlertDetail({ alert, onStatusChange }: AlertDetailProps) {
             currentStatus={alert.status}
             alertId={alert.id}
             onStatusChange={onStatusChange}
+            onStatusChangeStart={onStatusChangeStart}
           />
           {alert.resolvedAt && (
             <div className="mt-4 pt-4 border-t text-sm text-muted-foreground">

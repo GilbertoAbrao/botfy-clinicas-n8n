@@ -21,6 +21,7 @@ interface AlertStatusUpdaterProps {
   currentStatus: AlertStatus
   alertId: string
   onStatusChange?: () => void
+  onStatusChangeStart?: () => void
 }
 
 const statusLabels: Record<AlertStatus, string> = {
@@ -41,6 +42,7 @@ export function AlertStatusUpdater({
   currentStatus,
   alertId,
   onStatusChange,
+  onStatusChangeStart,
 }: AlertStatusUpdaterProps) {
   const [isUpdating, setIsUpdating] = useState(false)
   const [showDialog, setShowDialog] = useState(false)
@@ -48,6 +50,11 @@ export function AlertStatusUpdater({
   const [note, setNote] = useState('')
 
   const handleStatusClick = (newStatus: AlertStatus) => {
+    // Notify parent that user is starting to edit
+    if (onStatusChangeStart) {
+      onStatusChangeStart()
+    }
+
     // For resolved/dismissed, show confirmation dialog
     if (newStatus === 'resolved' || newStatus === 'dismissed') {
       setPendingStatus(newStatus)
