@@ -214,20 +214,20 @@ Which phases cover which requirements. Updated by create-roadmap.
 | CAL-13 | Phase 4 | Not Started |
 | CAL-14 | Phase 4 | Not Started |
 | CAL-15 | Phase 4 | Not Started |
-| PAT-01 | Phase 3 | Not Started |
-| PAT-02 | Phase 3 | Not Started |
-| PAT-03 | Phase 3 | Not Started |
-| PAT-04 | Phase 3 | Not Started |
-| PAT-05 | Phase 3 | Not Started |
-| PAT-06 | Phase 3 | Not Started |
-| PAT-07 | Phase 3 | Not Started |
-| PAT-08 | Phase 3 | Not Started |
-| PAT-09 | Phase 3 | Not Started |
-| PAT-10 | Phase 3 | Not Started |
-| PAT-11 | Phase 3 | Not Started |
-| PAT-12 | Phase 3 | Not Started |
-| PAT-13 | Phase 3 | Not Started |
-| PAT-14 | Phase 3 | Not Started |
+| PAT-01 | Phase 3 | Complete |
+| PAT-02 | Phase 3 | Complete |
+| PAT-03 | Phase 3 | Complete |
+| PAT-04 | Phase 3 | Complete |
+| PAT-05 | Phase 3 | Complete |
+| PAT-06 | Phase 3 | Complete |
+| PAT-07 | Phase 3 | Complete |
+| PAT-08 | Phase 3 | Complete |
+| PAT-09 | Phase 3 | Complete |
+| PAT-10 | Phase 3 | Complete |
+| PAT-11 | Phase 3 | Complete |
+| PAT-12 | Phase 3 | Complete |
+| PAT-13 | Phase 3 | Complete |
+| PAT-14 | Phase 3 | Complete |
 | CONV-01 | Phase 5 | Not Started |
 | CONV-02 | Phase 5 | Not Started |
 | CONV-03 | Phase 5 | Not Started |
