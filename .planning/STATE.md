@@ -1,17 +1,17 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-16
-**Status:** Phase 2 Complete ✅
-**Current Phase:** Phase 2 - Alert Dashboard (COMPLETE)
+**Status:** Phase 3 In Progress ⚡
+**Current Phase:** Phase 3 - Patient Management (IN PROGRESS)
 **Current Milestone:** v1.0
 
 ---
 
 ## Current State
 
-**Stage:** Phase 2 Complete - All 4 plans executed
-**Action:** Ready for Phase 3 - Patient Management
-**Blockers:** Manual DB migration required for full E2E testing (see Plan 02-01 SUMMARY)
+**Stage:** Phase 3 In Progress - Plan 03-01 complete (1/4 plans executed)
+**Action:** Continue Phase 3 - Execute Plan 03-02 (Patient Profile Page)
+**Blockers:** None
 
 **Recently Completed:**
 - [x] Project initialized with PROJECT.md
@@ -67,15 +67,21 @@
   - ✅ Auto-refresh: metrics 5min, service status 2min
   - ✅ Toast notifications for urgent alerts and concurrent edits
 - [x] **PHASE 2: ALERT DASHBOARD - COMPLETE!** 🎉
+- [x] **Plan 03-01: Patient Search & List** ✅
+  - ✅ Patient list page at /pacientes with auth/RBAC protection
+  - ✅ Search API with nome/telefone/cpf filters and pagination
+  - ✅ Search UI with type selector, debouncing, URL-based state
+  - ✅ Responsive patient table (desktop table, mobile cards)
+  - ✅ Pagination controls (20/50/100 per page)
+  - ✅ Phone/CPF formatting utilities
+  - ✅ Audit logging for all PHI access
 
 **Next Steps:**
-1. **RECOMMENDED:** Apply migration SQL via Supabase SQL Editor for full E2E testing
+1. **READY:** Execute Plan 03-02 (Patient Profile Page)
+2. **RECOMMENDED:** Apply migration SQL via Supabase SQL Editor for full E2E testing
    - File: `prisma/migrations/20260116_add_alert_system/migration.sql`
    - Then: `prisma/rls-policies-phase2.sql`
    - Then: `npm run seed:phase2`
-2. **READY:** Begin Phase 3 - Patient Management
-3. Test real-time: Open two browser windows, verify alerts sync
-4. Configure service monitoring (optional): Set NEXT_PUBLIC_EVOLUTION_API_URL and NEXT_PUBLIC_N8N_URL
 
 ---
 
@@ -85,14 +91,14 @@
 |-------|--------|--------------|-----------|----------|
 | Phase 1: Secure Foundation | ✅ Complete (All 5 plans done) | 17 | 17 | 100% |
 | Phase 2: Alert Dashboard | ✅ Complete (All 4 plans done) | 16 | 16 | 100% |
-| Phase 3: Patient Management | Not Started | 14 | 0 | 0% |
+| Phase 3: Patient Management | ⚡ In Progress (1/4 plans done) | 14 | 3 | 21% |
 | Phase 4: Calendar & Scheduling | Not Started | 15 | 0 | 0% |
 | Phase 5: Conversation Monitoring | Not Started | 10 | 0 | 0% |
 | Phase 6: One-Click Interventions | Not Started | 1 | 0 | 0% |
 | Phase 7: System Configuration | Not Started | 14 | 0 | 0% |
 | Phase 8: Analytics & Smart Features | Not Started | 2 | 0 | 0% |
 
-**Overall Progress:** 33/79 requirements (42%)
+**Overall Progress:** 36/79 requirements (46%)
 
 ---
 
@@ -140,6 +146,11 @@
 35. ✅ Metrics dashboard (agendamentos hoje, taxa confirmação, conversas ativas)
 36. ✅ Service status monitoring (Evolution API, N8N, Supabase)
 
+**Phase 3 - Patient Management (IN PROGRESS):**
+37. ✅ User can search patients by name (PAT-01)
+38. ✅ User can search patients by phone number (PAT-02)
+39. ✅ User can search patients by CPF (PAT-03)
+
 ### In Progress Requirements
 
 None yet.
@@ -160,6 +171,10 @@ None currently.
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-01-16 | Use checkPermission with PERMISSIONS constants | Type safety and consistency with existing RBAC pattern |
+| 2026-01-16 | Debounce nome search (300ms), immediate for exact match | Partial match benefits from debouncing, exact match needs immediate feedback |
+| 2026-01-16 | URL params for all filter state | Enables shareable links, browser history, and refresh persistence |
+| 2026-01-16 | Server component for table, client for search/pagination | Table fetches server-side (RSC caching), search/pagination need client interaction |
 | 2026-01-16 | Supabase real-time over polling | More efficient, lower latency, better UX for multi-user scenarios |
 | 2026-01-16 | Mandatory cleanup functions for subscriptions | Prevent memory leaks from stale WebSocket connections |
 | 2026-01-16 | 5-minute cache for metrics | Balance data freshness with database load |
