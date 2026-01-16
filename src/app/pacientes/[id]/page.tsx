@@ -7,6 +7,7 @@ import { ContactInfoSection } from '@/components/patients/contact-info-section'
 import { PatientStats } from '@/components/patients/patient-stats'
 import { AppointmentHistory } from '@/components/patients/appointment-history'
 import { ConversationHistory } from '@/components/patients/conversation-history'
+import { DocumentSection } from '@/components/patients/document-section'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 interface PageProps {
@@ -74,6 +75,7 @@ export default async function PatientProfilePage({ params }: PageProps) {
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
           <TabsTrigger value="appointments">Agendamentos</TabsTrigger>
           <TabsTrigger value="conversations">Conversas</TabsTrigger>
+          <TabsTrigger value="documents">Documentos</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -97,6 +99,11 @@ export default async function PatientProfilePage({ params }: PageProps) {
                 : [],
             }))}
           />
+        </TabsContent>
+
+        {/* Documents Tab */}
+        <TabsContent value="documents">
+          <DocumentSection patientId={patient.id} />
         </TabsContent>
       </Tabs>
     </div>

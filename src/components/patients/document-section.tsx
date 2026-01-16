@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Upload, Download, Trash2, FileText, File } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -48,9 +48,9 @@ export function DocumentSection({ patientId }: DocumentSectionProps) {
   }, [patientId]);
 
   // Load documents on mount
-  useState(() => {
+  useEffect(() => {
     fetchDocuments();
-  });
+  }, [fetchDocuments]);
 
   // Dropzone for file selection
   const onDrop = useCallback((acceptedFiles: File[]) => {
