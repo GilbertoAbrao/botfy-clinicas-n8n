@@ -1,17 +1,17 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-16
-**Status:** Phase 2 Wave 2 In Progress ⏳
-**Current Phase:** Phase 2 - Alert Dashboard (IN PROGRESS - Wave 1 done, Wave 2 executing)
+**Status:** Phase 2 Wave 2 Complete ✅
+**Current Phase:** Phase 2 - Alert Dashboard (IN PROGRESS - Wave 1 & 2 done, Wave 3 ready)
 **Current Milestone:** v1.0
 
 ---
 
 ## Current State
 
-**Stage:** Phase 2 Wave 2 In Progress (Plan 02-02 complete, Plan 02-03 ready)
-**Action:** Execute Plan 02-03 (Alert Detail View)
-**Blockers:** Manual DB migration required for full testing (see Plan 02-01 SUMMARY)
+**Stage:** Phase 2 Wave 2 Complete (Plans 02-02 and 02-03 done)
+**Action:** Ready for Wave 3 - execute Plan 02-04 (Real-time Updates)
+**Blockers:** Manual DB migration required for full E2E testing (see Plan 02-01 SUMMARY)
 
 **Recently Completed:**
 - [x] Project initialized with PROJECT.md
@@ -50,15 +50,21 @@
   - ✅ Alert list page at /dashboard/alerts
   - ✅ Navigation integration with unresolved count badge
   - ✅ Mobile-first design with 44px tap targets
+- [x] **Plan 02-03: Alert Detail View** ✅
+  - ✅ Conversation thread component with compact mode (last 10 messages)
+  - ✅ Alert status updater with confirmation dialogs
+  - ✅ Alert detail component with 6 sections (header, status, patient, appointment, conversation, actions)
+  - ✅ Alert detail page at /dashboard/alerts/[id]
+  - ✅ Click-to-call/email functionality with copy buttons
+  - ✅ Phase 6 placeholder buttons (disabled with tooltips)
 
 **Next Steps:**
 1. **REQUIRED:** Apply migration SQL via Supabase SQL Editor (blocking for E2E testing)
    - File: `prisma/migrations/20260116_add_alert_system/migration.sql`
    - Then: `prisma/rls-policies-phase2.sql`
    - Then: `npm run seed:phase2`
-2. Execute Plan 02-03 (Alert Detail View)
-3. Then Plan 02-04 (Real-time Updates & Metrics Dashboard)
-4. Test E2E: Verify alert list, filters, sorting, navigation
+2. Execute Plan 02-04 (Real-time Updates & Metrics Dashboard)
+3. Test E2E: Verify alert list, detail view, status updates, filters
 
 ---
 
@@ -67,7 +73,7 @@
 | Phase | Status | Requirements | Completed | Progress |
 |-------|--------|--------------|-----------|----------|
 | Phase 1: Secure Foundation | ✅ Complete (All 5 plans done) | 17 | 17 | 100% |
-| Phase 2: Alert Dashboard | 🔄 In Progress (2/4 plans done) | 16 | 10 | 63% |
+| Phase 2: Alert Dashboard | 🔄 In Progress (3/4 plans done) | 16 | 13 | 81% |
 | Phase 3: Patient Management | Not Started | 14 | 0 | 0% |
 | Phase 4: Calendar & Scheduling | Not Started | 15 | 0 | 0% |
 | Phase 5: Conversation Monitoring | Not Started | 10 | 0 | 0% |
@@ -113,6 +119,12 @@
 25. ✅ Alert list page at /dashboard/alerts
 26. ✅ Navigation integration with unresolved count badge
 27. ✅ Mobile-first design with 44px tap targets
+28. ✅ Alert detail page at /dashboard/alerts/[id]
+29. ✅ Alert detail shows patient contact (name, phone, email with click-to-call/email)
+30. ✅ Alert detail shows appointment info (date, time, service, status)
+31. ✅ Alert detail shows conversation thread (last 10 messages with AI/human labels)
+32. ✅ Status update functionality (new → in_progress → resolved/dismissed)
+33. ✅ Action button placeholders for Phase 6 interventions
 
 ### In Progress Requirements
 
@@ -134,6 +146,10 @@ None currently.
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-01-16 | Client-server component split for detail page | Server fetches data (RSC caching), client handles mutations and refresh |
+| 2026-01-16 | Safe JSON message parsing with type guards | Conversation.messages is Prisma.JsonValue, needs runtime validation |
+| 2026-01-16 | Compact conversation mode (last 10 messages) | Balance information density with performance, link to Phase 5 for full history |
+| 2026-01-16 | Phase 6 placeholder buttons with tooltips | Show what's coming, prepare users for one-click interventions |
 | 2026-01-16 | Server Actions for alert API | Better RSC integration, simpler auth context |
 | 2026-01-16 | URL-based filter persistence | Shareable links, browser history, refresh persistence |
 | 2026-01-16 | 44px minimum tap targets | iOS/Android guidelines, accessibility |
@@ -186,6 +202,19 @@ None yet (greenfield project).
 ---
 
 ## Recent Activity
+
+**2026-01-16 16:24 - Plan 02-03 Complete (Wave 2 Complete) 🎉**
+- ✅ Alert detail page at /dashboard/alerts/[id] with full context
+- ✅ Conversation thread component: Last 10 messages with chat bubbles, AI/human labels
+- ✅ Alert status updater: Confirmation dialogs, loading states, success feedback
+- ✅ Alert detail component: 6 sections (header, status, patient, appointment, conversation, actions)
+- ✅ Patient contact: Click-to-call/email with copy buttons
+- ✅ Phase 6 placeholders: Disabled intervention buttons with tooltips
+- ✅ Client-server split: Server fetches, client handles refresh
+- ✅ Safe JSON parsing: Type guards for conversation messages
+- 📦 5 atomic commits created (10 min execution)
+- 🎯 Build verification passed
+- 🚀 Ready for Wave 3 (Plan 02-04: Real-time Updates)
 
 **2026-01-16 16:20 - Plan 02-02 Complete (Wave 2 - 1/2) 🎉**
 - ✅ Alert list page at /dashboard/alerts with responsive design
