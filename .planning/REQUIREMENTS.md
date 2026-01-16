@@ -184,21 +184,21 @@ Which phases cover which requirements. Updated by create-roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ALERT-01 | Phase 2 | Not Started |
-| ALERT-02 | Phase 2 | Not Started |
-| ALERT-03 | Phase 2 | Not Started |
-| ALERT-04 | Phase 2 | Not Started |
-| ALERT-05 | Phase 2 | Not Started |
-| ALERT-06 | Phase 2 | Not Started |
-| ALERT-07 | Phase 2 | Not Started |
-| ALERT-08 | Phase 2 | Not Started |
+| ALERT-01 | Phase 2 | Complete |
+| ALERT-02 | Phase 2 | Complete |
+| ALERT-03 | Phase 2 | Complete |
+| ALERT-04 | Phase 2 | Complete |
+| ALERT-05 | Phase 2 | Complete |
+| ALERT-06 | Phase 2 | Complete |
+| ALERT-07 | Phase 2 | Complete |
+| ALERT-08 | Phase 2 | Complete |
 | ALERT-09 | Phase 8 | Not Started |
 | ALERT-10 | Phase 8 | Not Started |
 | ALERT-11 | Phase 6 | Not Started |
-| ALERT-12 | Phase 2 | Not Started |
-| ALERT-13 | Phase 2 | Not Started |
-| ALERT-14 | Phase 2 | Not Started |
-| ALERT-15 | Phase 2 | Not Started |
+| ALERT-12 | Phase 2 | Complete |
+| ALERT-13 | Phase 2 | Complete |
+| ALERT-14 | Phase 2 | Complete |
+| ALERT-15 | Phase 2 | Complete |
 | CAL-01 | Phase 4 | Not Started |
 | CAL-02 | Phase 4 | Not Started |
 | CAL-03 | Phase 4 | Not Started |
@@ -264,15 +264,15 @@ Which phases cover which requirements. Updated by create-roadmap.
 | AUTH-10 | Phase 1 | Not Started |
 | AUTH-11 | Phase 1 | Not Started |
 | AUTH-12 | Phase 1 | Not Started |
-| UX-01 | Phase 2 | Not Started |
-| UX-02 | Phase 2 | Not Started |
+| UX-01 | Phase 2 | Complete |
+| UX-02 | Phase 2 | Complete |
 | UX-03 | Phase 1 | Not Started |
 | UX-04 | Phase 1 | Not Started |
 | UX-05 | Phase 1 | Not Started |
 | UX-06 | Phase 1 | Not Started |
 | UX-07 | Phase 1 | Not Started |
-| UX-08 | Phase 2 | Not Started |
-| UX-09 | Phase 2 | Not Started |
+| UX-08 | Phase 2 | Complete |
+| UX-09 | Phase 2 | Complete |
 
 **Coverage:**
 - v1 requirements: 79 total
