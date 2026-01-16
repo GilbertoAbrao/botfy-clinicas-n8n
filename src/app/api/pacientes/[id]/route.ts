@@ -5,7 +5,7 @@ import { logAudit, AuditAction } from '@/lib/audit/logger'
 
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Authentication check
@@ -20,9 +20,12 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
+    // Await params (Next.js 15+ async params)
+    const { id } = await params
+
     // Fetch patient with relations
     const patient = await prisma.patient.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         appointments: {
           orderBy: { scheduledAt: 'desc' },
