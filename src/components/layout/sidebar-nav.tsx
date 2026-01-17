@@ -50,10 +50,11 @@ const navigation = [
     enabled: true,
   },
   {
-    name: 'Configurações',
-    href: '/configuracoes',
+    name: 'Configuracoes',
+    href: '/admin/configuracoes',
     icon: Settings,
-    enabled: false, // Em breve
+    enabled: true,
+    adminOnly: true,
   },
 ];
 
