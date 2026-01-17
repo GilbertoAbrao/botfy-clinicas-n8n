@@ -39,10 +39,32 @@ export function CalendarView() {
       defaultView: view,
       events: events.map(e => ({
         id: e.id,
-        title: e.title,
+        title: `[${e.providerName}] ${e.title}`,
         start: e.start.toISOString(),
         end: e.end.toISOString(),
+        calendarId: e.providerId, // Use provider as calendar category for coloring
       })),
+      calendars: {
+        // Create a calendar category for each unique provider
+        ...events.reduce((acc, e) => {
+          if (!acc[e.providerId]) {
+            acc[e.providerId] = {
+              colorName: e.providerId,
+              lightColors: {
+                main: e.providerColor,
+                container: e.providerColor + '20', // 20% opacity
+                onContainer: e.providerColor,
+              },
+              darkColors: {
+                main: e.providerColor,
+                onContainer: '#fff',
+                container: e.providerColor + '30',
+              },
+            }
+          }
+          return acc
+        }, {} as Record<string, any>),
+      },
       plugins: [eventsService],
       locale: 'pt-BR',
       callbacks: {
