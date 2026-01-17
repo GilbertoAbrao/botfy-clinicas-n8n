@@ -27,9 +27,9 @@ const navigation = [
   },
   {
     name: 'Agendamentos',
-    href: '/agendamentos',
+    href: '/agenda',
     icon: Calendar,
-    enabled: false, // Em breve
+    enabled: true,
   },
   {
     name: 'Conversas',

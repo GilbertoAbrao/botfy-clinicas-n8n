@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUserWithRole } from '@/lib/auth/session'
-import { createServerClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { logAudit, AuditAction } from '@/lib/audit/logger'
 import { z } from 'zod'
 
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = await createServerClient()
+    const supabase = await createServerSupabaseClient()
 
     // Query waitlist ordered by priority (URGENT first), then creation date
     const { data, error } = await supabase
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const validatedData = createWaitlistSchema.parse(body)
 
-    const supabase = await createServerClient()
+    const supabase = await createServerSupabaseClient()
 
     // Check for duplicate entry (same patient + service + ACTIVE status)
     const { data: existing } = await supabase

@@ -26,6 +26,8 @@ export function useCalendarEvents(startDate: Date, endDate: Date) {
     setLoading(true)
     setError(null)
 
+    console.log('[useCalendarEvents] Fetching events...', { startDate: startDate.toISOString(), endDate: endDate.toISOString() })
+
     try {
       const supabase = createBrowserClient()
 
@@ -51,6 +53,8 @@ export function useCalendarEvents(startDate: Date, endDate: Date) {
         .gte('scheduled_at', startDate.toISOString())
         .lte('scheduled_at', endDate.toISOString())
         .order('scheduled_at', { ascending: true })
+
+      console.log('[useCalendarEvents] Query result:', { data, fetchError })
 
       if (fetchError) throw fetchError
 
@@ -79,8 +83,10 @@ export function useCalendarEvents(startDate: Date, endDate: Date) {
 
       setEvents(calendarEvents)
     } catch (err) {
+      console.error('[useCalendarEvents] Error:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch appointments')
     } finally {
+      console.log('[useCalendarEvents] Fetch complete')
       setLoading(false)
     }
   }, [startDate, endDate])
