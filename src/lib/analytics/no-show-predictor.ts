@@ -50,6 +50,69 @@ const WEIGHTS = {
 const HIGH_RISK_THRESHOLD = 60
 const MEDIUM_RISK_THRESHOLD = 30
 
+// ============================================================================
+// Caching Layer (LRU with TTL)
+// ============================================================================
+
+interface CachedPrediction {
+  prediction: NoShowPrediction
+  cachedAt: number
+}
+
+const predictionCache = new Map<string, CachedPrediction>()
+const CACHE_TTL = 60 * 60 * 1000 // 1 hour in milliseconds
+const MAX_CACHE_SIZE = 1000
+
+/**
+ * Get cached prediction if valid (not expired)
+ */
+function getCachedPrediction(appointmentId: string): NoShowPrediction | null {
+  const cached = predictionCache.get(appointmentId)
+
+  if (!cached) {
+    return null
+  }
+
+  // Check if expired
+  if (Date.now() - cached.cachedAt > CACHE_TTL) {
+    predictionCache.delete(appointmentId)
+    return null
+  }
+
+  return cached.prediction
+}
+
+/**
+ * Cache a prediction with LRU eviction
+ */
+function cachePrediction(appointmentId: string, prediction: NoShowPrediction): void {
+  // LRU eviction: remove oldest entries if cache is full
+  if (predictionCache.size >= MAX_CACHE_SIZE) {
+    // Get the first (oldest) entry and delete it
+    const firstKey = predictionCache.keys().next().value
+    if (firstKey) {
+      predictionCache.delete(firstKey)
+    }
+  }
+
+  predictionCache.set(appointmentId, {
+    prediction,
+    cachedAt: Date.now(),
+  })
+}
+
+/**
+ * Invalidate cache for a specific appointment or all appointments
+ * Call this when appointment status changes (e.g., confirmed, cancelled)
+ */
+export function invalidatePredictionCache(appointmentId?: string): void {
+  if (appointmentId) {
+    predictionCache.delete(appointmentId)
+  } else {
+    predictionCache.clear()
+  }
+}
+
 // Time of day risk (higher for early morning and late afternoon)
 // Hours: 0-7 (very early), 8-9 (early), 10-16 (normal), 17-18 (late), 19+ (very late)
 function getTimeOfDayRisk(hour: number): number {
@@ -186,10 +249,17 @@ function getRiskLevel(score: number): NoShowRiskLevel {
 
 /**
  * Predict no-show risk for a single appointment
+ * Results are cached for 1 hour to avoid redundant calculations
  */
 export async function predictNoShowRisk(
   appointmentId: string
 ): Promise<NoShowPrediction> {
+  // Check cache first
+  const cached = getCachedPrediction(appointmentId)
+  if (cached) {
+    return cached
+  }
+
   const appointment = await prisma.appointment.findUnique({
     where: { id: appointmentId },
     include: { patient: true },
@@ -238,17 +308,23 @@ export async function predictNoShowRisk(
   const riskLevel = getRiskLevel(riskScore)
   const recommendations = generateRecommendations(riskLevel, factors)
 
-  return {
+  const prediction: NoShowPrediction = {
     appointmentId,
     riskLevel,
     riskScore,
     factors,
     recommendations,
   }
+
+  // Cache the result
+  cachePrediction(appointmentId, prediction)
+
+  return prediction
 }
 
 /**
  * Predict no-show risk for multiple appointments (batch operation for efficiency)
+ * Uses cache for already calculated predictions, only fetches uncached ones
  */
 export async function predictNoShowRiskBatch(
   appointmentIds: string[]
@@ -257,14 +333,32 @@ export async function predictNoShowRiskBatch(
     return []
   }
 
-  // Fetch all appointments in a single query
+  // Check cache first - separate cached from uncached
+  const cachedPredictions: NoShowPrediction[] = []
+  const uncachedIds: string[] = []
+
+  for (const id of appointmentIds) {
+    const cached = getCachedPrediction(id)
+    if (cached) {
+      cachedPredictions.push(cached)
+    } else {
+      uncachedIds.push(id)
+    }
+  }
+
+  // If all are cached, return immediately
+  if (uncachedIds.length === 0) {
+    return cachedPredictions
+  }
+
+  // Fetch only uncached appointments in a single query
   const appointments = await prisma.appointment.findMany({
-    where: { id: { in: appointmentIds } },
+    where: { id: { in: uncachedIds } },
     include: { patient: true },
   })
 
   if (appointments.length === 0) {
-    return []
+    return cachedPredictions
   }
 
   // Get unique patient IDs for batch history lookup
@@ -300,7 +394,7 @@ export async function predictNoShowRiskBatch(
   const now = new Date()
 
   // Calculate predictions for each appointment
-  const predictions: NoShowPrediction[] = appointments.map(appointment => {
+  const newPredictions: NoShowPrediction[] = appointments.map(appointment => {
     const scheduledAt = new Date(appointment.scheduledAt)
 
     const historicalNoShowRate = patientNoShowRates.get(appointment.patientId) || 25
@@ -334,14 +428,20 @@ export async function predictNoShowRiskBatch(
     const riskLevel = getRiskLevel(riskScore)
     const recommendations = generateRecommendations(riskLevel, factors)
 
-    return {
+    const prediction: NoShowPrediction = {
       appointmentId: appointment.id,
       riskLevel,
       riskScore,
       factors,
       recommendations,
     }
+
+    // Cache each new prediction
+    cachePrediction(appointment.id, prediction)
+
+    return prediction
   })
 
-  return predictions
+  // Combine cached and new predictions
+  return [...cachedPredictions, ...newPredictions]
 }
