@@ -86,16 +86,16 @@ export async function fetchConversations(filters?: ConversationFilters): Promise
       throw new AppError('Unauthorized', 'UNAUTHORIZED', 401)
     }
 
-    // Fetch all chat messages
+    // Fetch all chat messages ordered by creation time
     const chatHistories = await prisma.chatHistory.findMany({
-      orderBy: { id: 'asc' },
+      orderBy: { createdAt: 'asc' },
     })
 
     // Fetch all patients for joining
     const patients = await prisma.patient.findMany()
 
-    // Group messages by session_id
-    const sessionMap = new Map<string, { messages: ChatMessage[], lastId: number }>()
+    // Group messages by session_id, tracking last message timestamp
+    const sessionMap = new Map<string, { messages: ChatMessage[], lastMessageAt: Date }>()
 
     for (const history of chatHistories) {
       const existing = sessionMap.get(history.sessionId)
@@ -104,11 +104,14 @@ export async function fetchConversations(filters?: ConversationFilters): Promise
       if (!existing) {
         sessionMap.set(history.sessionId, {
           messages: [message],
-          lastId: history.id,
+          lastMessageAt: history.createdAt,
         })
       } else {
         existing.messages.push(message)
-        existing.lastId = Math.max(existing.lastId, history.id)
+        // Update to most recent timestamp
+        if (history.createdAt > existing.lastMessageAt) {
+          existing.lastMessageAt = history.createdAt
+        }
       }
     }
 
@@ -130,10 +133,7 @@ export async function fetchConversations(filters?: ConversationFilters): Promise
       }) || null
 
       const lastMessage = data.messages[data.messages.length - 1]
-
-      // Estimate lastMessageAt from last message ID (approximate)
-      // In production, you'd want to store timestamp in message
-      const lastMessageAt = new Date()
+      const lastMessageAt = data.lastMessageAt
 
       const status = determineStatus(lastMessage, lastMessageAt)
 
@@ -158,8 +158,8 @@ export async function fetchConversations(filters?: ConversationFilters): Promise
       })
     }
 
-    // Sort by most recent first (using messageCount as proxy for recency)
-    threads.sort((a, b) => b.messageCount - a.messageCount)
+    // Sort by most recent message first
+    threads.sort((a, b) => b.lastMessageAt.getTime() - a.lastMessageAt.getTime())
 
     // Log audit trail (fire-and-forget)
     logAudit({
@@ -190,7 +190,7 @@ export async function getConversationBySessionId(sessionId: string): Promise<Con
 
     const chatHistories = await prisma.chatHistory.findMany({
       where: { sessionId },
-      orderBy: { id: 'asc' },
+      orderBy: { createdAt: 'asc' },
     })
 
     if (chatHistories.length === 0) {
@@ -213,7 +213,8 @@ export async function getConversationBySessionId(sessionId: string): Promise<Con
     }) || null
 
     const lastMessage = messages[messages.length - 1]
-    const lastMessageAt = new Date()
+    const lastHistory = chatHistories[chatHistories.length - 1]
+    const lastMessageAt = lastHistory.createdAt
     const status = determineStatus(lastMessage, lastMessageAt)
 
     // Log audit trail (fire-and-forget)

@@ -149,10 +149,13 @@ model Appointment {
 // N8N Chat History - WhatsApp conversation messages
 // Each row is a single message in a conversation thread (identified by session_id)
 model ChatHistory {
-  id        Int    @id @default(autoincrement())
-  sessionId String @map("session_id") @db.VarChar(255)
-  message   Json   @db.JsonB
+  id        Int      @id @default(autoincrement())
+  sessionId String   @map("session_id") @db.VarChar(255)
+  message   Json     @db.JsonB
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
+  @@index([sessionId])
+  @@index([createdAt])
   @@map("n8n_chat_histories")
 }
 
