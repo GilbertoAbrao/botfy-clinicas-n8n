@@ -238,20 +238,20 @@ Which phases cover which requirements. Updated by create-roadmap.
 | CONV-08 | Phase 5 | Not Started |
 | CONV-09 | Phase 5 | Not Started |
 | CONV-10 | Phase 5 | Not Started |
-| CONF-01 | Phase 7 | Not Started |
-| CONF-02 | Phase 7 | Not Started |
-| CONF-03 | Phase 7 | Not Started |
-| CONF-04 | Phase 7 | Not Started |
-| CONF-05 | Phase 7 | Not Started |
-| CONF-06 | Phase 7 | Not Started |
-| CONF-07 | Phase 7 | Not Started |
-| CONF-08 | Phase 7 | Not Started |
-| CONF-09 | Phase 7 | Not Started |
-| CONF-10 | Phase 7 | Not Started |
-| CONF-11 | Phase 7 | Not Started |
-| CONF-12 | Phase 7 | Not Started |
-| CONF-13 | Phase 7 | Not Started |
-| CONF-14 | Phase 7 | Not Started |
+| CONF-01 | Phase 7 | Complete |
+| CONF-02 | Phase 7 | Complete |
+| CONF-03 | Phase 7 | Complete |
+| CONF-04 | Phase 7 | Complete |
+| CONF-05 | Phase 7 | Complete |
+| CONF-06 | Phase 7 | Complete |
+| CONF-07 | Phase 7 | Complete |
+| CONF-08 | Phase 7 | Complete |
+| CONF-09 | Phase 7 | Complete |
+| CONF-10 | Phase 7 | Complete |
+| CONF-11 | Phase 7 | Complete |
+| CONF-12 | Phase 7 | Complete |
+| CONF-13 | Phase 7 | Complete |
+| CONF-14 | Phase 7 | Complete |
 | AUTH-01 | Phase 1 | Not Started |
 | AUTH-02 | Phase 1 | Not Started |
 | AUTH-03 | Phase 1 | Not Started |
@@ -281,4 +281,4 @@ Which phases cover which requirements. Updated by create-roadmap.
 
 ---
 *Requirements defined: 2026-01-15*
-*Last updated: 2026-01-17 after Phase 6 completion*
+*Last updated: 2026-01-17 after Phase 7 completion*
