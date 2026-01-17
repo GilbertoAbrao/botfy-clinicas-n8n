@@ -487,6 +487,125 @@ curl -X POST "$N8N_URL/webhook/test/verificar-pendencias" \
 
 ---
 
+## Webhooks do Calendário (Console Administrativo)
+
+O console administrativo envia webhooks para o N8N quando agendamentos são criados, atualizados ou cancelados manualmente. Isso permite que os workflows de lembretes funcionem também para agendamentos criados fora do WhatsApp.
+
+### Webhooks Configurados
+
+| Evento | Path | Descrição |
+|--------|------|-----------|
+| Appointment Created | `/webhook/calendar/appointment-created` | Agendamento criado via calendário |
+| Appointment Updated | `/webhook/calendar/appointment-updated` | Agendamento atualizado (hora, status) |
+| Appointment Cancelled | `/webhook/calendar/appointment-cancelled` | Agendamento cancelado |
+| Waitlist Notify | `/webhook/calendar/waitlist-notify` | Notificar paciente da lista de espera |
+
+### Payloads
+
+**Appointment Created / Cancelled:**
+```json
+{
+  "appointmentId": "uuid",
+  "patientId": "uuid",
+  "serviceId": "uuid",
+  "providerId": "uuid",
+  "dataHora": "2026-01-20T10:00:00-03:00",
+  "status": "AGENDADO",
+  "patientName": "Maria Silva",
+  "patientPhone": "5511999999999",
+  "serviceName": "Consulta Geral",
+  "providerName": "Dr. João"
+}
+```
+
+**Appointment Updated:**
+```json
+{
+  "appointmentId": "uuid",
+  "changes": {
+    "dataHora": "2026-01-21T14:00:00-03:00",
+    "status": "CONFIRMADO"
+  }
+}
+```
+
+**Waitlist Notify:**
+```json
+{
+  "patientPhone": "5511999999999",
+  "patientName": "Carlos Santos",
+  "availableSlot": "2026-01-20T10:00:00-03:00",
+  "serviceName": "Consulta Geral",
+  "waitlistId": "uuid"
+}
+```
+
+### Criar Workflows no N8N
+
+Para cada webhook, crie um workflow no N8N:
+
+**1. Appointment Created Webhook**
+1. Crie novo workflow → Add Webhook node
+2. Configure:
+   - HTTP Method: POST
+   - Path: `calendar/appointment-created`
+   - Response Mode: `Immediately`
+3. Conecte ao workflow Anti No-Show para agendar lembretes
+4. Ative o workflow
+
+**2. Appointment Updated Webhook**
+1. Crie novo workflow → Add Webhook node
+2. Configure Path: `calendar/appointment-updated`
+3. Lógica:
+   - Cancela lembretes antigos
+   - Agenda novos lembretes com horário atualizado
+4. Ative o workflow
+
+**3. Appointment Cancelled Webhook**
+1. Crie novo workflow → Add Webhook node
+2. Configure Path: `calendar/appointment-cancelled`
+3. Lógica:
+   - Cancela todos os lembretes pendentes
+   - Opcionalmente: notifica paciente do cancelamento
+4. Ative o workflow
+
+**4. Waitlist Notify Webhook**
+1. Crie novo workflow → Add Webhook node
+2. Configure Path: `calendar/waitlist-notify`
+3. Conecte ao Evolution API para enviar WhatsApp:
+   ```
+   [Webhook] → [HTTP Request - Evolution API]
+   ```
+4. Mensagem sugerida:
+   ```
+   Olá {{patientName}}! Surgiu um horário disponível para {{serviceName}} em {{availableSlot}}. Gostaria de agendar? Responda SIM ou NÃO.
+   ```
+5. Ative o workflow
+
+### Testar Webhooks
+
+```bash
+# URL base
+N8N_URL=https://botfy-ai-agency-n8n.tb0oe2.easypanel.host
+
+# Testar appointment created
+curl -X POST "$N8N_URL/webhook/calendar/appointment-created" \
+  -H "Content-Type: application/json" \
+  -d '{"appointmentId":"test-123","patientName":"Teste","patientPhone":"5511999999999","dataHora":"2026-01-20T10:00:00-03:00","serviceName":"Consulta"}'
+
+# Testar appointment cancelled
+curl -X POST "$N8N_URL/webhook/calendar/appointment-cancelled" \
+  -H "Content-Type: application/json" \
+  -d '{"appointmentId":"test-123","patientName":"Teste"}'
+
+# Testar waitlist notify
+curl -X POST "$N8N_URL/webhook/calendar/waitlist-notify" \
+  -H "Content-Type: application/json" \
+  -d '{"patientPhone":"5511999999999","patientName":"Carlos","availableSlot":"2026-01-20T10:00:00-03:00","serviceName":"Consulta"}'
+```
+
+---
+
 ## Troubleshooting
 
 ### AI Agent não chama tools

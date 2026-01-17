@@ -228,10 +228,10 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon_key>
 SUPABASE_SERVICE_ROLE_KEY=<service_role_key>
 
 # N8N Webhooks (Calendário)
-N8N_WEBHOOK_APPOINTMENT_CREATED=<url>
-N8N_WEBHOOK_APPOINTMENT_UPDATED=<url>
-N8N_WEBHOOK_APPOINTMENT_CANCELLED=<url>
-N8N_WEBHOOK_WAITLIST_NOTIFY=<url>
+N8N_WEBHOOK_APPOINTMENT_CREATED=https://botfy-ai-agency-n8n.tb0oe2.easypanel.host/webhook/calendar/appointment-created
+N8N_WEBHOOK_APPOINTMENT_UPDATED=https://botfy-ai-agency-n8n.tb0oe2.easypanel.host/webhook/calendar/appointment-updated
+N8N_WEBHOOK_APPOINTMENT_CANCELLED=https://botfy-ai-agency-n8n.tb0oe2.easypanel.host/webhook/calendar/appointment-cancelled
+N8N_WEBHOOK_WAITLIST_NOTIFY=https://botfy-ai-agency-n8n.tb0oe2.easypanel.host/webhook/calendar/waitlist-notify
 
 # Evolution API (se necessário)
 EVOLUTION_API_URL=https://botfy-ai-agency-evolution-api.tb0oe2.easypanel.host
