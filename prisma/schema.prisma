@@ -206,6 +206,33 @@ model PatientDocument {
   @@map("patient_documents")
 }
 
+// Clinic settings (singleton pattern - always id = 'default')
+model ClinicSettings {
+  id                      String   @id @default("default")
+  businessHours           Json     @map("business_hours") // { monday: { open: "09:00", close: "18:00" }, ... }
+  lunchBreak              Json     @map("lunch_break") // { start: "12:00", end: "13:00" }
+  antecedenciaMinima      Int      @default(24) @map("antecedencia_minima") // Minimum hours before appointment
+  notificationPreferences Json?    @map("notification_preferences") // Future flexibility
+  updatedAt               DateTime @updatedAt @map("updated_at")
+
+  @@map("clinic_settings")
+}
+
+// Service catalog for appointments
+model Service {
+  id        String   @id @default(uuid()) @db.Uuid
+  nome      String
+  duracao   Int      // Duration in minutes
+  preco     Decimal  @db.Decimal(10, 2)
+  ativo     Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([nome])
+  @@index([ativo])
+  @@map("services")
+}
+
 // Waitlist for appointment slots
 model Waitlist {
   id            String   @id @default(uuid()) @db.Uuid
