@@ -20,8 +20,8 @@ interface ConversationCardProps {
     patient: Patient | null
     phoneNumber: string
     status: ChatStatus
-    lastMessage: ChatMessage
-    lastMessageAt: Date
+    lastMessage: ChatMessage | null
+    lastMessageAt: Date | null
     messageCount: number
     messages: ChatMessage[]
   }
@@ -57,15 +57,18 @@ export function ConversationCard({ conversation, onMemoryCleared }: Conversation
   const [isExpanded, setIsExpanded] = useState(false)
 
   // Truncate last message for preview (60 chars max)
-  const lastMessagePreview = conversation.lastMessage.content.length > 60
-    ? conversation.lastMessage.content.substring(0, 60) + '...'
-    : conversation.lastMessage.content
+  const lastMessageContent = conversation.lastMessage?.content || 'Sem mensagens'
+  const lastMessagePreview = lastMessageContent.length > 60
+    ? lastMessageContent.substring(0, 60) + '...'
+    : lastMessageContent
 
   // Format time since last message
-  const timeSinceLastMessage = formatDistanceToNow(conversation.lastMessageAt, {
-    addSuffix: true,
-    locale: ptBR,
-  })
+  const timeSinceLastMessage = conversation.lastMessageAt
+    ? formatDistanceToNow(conversation.lastMessageAt, {
+        addSuffix: true,
+        locale: ptBR,
+      })
+    : 'Nunca'
 
   // Convert ChatMessage[] to format expected by ConversationThread
   const formattedMessages = conversation.messages.map((msg, index) => ({
