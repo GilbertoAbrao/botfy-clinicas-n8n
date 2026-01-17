@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { AlertStatusUpdater } from './alert-status-updater'
 import { ConversationThread } from '../conversations/conversation-thread'
+import { ClearMemoryButton } from '../conversations/clear-memory-button'
 import { formatDistanceToNow, format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import Link from 'next/link'
@@ -214,12 +215,11 @@ export function AlertDetail({ alert, onStatusChange, onStatusChangeStart }: Aler
             )}
 
             <div className="pt-2">
-              <Button variant="outline" size="sm" disabled>
-                Ver perfil completo
-                <span className="ml-2 text-xs text-muted-foreground">
-                  (Fase 3)
-                </span>
-              </Button>
+              <Link href={`/pacientes/${alert.patient.id}`}>
+                <Button variant="outline" size="sm">
+                  Ver perfil completo
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
@@ -279,12 +279,11 @@ export function AlertDetail({ alert, onStatusChange, onStatusChangeStart }: Aler
             )}
 
             <div className="pt-2">
-              <Button variant="outline" size="sm" disabled>
-                Ver agendamento completo
-                <span className="ml-2 text-xs text-muted-foreground">
-                  (Fase 4)
-                </span>
-              </Button>
+              <Link href="/agenda">
+                <Button variant="outline" size="sm">
+                  Ver agenda
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
@@ -293,21 +292,25 @@ export function AlertDetail({ alert, onStatusChange, onStatusChangeStart }: Aler
       {/* Conversation Section */}
       {alert.conversation && (
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />
               Conversa
             </CardTitle>
+            {/* Clear Memory button in header */}
+            {alert.chatSessionId && (
+              <ClearMemoryButton sessionId={alert.chatSessionId} />
+            )}
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4">
               <Badge variant="outline">
                 {conversationStatusLabels[alert.conversation.status] ||
                   alert.conversation.status}
               </Badge>
               {alert.conversation.lastMessageAt && (
                 <span className="text-sm text-muted-foreground">
-                  Última mensagem{' '}
+                  Ultima mensagem{' '}
                   {formatDistanceToNow(
                     new Date(alert.conversation.lastMessageAt),
                     {
@@ -319,11 +322,25 @@ export function AlertDetail({ alert, onStatusChange, onStatusChangeStart }: Aler
               )}
             </div>
 
-            <ConversationThread
-              messages={conversationMessages}
-              compact={true}
-              conversationId={alert.conversation.id}
-            />
+            {/* Conversation thread with WhatsApp styling */}
+            <div className="bg-gray-50 rounded-lg p-3 border">
+              <ConversationThread
+                messages={conversationMessages}
+                compact={true}
+                conversationId={alert.conversation.id}
+              />
+            </div>
+
+            {/* Link to full conversation */}
+            {alert.chatSessionId && (
+              <div className="flex justify-end pt-2">
+                <Link href={`/conversas/${encodeURIComponent(alert.chatSessionId)}`}>
+                  <Button variant="outline" size="sm">
+                    Ver conversa completa
+                  </Button>
+                </Link>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -331,12 +348,12 @@ export function AlertDetail({ alert, onStatusChange, onStatusChangeStart }: Aler
       {/* Action Section */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Intervenções</CardTitle>
+          <CardTitle className="text-lg">Intervencoes</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground mb-4">
-              Ações de intervenção rápida estarão disponíveis na Fase 6.
+              Acoes rapidas para resolver este alerta.
             </p>
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" disabled className="h-11 sm:h-auto">
@@ -351,12 +368,10 @@ export function AlertDetail({ alert, onStatusChange, onStatusChangeStart }: Aler
                   (Fase 6)
                 </span>
               </Button>
-              <Button variant="outline" disabled className="h-11 sm:h-auto">
-                Limpar Memória
-                <span className="ml-2 text-xs text-muted-foreground">
-                  (Fase 6)
-                </span>
-              </Button>
+              {/* Clear Memory is now functional (moved from Phase 6 to Phase 5) */}
+              {alert.chatSessionId && (
+                <ClearMemoryButton sessionId={alert.chatSessionId} />
+              )}
             </div>
           </div>
         </CardContent>
