@@ -2,33 +2,30 @@
 
 **Last Updated:** 2026-01-17
 **Status:** Phase 5 In Progress
-**Current Phase:** Phase 5 - Conversation Monitoring
+**Current Phase:** Phase 5 - Conversation Monitoring (Plan 02 Complete)
 **Current Milestone:** v1.0
 
 ---
 
 ## Current State
 
-**Stage:** Phase 5 Plan 01 Complete
-**Action:** Continue with Phase 5 Plan 02 or subsequent plans
+**Stage:** Phase 5 Plan 02 Complete
+**Action:** Continue with Phase 5 Plan 03 or subsequent plans
 **Blockers:** None
 
 **Recently Completed:**
-- [x] **Plan 05-01 Complete** ✅
-  - ✅ WhatsApp-style MessageBubble component
-  - ✅ Patient messages left-aligned (green), clinic right-aligned (white)
-  - ✅ AI badge (purple "IA") and Human badge (blue "Humano")
-  - ✅ Delivery status indicators (checkmarks)
-  - ✅ Timestamps in ptBR format
-  - ✅ Scroll-to-bottom behavior
-  - ✅ Enhanced ConversationThread with new styling
-  - ✅ Multiple pre-existing build issues fixed
-  - 📦 3 atomic commits created (~42 min execution)
+- [x] **Plan 05-02 Complete** ✅
+  - ✅ Clear Memory API endpoint (DELETE /api/conversations/[sessionId]/memory)
+  - ✅ CLEAR_CHAT_MEMORY audit action for HIPAA compliance
+  - ✅ ClearMemoryButton component with AlertDialog confirmation
+  - ✅ Installed shadcn alert-dialog component
+  - ⚠️ Fixed multiple pre-existing TypeScript build errors (separate commit)
+  - 📦 2 feature commits + 1 bug fix commit (45 min execution)
 
 **Next Steps:**
-1. Continue with Plan 05-02 (if not already done) or subsequent plans
-2. Check `.planning/phases/05-conversation-monitoring/` for remaining plans
-3. Complete Phase 5 (Conversation Monitoring)
+1. Continue with Plan 05-03 (Conversation Detail Page - integrate ClearMemoryButton)
+2. Plan 05-04 (Handoff Status Updater)
+3. Plan 05-05 (Integration and Polish)
 
 ---
 
@@ -40,12 +37,12 @@
 | Phase 2: Alert Dashboard | ✅ Complete (All 4 plans done) | 16 | 16 | 100% |
 | Phase 3: Patient Management | ✅ Complete (All 4 plans done) | 14 | 14 | 100% |
 | Phase 4: Calendar & Scheduling | ✅ Complete (All 6 plans done) | 15 | 15 | 100% |
-| Phase 5: Conversation Monitoring | 🔄 In Progress (Plan 01 done) | 10 | 2 | 20% |
+| Phase 5: Conversation Monitoring | 🔄 In Progress (2/5 plans done) | 10 | 4 | 40% |
 | Phase 6: One-Click Interventions | Not Started | 1 | 0 | 0% |
 | Phase 7: System Configuration | Not Started | 14 | 0 | 0% |
 | Phase 8: Analytics & Smart Features | Not Started | 2 | 0 | 0% |
 
-**Overall Progress:** 64/79 requirements (81%)
+**Overall Progress:** 66/79 requirements (84%)
 
 ---
 
@@ -93,12 +90,16 @@
 65. ✅ Calendar syncs with N8N workflows (CAL-15)
 
 **Phase 5 - Conversation Monitoring (IN PROGRESS):**
-66. ✅ WhatsApp-style message bubbles display (CONV-01)
-67. ✅ AI/Human badge distinction on messages (CONV-02)
-68. ⬜ Real-time conversation updates (CONV-03)
-69. ⬜ Conversation filtering and search (CONV-04)
-70. ⬜ Clear AI memory functionality (CONV-05)
-... (remaining requirements pending)
+66. ✅ WhatsApp-style message bubbles display (CONV-01) - Plan 05-01
+67. ✅ AI/Human badge distinction on messages (CONV-02) - Plan 05-01
+68. ✅ Scroll-to-bottom and compact mode (CONV-06) - Plan 05-01
+69. ✅ Clear AI memory functionality (CONV-05) - Plan 05-02
+70. ⬜ Conversation detail page with full thread (CONV-03) - Plan 05-03
+71. ⬜ Conversation list shows all active sessions (CONV-04) - Plan 05-03
+72. ⬜ Handoff status updater (CONV-07) - Plan 05-04
+73. ⬜ System shows conversation status indicator (CONV-08) - Plan 05-04
+74. ⬜ Real-time conversation updates (CONV-09) - Plan 05-05
+75. ⬜ Integration with alert system (CONV-10) - Plan 05-05
 
 ---
 
@@ -106,6 +107,9 @@
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-01-17 | AlertDialog for destructive confirmations | Accessible, blocks accidental clicks, shadcn/radix component |
+| 2026-01-17 | URL-encode sessionId in API routes | Session IDs contain @ and . characters (e.g., 5511999998888@s.whatsapp.net) |
+| 2026-01-17 | DELETE method for memory clear | RESTful semantics for removal operations |
 | 2026-01-17 | WhatsApp-style bubbles for conversations | Familiar UX, clear visual distinction between patient/clinic messages |
 | 2026-01-17 | Purple AI badge, blue Human badge | Distinct colors help quickly identify message source |
 | 2026-01-17 | Default 'delivered' status | Full status tracking requires N8N integration, out of scope for Plan 01 |
@@ -122,6 +126,15 @@
 ---
 
 ## Recent Activity
+
+**2026-01-17 - Plan 05-02 Complete ✅**
+- ✅ Clear Memory API endpoint (DELETE /api/conversations/[sessionId]/memory)
+- ✅ CLEAR_CHAT_MEMORY audit action for HIPAA compliance
+- ✅ ClearMemoryButton component with AlertDialog confirmation
+- ✅ Installed shadcn alert-dialog component
+- ⚠️ Fixed multiple pre-existing TypeScript build errors (separate commit)
+- 📦 2 feature commits + 1 bug fix commit (45 min execution)
+- 🎯 Requirements: CONV-05 (clear AI memory)
 
 **2026-01-17 - Plan 05-01 Complete ✅**
 - ✅ WhatsApp-style MessageBubble component created
@@ -210,4 +223,4 @@
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-17 after Plan 05-01 execution*
+*Last updated: 2026-01-17 after Plan 05-02 execution*
