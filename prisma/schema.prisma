@@ -19,6 +19,7 @@ model User {
   auditLogs         AuditLog[]
   resolvedAlerts    Alert[]
   uploadedDocuments PatientDocument[]
+  waitlistCreations Waitlist[] @relation("WaitlistCreator")
 
   @@map("users")
 }
@@ -96,6 +97,7 @@ model Patient {
   appointments      Appointment[]
   alerts            Alert[]
   documents         PatientDocument[]
+  waitlistEntries   Waitlist[] @relation("WaitlistPatient")
 
   @@index([telefone])
   @@index([cpf])
@@ -114,6 +116,7 @@ model Provider {
   updatedAt        DateTime @updatedAt @map("updated_at")
 
   appointments Appointment[] @relation("ProviderAppointments")
+  waitlistEntries Waitlist[] @relation("WaitlistProvider")
 
   @@map("providers")
 }
@@ -198,4 +201,27 @@ model PatientDocument {
   @@index([patientId])
   @@index([uploadedAt])
   @@map("patient_documents")
+}
+
+// Waitlist for appointment slots
+model Waitlist {
+  id            String   @id @default(uuid()) @db.Uuid
+  paciente_id   String   @map("paciente_id") @db.Uuid
+  servico_tipo  String   @map("servico_tipo")  // Service type (e.g., "Consulta", "Retorno")
+  provider_id   String?  @map("provider_id") @db.Uuid  // Specific provider preference (optional)
+  priority      String   @default("CONVENIENCE")  // URGENT or CONVENIENCE
+  preferred_date DateTime? @map("preferred_date")  // Preferred date/time (optional)
+  notes         String?
+  status        String   @default("ACTIVE")  // ACTIVE, NOTIFIED, FILLED, EXPIRED
+  created_at    DateTime @default(now()) @map("created_at")
+  expires_at    DateTime  @map("expires_at")  // Auto-set to 7 days from creation
+  created_by    String   @map("created_by")
+
+  paciente Patient   @relation("WaitlistPatient", fields: [paciente_id], references: [id], onDelete: Cascade)
+  provider Provider? @relation("WaitlistProvider", fields: [provider_id], references: [id])
+  criador  User      @relation("WaitlistCreator", fields: [created_by], references: [id])
+
+  @@index([status, priority, created_at])  // For priority queue queries
+  @@index([paciente_id, servico_tipo])  // Prevent duplicates
+  @@map("waitlist")
 }
