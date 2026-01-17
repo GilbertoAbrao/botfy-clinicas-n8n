@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { Trash2 } from 'lucide-react'
 import { createBrowserClient } from '@/lib/supabase/client'
+import { NoShowRiskBadge } from '@/components/appointments/no-show-risk-badge'
 
 interface AppointmentModalProps {
   isOpen: boolean
@@ -43,6 +44,18 @@ export function AppointmentModal({
     observacoes: initialData?.observacoes || '',
     status: initialData?.status || 'AGENDADO',
   })
+
+  // Determine if we should show the no-show risk badge
+  // Only show for existing appointments that are in the future and not cancelled/completed
+  const showRiskBadge = useMemo(() => {
+    if (!appointmentId) return false // New appointment
+    if (!formData.dataHora) return false
+    if (['CANCELADO', 'REALIZADO', 'FALTOU'].includes(formData.status)) return false
+
+    // Check if appointment is in the future
+    const appointmentDate = new Date(formData.dataHora)
+    return appointmentDate > new Date()
+  }, [appointmentId, formData.dataHora, formData.status])
 
   // Fetch patients and services on mount
   useEffect(() => {
@@ -130,9 +143,14 @@ export function AppointmentModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {appointmentId ? 'Editar Agendamento' : 'Novo Agendamento'}
-          </DialogTitle>
+          <div className="flex items-center gap-3">
+            <DialogTitle>
+              {appointmentId ? 'Editar Agendamento' : 'Novo Agendamento'}
+            </DialogTitle>
+            {showRiskBadge && appointmentId && (
+              <NoShowRiskBadge appointmentId={appointmentId} />
+            )}
+          </div>
         </DialogHeader>
 
         <div className="space-y-4">

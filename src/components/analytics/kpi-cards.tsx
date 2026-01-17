@@ -29,7 +29,14 @@ export interface KPIMetrics {
   cancellationRate: number
   avgResolutionTimeMinutes: number | null
   confirmationRateTrend: TrendDirection
+  confirmationRateChange?: number
+  alertVolumeByType?: Record<string, number>
   period: { start: Date; end: Date }
+  totals?: {
+    appointments: number
+    alerts: number
+    resolvedAlerts: number
+  }
 }
 
 /**

@@ -9,6 +9,7 @@ import { AlertType, AlertPriority, AlertStatus } from '@prisma/client'
 import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import Link from 'next/link'
+import { AlertPriorityBadge } from './alert-priority-badge'
 
 interface AlertListProps {
   alerts: AlertWithRelations[]
@@ -169,9 +170,12 @@ export function AlertList({ alerts, loading = false }: AlertListProps) {
                 className="hover:bg-gray-50 transition-colors cursor-pointer"
               >
                 <TableCell>
-                  <Badge className={priorityColors[alert.priority]}>
-                    {priorityLabels[alert.priority]}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge className={priorityColors[alert.priority]}>
+                      {priorityLabels[alert.priority]}
+                    </Badge>
+                    <AlertPriorityBadge alertId={alert.id} />
+                  </div>
                 </TableCell>
                 <TableCell className="font-medium">
                   {alertTypeLabels[alert.type]}
@@ -211,9 +215,12 @@ export function AlertList({ alerts, loading = false }: AlertListProps) {
               <div className="space-y-3">
                 {/* Priority badge at top */}
                 <div className="flex items-center justify-between">
-                  <Badge className={priorityColors[alert.priority]}>
-                    {priorityLabels[alert.priority]}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge className={priorityColors[alert.priority]}>
+                      {priorityLabels[alert.priority]}
+                    </Badge>
+                    <AlertPriorityBadge alertId={alert.id} />
+                  </div>
                   <Badge className={statusColors[alert.status]}>
                     {statusLabels[alert.status]}
                   </Badge>
