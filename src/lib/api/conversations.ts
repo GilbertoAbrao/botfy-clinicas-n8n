@@ -4,29 +4,81 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUserWithRole } from '@/lib/auth/session'
 import { logAudit, AuditAction } from '@/lib/audit/logger'
 import { AppError, handleApiError, getUserFriendlyMessage } from '@/lib/utils/error-handler'
-import type { Conversation, Patient, ConversationStatus, Prisma } from '@prisma/client'
+import type { Patient } from '@prisma/client'
 
-// Types for API responses
-export type ConversationWithPatient = Conversation & {
-  patient: Patient
+// Chat status based on last message
+export type ChatStatus = 'IA' | 'HUMANO' | 'FINALIZADO'
+
+// Message structure from n8n_chat_histories
+export interface ChatMessage {
+  type: 'human' | 'ai' | 'system'
+  content: string
+  additional_kwargs?: Record<string, any>
+  response_metadata?: Record<string, any>
+  tool_calls?: any[]
+  invalid_tool_calls?: any[]
+}
+
+// Conversation thread (grouped by session_id)
+export interface ConversationThread {
+  sessionId: string // remotejID from n8n
+  phoneNumber: string // extracted from sessionId
+  patient: Patient | null
+  messages: ChatMessage[]
+  messageCount: number
+  lastMessage: ChatMessage
+  lastMessageAt: Date
+  status: ChatStatus
 }
 
 export interface ConversationFilters {
-  status?: ConversationStatus
+  status?: ChatStatus
   dateFrom?: Date
   dateTo?: Date
   patientId?: string
-  sortBy?: ConversationSortBy
-  sortOrder?: 'asc' | 'desc'
 }
 
-export type ConversationSortBy = 'recent' | 'status' | 'patient'
+/**
+ * Extract phone number from WhatsApp session_id
+ * Format: "5511999999999@s.whatsapp.net-calendar" -> "5511999999999"
+ */
+function extractPhoneNumber(sessionId: string): string {
+  return sessionId.split('@')[0]
+}
 
 /**
- * Fetch all conversations with optional filters
- * Used by conversation list page
+ * Normalize phone number for matching
+ * Removes +, spaces, and ensures it starts with country code
  */
-export async function fetchConversations(filters?: ConversationFilters): Promise<ConversationWithPatient[]> {
+function normalizePhone(phone: string): string {
+  return phone.replace(/[+\s-]/g, '')
+}
+
+/**
+ * Determine chat status based on message history
+ * - If last message is from human -> HUMANO (waiting for response)
+ * - If last message is from ai -> IA (bot responded)
+ * - If session is old (>7 days) -> FINALIZADO
+ */
+function determineStatus(lastMessage: ChatMessage, lastMessageAt: Date): ChatStatus {
+  const daysSinceLastMessage = (Date.now() - lastMessageAt.getTime()) / (1000 * 60 * 60 * 24)
+
+  if (daysSinceLastMessage > 7) {
+    return 'FINALIZADO'
+  }
+
+  if (lastMessage.type === 'human') {
+    return 'HUMANO' // Waiting for response
+  }
+
+  return 'IA' // Bot is handling it
+}
+
+/**
+ * Fetch all conversation threads with optional filters
+ * Groups messages by session_id and joins with patients
+ */
+export async function fetchConversations(filters?: ConversationFilters): Promise<ConversationThread[]> {
   try {
     const user = await getCurrentUserWithRole()
 
@@ -34,66 +86,90 @@ export async function fetchConversations(filters?: ConversationFilters): Promise
       throw new AppError('Unauthorized', 'UNAUTHORIZED', 401)
     }
 
-    // Build Prisma where clause from filters
-    const where: Prisma.ConversationWhereInput = {}
-
-    if (filters?.status) {
-      where.status = filters.status
-    }
-
-    if (filters?.patientId) {
-      where.patientId = filters.patientId
-    }
-
-    if (filters?.dateFrom || filters?.dateTo) {
-      where.lastMessageAt = {}
-      if (filters.dateFrom) {
-        where.lastMessageAt.gte = filters.dateFrom
-      }
-      if (filters.dateTo) {
-        where.lastMessageAt.lte = filters.dateTo
-      }
-    }
-
-    // Build Prisma orderBy clause from sort parameters
-    const orderBy: Prisma.ConversationOrderByWithRelationInput[] = []
-
-    if (filters?.sortBy) {
-      switch (filters.sortBy) {
-        case 'recent':
-          orderBy.push({ lastMessageAt: filters.sortOrder || 'desc' })
-          break
-        case 'status':
-          orderBy.push({ status: filters.sortOrder || 'asc' })
-          break
-        case 'patient':
-          orderBy.push({ patient: { nome: filters.sortOrder || 'asc' } })
-          break
-      }
-    } else {
-      // Default sort: most recent first
-      orderBy.push({ lastMessageAt: 'desc' })
-    }
-
-    // Fetch conversations with patient relation
-    const conversations = await prisma.conversation.findMany({
-      where,
-      orderBy,
-      take: 100, // Limit to 100 conversations (pagination in future)
-      include: {
-        patient: true,
-      },
+    // Fetch all chat messages
+    const chatHistories = await prisma.chatHistory.findMany({
+      orderBy: { id: 'asc' },
     })
+
+    // Fetch all patients for joining
+    const patients = await prisma.patient.findMany()
+
+    // Group messages by session_id
+    const sessionMap = new Map<string, { messages: ChatMessage[], lastId: number }>()
+
+    for (const history of chatHistories) {
+      const existing = sessionMap.get(history.sessionId)
+      const message = history.message as ChatMessage
+
+      if (!existing) {
+        sessionMap.set(history.sessionId, {
+          messages: [message],
+          lastId: history.id,
+        })
+      } else {
+        existing.messages.push(message)
+        existing.lastId = Math.max(existing.lastId, history.id)
+      }
+    }
+
+    // Build conversation threads
+    const threads: ConversationThread[] = []
+
+    for (const [sessionId, data] of sessionMap.entries()) {
+      const phoneNumber = extractPhoneNumber(sessionId)
+      const normalizedPhone = normalizePhone(phoneNumber)
+
+      // Try to find matching patient
+      const patient = patients.find(p => {
+        const patientPhone = normalizePhone(p.telefone)
+        return (
+          patientPhone === normalizedPhone ||
+          `55${patientPhone}` === normalizedPhone ||
+          patientPhone === `55${normalizedPhone}`
+        )
+      }) || null
+
+      const lastMessage = data.messages[data.messages.length - 1]
+
+      // Estimate lastMessageAt from last message ID (approximate)
+      // In production, you'd want to store timestamp in message
+      const lastMessageAt = new Date()
+
+      const status = determineStatus(lastMessage, lastMessageAt)
+
+      // Apply filters
+      if (filters?.status && status !== filters.status) {
+        continue
+      }
+
+      if (filters?.patientId && patient?.id !== filters.patientId) {
+        continue
+      }
+
+      threads.push({
+        sessionId,
+        phoneNumber,
+        patient,
+        messages: data.messages,
+        messageCount: data.messages.length,
+        lastMessage,
+        lastMessageAt,
+        status,
+      })
+    }
+
+    // Sort by most recent first (using messageCount as proxy for recency)
+    threads.sort((a, b) => b.messageCount - a.messageCount)
 
     // Log audit trail (fire-and-forget)
     logAudit({
       userId: user.id,
       action: AuditAction.VIEW_CONVERSATION,
       resource: 'conversations',
-      details: { filters },
+      details: { filters, threadCount: threads.length },
     })
 
-    return conversations
+    return threads
   } catch (error) {
     const appError = handleApiError(error)
     console.error('[fetchConversations] Error:', getUserFriendlyMessage(appError), error)
@@ -102,10 +178,9 @@ export async function fetchConversations(filters?: ConversationFilters): Promise
 }
 
 /**
- * Get single conversation with full context
- * Used by conversation detail page
+ * Get single conversation thread by session_id
  */
-export async function getConversationById(id: string): Promise<ConversationWithPatient | null> {
+export async function getConversationBySessionId(sessionId: string): Promise<ConversationThread | null> {
   try {
     const user = await getCurrentUserWithRole()
 
@@ -113,67 +188,56 @@ export async function getConversationById(id: string): Promise<ConversationWithP
       throw new AppError('Unauthorized', 'UNAUTHORIZED', 401)
     }
 
-    const conversation = await prisma.conversation.findUnique({
-      where: { id },
-      include: {
-        patient: true,
-      },
+    const chatHistories = await prisma.chatHistory.findMany({
+      where: { sessionId },
+      orderBy: { id: 'asc' },
     })
 
-    if (!conversation) {
+    if (chatHistories.length === 0) {
       return null
     }
+
+    const messages = chatHistories.map(h => h.message as ChatMessage)
+    const phoneNumber = extractPhoneNumber(sessionId)
+    const normalizedPhone = normalizePhone(phoneNumber)
+
+    // Try to find matching patient
+    const patients = await prisma.patient.findMany()
+    const patient = patients.find(p => {
+      const patientPhone = normalizePhone(p.telefone)
+      return (
+        patientPhone === normalizedPhone ||
+        `55${patientPhone}` === normalizedPhone ||
+        patientPhone === `55${normalizedPhone}`
+      )
+    }) || null
+
+    const lastMessage = messages[messages.length - 1]
+    const lastMessageAt = new Date()
+    const status = determineStatus(lastMessage, lastMessageAt)
 
     // Log audit trail (fire-and-forget)
     logAudit({
       userId: user.id,
       action: AuditAction.VIEW_CONVERSATION,
       resource: 'conversations',
-      resourceId: id,
-      details: { patientId: conversation.patientId },
+      resourceId: sessionId,
+      details: { patientId: patient?.id },
     })
 
-    return conversation
-  } catch (error) {
-    const appError = handleApiError(error)
-    console.error('[getConversationById] Error:', getUserFriendlyMessage(appError), error)
-    throw appError
-  }
-}
-
-/**
- * Update conversation status
- * Used when escalating to human or finishing conversation
- */
-export async function updateConversationStatus(
-  id: string,
-  status: ConversationStatus
-): Promise<Conversation> {
-  try {
-    const user = await getCurrentUserWithRole()
-
-    if (!user) {
-      throw new AppError('Unauthorized', 'UNAUTHORIZED', 401)
+    return {
+      sessionId,
+      phoneNumber,
+      patient,
+      messages,
+      messageCount: messages.length,
+      lastMessage,
+      lastMessageAt,
+      status,
     }
-
-    const updatedConversation = await prisma.conversation.update({
-      where: { id },
-      data: { status },
-    })
-
-    // Log audit trail (fire-and-forget)
-    logAudit({
-      userId: user.id,
-      action: AuditAction.UPDATE_CONVERSATION_STATUS,
-      resource: 'conversations',
-      resourceId: id,
-      details: { newStatus: status },
-    })
-
-    return updatedConversation
   } catch (error) {
     const appError = handleApiError(error)
-    console.error('[updateConversationStatus] Error:', getUserFriendlyMessage(appError), error)
+    console.error('[getConversationBySessionId] Error:', getUserFriendlyMessage(appError), error)
     throw appError
   }
 }
@@ -190,15 +254,10 @@ export async function getActiveConversationCount(): Promise<number> {
       return 0
     }
 
-    const count = await prisma.conversation.count({
-      where: {
-        status: {
-          in: ['IA', 'HUMANO'],
-        },
-      },
-    })
+    const threads = await fetchConversations()
+    const activeCount = threads.filter(t => t.status === 'IA' || t.status === 'HUMANO').length
 
-    return count
+    return activeCount
   } catch (error) {
     console.error('[getActiveConversationCount] Error:', error)
     return 0

@@ -58,11 +58,6 @@ enum AppointmentStatus {
   completed
 }
 
-enum ConversationStatus {
-  IA
-  HUMANO
-  FINALIZADO
-}
 
 // HIPAA-compliant audit logging (6-year retention required)
 model AuditLog {
@@ -99,7 +94,6 @@ model Patient {
   updatedAt         DateTime       @updatedAt @map("updated_at")
 
   appointments      Appointment[]
-  conversations     Conversation[]
   alerts            Alert[]
   documents         PatientDocument[]
 
@@ -132,24 +126,14 @@ model Appointment {
   @@map("appointments")
 }
 
-// WhatsApp conversation tracking
-model Conversation {
-  id            String             @id @default(uuid()) @db.Uuid
-  patientId     String             @map("patient_id") @db.Uuid
-  whatsappId    String             @map("whatsapp_id")
-  status        ConversationStatus @default(IA)
-  messages      Json[]             // Array of message objects
-  lastMessageAt DateTime           @map("last_message_at")
-  createdAt     DateTime           @default(now()) @map("created_at")
-  updatedAt     DateTime           @updatedAt @map("updated_at")
+// N8N Chat History - WhatsApp conversation messages
+// Each row is a single message in a conversation thread (identified by session_id)
+model ChatHistory {
+  id        Int    @id @default(autoincrement())
+  sessionId String @map("session_id") @db.VarChar(255)
+  message   Json   @db.JsonB
 
-  patient       Patient            @relation(fields: [patientId], references: [id])
-  alerts        Alert[]
-
-  @@index([patientId])
-  @@index([lastMessageAt])
-  @@index([status])
-  @@map("conversations")
+  @@map("n8n_chat_histories")
 }
 
 // Alert system
@@ -162,7 +146,7 @@ model Alert {
   description    String?
   patientId      String?       @map("patient_id") @db.Uuid
   appointmentId  String?       @map("appointment_id") @db.Uuid
-  conversationId String?       @map("conversation_id") @db.Uuid
+  chatSessionId  String?       @map("chat_session_id") // n8n chat session_id
   metadata       Json?         // Additional context like error messages
   resolvedAt     DateTime?     @map("resolved_at")
   resolvedBy     String?       @map("resolved_by") @db.Uuid
@@ -171,7 +155,6 @@ model Alert {
 
   patient        Patient?      @relation(fields: [patientId], references: [id])
   appointment    Appointment?  @relation(fields: [appointmentId], references: [id])
-  conversation   Conversation? @relation(fields: [conversationId], references: [id])
   resolver       User?         @relation(fields: [resolvedBy], references: [id])
 
   @@index([status])

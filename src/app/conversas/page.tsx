@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
-import { fetchConversations, getActiveConversationCount } from '@/lib/api/conversations'
+import { fetchConversations, getActiveConversationCount, type ChatStatus, type ConversationFilters } from '@/lib/api/conversations'
 import { ConversationList } from '@/components/conversations/conversation-list'
 import { ConversationListRealtime } from '@/components/conversations/conversation-list-realtime'
 import { getCurrentUserWithRole } from '@/lib/auth/session'
@@ -9,11 +9,9 @@ import { redirect } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
-import { ConversationStatus } from '@prisma/client'
-import { ConversationFilters as ConversationFiltersType } from '@/lib/api/conversations'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 
-type FilterValues = Partial<ConversationFiltersType>
+type FilterValues = Partial<ConversationFilters>
 
 interface PageProps {
   searchParams: Promise<{
@@ -38,8 +36,8 @@ export default async function ConversationsPage({ searchParams }: PageProps) {
   // Parse filters from URL query params
   const filters: Partial<FilterValues> = {}
 
-  if (params.status && isValidConversationStatus(params.status)) {
-    filters.status = params.status as ConversationStatus
+  if (params.status && isValidChatStatus(params.status)) {
+    filters.status = params.status as ChatStatus
   }
 
   if (params.patientId) {
@@ -102,7 +100,7 @@ export default async function ConversationsPage({ searchParams }: PageProps) {
           </p>
         </div>
 
-        {/* Filter section (can be expanded in future) */}
+        {/* Filter section */}
         <div className="flex gap-2">
           <Link href="/conversas?status=IA">
             <Button variant={filters.status === 'IA' ? 'default' : 'outline'} size="sm">
@@ -138,7 +136,7 @@ export default async function ConversationsPage({ searchParams }: PageProps) {
 }
 
 // Validation helper
-function isValidConversationStatus(value: string): boolean {
-  const validStatuses: ConversationStatus[] = ['IA', 'HUMANO', 'FINALIZADO']
-  return validStatuses.includes(value as ConversationStatus)
+function isValidChatStatus(value: string): boolean {
+  const validStatuses: ChatStatus[] = ['IA', 'HUMANO', 'FINALIZADO']
+  return validStatuses.includes(value as ChatStatus)
 }
