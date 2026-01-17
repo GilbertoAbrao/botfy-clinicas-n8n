@@ -1,0 +1,96 @@
+{
+  "id": "3ryiGnLNLuPWEfmL",
+  "name": "Botfy - Pre Check-In Lembrete",
+  "active": true,
+  "nodes": [
+    {
+      "id": "schedule-trigger",
+      "name": "Disparo Lembrete",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [-600, 300],
+      "parameters": {"rule": {"interval": [{"field": "hours", "hoursInterval": 2}]}}
+    },
+    {
+      "id": "busca-pendentes",
+      "name": "Busca Pre Check-Ins Pendentes",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [-400, 300],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT pc.*, a.data_hora, p.nome as paciente_nome, p.telefone as paciente_telefone, s.nome as servico_nome FROM pre_checkin pc JOIN agendamentos a ON pc.agendamento_id = a.id JOIN pacientes p ON pc.paciente_id = p.id LEFT JOIN servicos s ON a.servico_id = s.id WHERE pc.status IN ('pendente', 'em_andamento') AND pc.lembrete_enviado_em IS NULL AND a.data_hora >= NOW() + INTERVAL '10 hours' AND a.data_hora <= NOW() + INTERVAL '14 hours' AND a.status = 'confirmado'"
+      }
+    },
+    {
+      "id": "filter-sem-lembrete",
+      "name": "Filtrar Sem Lembrete",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [-200, 300],
+      "parameters": {
+        "conditions": {
+          "options": {"version": 2, "leftValue": "", "caseSensitive": true, "typeValidation": "loose"},
+          "conditions": [{"id": "cond-status", "leftValue": "={{ $json.status }}", "rightValue": "completo", "operator": {"type": "string", "operation": "notEquals"}}],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "prepara-lembrete",
+      "name": "Prepara Lembrete",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [0, 300],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "telefone", "name": "telefone", "value": "={{ $json.paciente_telefone }}", "type": "string"},
+            {"id": "nome", "name": "nome_paciente", "value": "={{ $json.paciente_nome.split(' ')[0] }}", "type": "string"},
+            {"id": "data_consulta", "name": "data_consulta", "value": "={{ DateTime.fromISO($json.data_hora).setZone('America/Sao_Paulo').toFormat('dd/MM/yyyy HH:mm') }}", "type": "string"},
+            {"id": "pendencias", "name": "pendencias_texto", "value": "={{ $json.dados_confirmados ? '' : '- Confirmar dados cadastrais\\n' }}{{ $json.documentos_enviados ? '' : '- Enviar documentos\\n' }}", "type": "string"},
+            {"id": "mensagem", "name": "mensagem", "value": "=Oi {{ $json.nome_paciente }}! ⏰\n\nSua consulta é *amanhã {{ $json.data_consulta.split(' ')[1] }}*!\n\nPara agilizar seu atendimento, ainda falta:\n{{ $json.pendencias_texto || '- Confirmar que recebeu as instruções' }}\n\nPosso te ajudar com alguma dúvida sobre o procedimento?", "type": "string"},
+            {"id": "pre_checkin_id", "name": "pre_checkin_id", "value": "={{ $json.pre_checkin_id }}", "type": "number"}
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "envia-lembrete",
+      "name": "Envia Lembrete WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [200, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "apikey", "value": "={{ $env.EVOLUTION_API_KEY }}"}]},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"number\": \"{{ $json.telefone }}\",\n    \"text\": \"{{ $json.mensagem.replace(/\\n/g, '\\\\n') }}\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "atualiza-lembrete",
+      "name": "Marca Lembrete Enviado",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [400, 300],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ 'UPDATE pre_checkin SET lembrete_enviado_em = NOW() WHERE id = ' + $json.id }}"
+      }
+    }
+  ],
+  "connections": {
+    "Disparo Lembrete": {"main": [[{"node": "Busca Pre Check-Ins Pendentes", "type": "main", "index": 0}]]},
+    "Busca Pre Check-Ins Pendentes": {"main": [[{"node": "Filtrar Sem Lembrete", "type": "main", "index": 0}]]},
+    "Filtrar Sem Lembrete": {"main": [[{"node": "Prepara Lembrete", "type": "main", "index": 0}]]},
+    "Prepara Lembrete": {"main": [[{"node": "Envia Lembrete WhatsApp", "type": "main", "index": 0}]]},
+    "Envia Lembrete WhatsApp": {"main": [[{"node": "Marca Lembrete Enviado", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1"}
+}

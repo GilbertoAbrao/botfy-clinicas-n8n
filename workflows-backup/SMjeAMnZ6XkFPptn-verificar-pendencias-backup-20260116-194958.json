@@ -1,0 +1,130 @@
+{
+  "id": "SMjeAMnZ6XkFPptn",
+  "name": "Botfy - Verificar Pendencias Pre Check-In",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {"rule": {"interval": [{"field": "hours", "hoursInterval": 2}]}},
+      "id": "trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 304]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT pc.*, a.data_hora, a.profissional, a.tipo_consulta, p.nome as paciente_nome, p.telefone as paciente_telefone, s.nome as servico_nome, EXTRACT(EPOCH FROM (a.data_hora - NOW())) / 3600 as horas_ate_consulta FROM pre_checkin pc JOIN agendamentos a ON pc.agendamento_id = a.id JOIN pacientes p ON pc.paciente_id = p.id LEFT JOIN servicos s ON a.servico_id = s.id WHERE pc.status IN ('pendente', 'em_andamento', 'incompleto') AND a.data_hora > NOW() AND a.data_hora <= NOW() + INTERVAL '24 hours' AND a.status = 'confirmado' ORDER BY a.data_hora ASC"
+      },
+      "id": "buscar_pendencias",
+      "name": "Buscar Pre Check-Ins Pendentes",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [464, 304]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
+          "combinator": "and",
+          "conditions": [{"leftValue": "={{ $input.all().length }}", "rightValue": 0, "operator": {"type": "number", "operation": "gt"}}]
+        },
+        "options": {}
+      },
+      "id": "verificar_resultados",
+      "name": "Tem Pendencias?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [688, 304]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "urgencia", "name": "urgencia", "type": "string", "value": "={{ $json.horas_ate_consulta <= 6 ? 'URGENTE' : 'NORMAL' }}"},
+            {"id": "pendencias_lista", "name": "pendencias_lista", "type": "array", "value": "={{ (() => { const p = []; if(!$json.dados_confirmados) p.push('Dados não confirmados'); if(!$json.documentos_enviados) p.push('Documentos pendentes'); if(!$json.instrucoes_enviadas) p.push('Instruções não enviadas'); return p; })() }}"},
+            {"id": "resumo", "name": "resumo", "type": "string", "value": "={{ $json.paciente_nome }} - {{ $json.servico_nome || $json.tipo_consulta }} em {{ new Date($json.data_hora).toLocaleString('pt-BR') }}"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "classificar_urgencia",
+      "name": "Classificar Urgencia",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [912, 208]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"},
+          "combinator": "and",
+          "conditions": [{"leftValue": "={{ $json.urgencia }}", "rightValue": "URGENTE", "operator": {"type": "string", "operation": "equals"}}]
+        },
+        "options": {}
+      },
+      "id": "filtrar_urgentes",
+      "name": "Filtrar Urgentes",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [1120, 208]
+    },
+    {
+      "parameters": {"aggregate": "aggregateAllItemData", "destinationFieldName": "pendencias_urgentes", "include": "allFieldsExcept", "options": {}},
+      "id": "agregar_relatorio",
+      "name": "Agregar Relatorio",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [1344, 208]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "apikey", "value": "={{ $env.EVOLUTION_API_KEY }}"}]},
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {"name": "number", "value": "={{ $env.CLINICA_WHATSAPP }}"},
+            {"name": "text", "value": "=🏥 *PENDÊNCIAS DE PRÉ-CHECK-IN*\n\n{{ $json.pendencias_urgentes.length }} paciente(s) com pendências URGENTES (consulta em menos de 6h):\n\n{{ $json.pendencias_urgentes.map((p, i) => `${i+1}. ${p.resumo}\\n   ⚠️ ${p.pendencias_lista.join(', ')}`).join('\\n\\n') }}"}
+          ]
+        },
+        "options": {}
+      },
+      "id": "enviar_notificacao",
+      "name": "Enviar Notificacao Clinica",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1568, 208]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ 'UPDATE pre_checkin SET pendencias = \\'' + JSON.stringify($('Classificar Urgencia').item.json.pendencias_lista) + '\\' WHERE id = ' + $json.id }}"
+      },
+      "id": "atualizar_pendencias",
+      "name": "Atualizar Campo Pendencias",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [912, 400]
+    },
+    {
+      "parameters": {},
+      "id": "sem_pendencias",
+      "name": "Sem Pendencias",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [912, 512]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {"main": [[{"node": "Buscar Pre Check-Ins Pendentes", "type": "main", "index": 0}]]},
+    "Buscar Pre Check-Ins Pendentes": {"main": [[{"node": "Tem Pendencias?", "type": "main", "index": 0}]]},
+    "Tem Pendencias?": {"main": [[{"node": "Classificar Urgencia", "type": "main", "index": 0}], [{"node": "Sem Pendencias", "type": "main", "index": 0}]]},
+    "Classificar Urgencia": {"main": [[{"node": "Filtrar Urgentes", "type": "main", "index": 0}], [{"node": "Atualizar Campo Pendencias", "type": "main", "index": 0}]]},
+    "Filtrar Urgentes": {"main": [[{"node": "Agregar Relatorio", "type": "main", "index": 0}]]},
+    "Agregar Relatorio": {"main": [[{"node": "Enviar Notificacao Clinica", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1"}
+}

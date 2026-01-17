@@ -1,0 +1,129 @@
+{
+  "id": "8Bke6sYr7r51aeEq",
+  "name": "Tool: Buscar Slots Disponíveis",
+  "active": false,
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 0],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {"name": "data", "type": "string"},
+            {"name": "periodo", "type": "string"}
+          ]
+        }
+      }
+    },
+    {
+      "id": "parse-json",
+      "name": "Parse JSON Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [110, 0],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const input = $input.first().json;\nlet dados;\nif (typeof input.query === 'string') {\n  dados = JSON.parse(input.query);\n} else if (typeof input === 'string') {\n  dados = JSON.parse(input);\n} else if (input.query && typeof input.query === 'object') {\n  dados = input.query;\n} else if (input.data) {\n  dados = input;\n} else {\n  dados = input;\n}\nlet periodo = (dados.periodo || 'qualquer').toLowerCase().trim();\nif (periodo.includes('tarde') && !periodo.includes('manha')) {\n  periodo = 'tarde';\n} else if (periodo.includes('manha') && !periodo.includes('tarde')) {\n  periodo = 'manha';\n} else {\n  periodo = 'qualquer';\n}\nreturn [{ json: { data: dados.data || null, periodo: periodo } }];"
+      }
+    },
+    {
+      "id": "valida-entrada",
+      "name": "Valida Entrada",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [220, 0],
+      "parameters": {
+        "conditions": {
+          "options": {"version": 2, "caseSensitive": true, "typeValidation": "loose"},
+          "combinator": "and",
+          "conditions": [{"id": "data-exists", "leftValue": "={{ $json.data }}", "rightValue": "", "operator": {"type": "string", "operation": "notEmpty"}}]
+        }
+      }
+    },
+    {
+      "id": "gera-slots",
+      "name": "Gera Todos os Slots",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [440, -120],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const HORA_ABERTURA = 8;\nconst HORA_ALMOCO_INICIO = 12;\nconst HORA_ALMOCO_FIM = 13;\nconst HORA_FECHAMENTO = 20;\nconst data = $input.first().json.data;\nconst periodo = $input.first().json.periodo || 'qualquer';\nconst todosSlots = [];\nfor (let hora = HORA_ABERTURA; hora < HORA_FECHAMENTO; hora++) {\n  if (hora >= HORA_ALMOCO_INICIO && hora < HORA_ALMOCO_FIM) continue;\n  todosSlots.push(`${hora.toString().padStart(2, '0')}:00`);\n  todosSlots.push(`${hora.toString().padStart(2, '0')}:30`);\n}\nlet slotsFiltrados = todosSlots;\nif (periodo === 'manha') {\n  slotsFiltrados = todosSlots.filter(s => parseInt(s.split(':')[0]) < HORA_ALMOCO_INICIO);\n} else if (periodo === 'tarde') {\n  slotsFiltrados = todosSlots.filter(s => parseInt(s.split(':')[0]) >= HORA_ALMOCO_FIM);\n}\nreturn [{ json: { data, periodo, slotsPossiveis: slotsFiltrados } }];"
+      }
+    },
+    {
+      "id": "busca-agendamentos",
+      "name": "Busca Agendamentos do Dia",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [440, 0],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "agendamentos",
+        "returnAll": true,
+        "filterType": "string",
+        "filterString": "=data_hora=gte.{{ $json.data }}T00:00:00&data_hora=lt.{{ $json.data }}T23:59:59&status=neq.cancelado",
+        "options": {"alwaysOutputData": true}
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "merge-slots",
+      "name": "Merge Slots e Agendamentos",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [770, -120],
+      "parameters": {"mode": "append"}
+    },
+    {
+      "id": "calcula-disponiveis",
+      "name": "Calcula Slots Disponíveis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [990, -120],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const geraSlots = $('Gera Todos os Slots').first().json;\nconst data = geraSlots.data;\nconst periodo = geraSlots.periodo;\nconst todosSlots = geraSlots.slotsPossiveis;\nlet agendados = [];\ntry { agendados = $('Busca Agendamentos do Dia').all(); } catch (e) { agendados = []; }\nconst horariosOcupados = agendados.filter(a => a.json && a.json.data_hora).map(a => {\n  const dt = new Date(a.json.data_hora);\n  return `${dt.getHours().toString().padStart(2, '0')}:${dt.getMinutes().toString().padStart(2, '0')}`;\n});\nconst disponiveis = todosSlots.filter(h => !horariosOcupados.includes(h));\nlet resultado;\nif (disponiveis.length === 0) {\n  resultado = `Não há horários disponíveis para ${data} no período ${periodo}. Sugira outro dia ou período ao paciente.`;\n} else {\n  const horariosParaMostrar = disponiveis.slice(0, 6);\n  resultado = `Horários disponíveis para ${data} (${periodo}): ${horariosParaMostrar.join(', ')}. Pergunte qual horário o paciente prefere.`;\n}\nreturn [{ json: { resultado, data, periodo, slotsDisponiveis: disponiveis, horariosOcupados, totalAgendamentos: agendados.length } }];"
+      }
+    },
+    {
+      "id": "retorna-resultado",
+      "name": "Retorna Resultado",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1210, -120],
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {"assignments": [{"id": "output", "name": "response", "type": "string", "value": "={{ $json.resultado }}"}]},
+        "options": {}
+      }
+    },
+    {
+      "id": "erro-sem-data",
+      "name": "Erro: Sem Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [440, 120],
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {"assignments": [{"id": "result", "name": "resultado", "type": "string", "value": "Erro: O parâmetro 'data' é obrigatório no formato YYYY-MM-DD"}]},
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {"main": [[{"node": "Parse JSON Input", "type": "main", "index": 0}]]},
+    "Parse JSON Input": {"main": [[{"node": "Valida Entrada", "type": "main", "index": 0}]]},
+    "Valida Entrada": {"main": [[{"node": "Gera Todos os Slots", "type": "main", "index": 0}, {"node": "Busca Agendamentos do Dia", "type": "main", "index": 0}], [{"node": "Erro: Sem Data", "type": "main", "index": 0}]]},
+    "Gera Todos os Slots": {"main": [[{"node": "Merge Slots e Agendamentos", "type": "main", "index": 0}]]},
+    "Busca Agendamentos do Dia": {"main": [[{"node": "Merge Slots e Agendamentos", "type": "main", "index": 1}]]},
+    "Merge Slots e Agendamentos": {"main": [[{"node": "Calcula Slots Disponíveis", "type": "main", "index": 0}]]},
+    "Calcula Slots Disponíveis": {"main": [[{"node": "Retorna Resultado", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1"}
+}

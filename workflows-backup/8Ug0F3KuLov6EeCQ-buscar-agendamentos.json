@@ -1,0 +1,64 @@
+{
+  "id": "8Ug0F3KuLov6EeCQ",
+  "name": "Botfy - Tool: Buscar Agendamentos",
+  "active": false,
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-400, 300],
+      "parameters": { "inputSource": "passthrough" }
+    },
+    {
+      "id": "parse-input",
+      "name": "Parse Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-200, 300],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "data_inicio", "name": "data_inicio", "value": "={{ $json.data_inicio || ($json.query && $json.query.includes(' to ') ? $json.query.split(' to ')[0] : $now.toISO()) }}", "type": "string" },
+            { "id": "data_fim", "name": "data_fim", "value": "={{ $json.data_fim || ($json.query && $json.query.includes(' to ') ? $json.query.split(' to ')[1] : $now.plus({ days: 7 }).toISO()) }}", "type": "string" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "busca-agendamentos",
+      "name": "Busca Agendamentos",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1.2,
+      "position": [0, 300],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "agendamentos_completos",
+        "returnAll": true,
+        "filterType": "string",
+        "filterString": "=data_hora.gte.{{ $json.data_inicio }},data_hora.lte.{{ $json.data_fim }},status.neq.cancelada"
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "id": "formata-resultado",
+      "name": "Formata Resultado",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [200, 300],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "resultado", "name": "resultado", "value": "={{ $input.all().map(item => ({ id: item.json.id, paciente: item.json.paciente_nome, telefone: item.json.paciente_telefone, servico: item.json.servico_nome || item.json.tipo_consulta, data_hora: item.json.data_hora, duracao: item.json.servico_duracao || item.json.duracao_minutos || 30, status: item.json.status })) }}", "type": "array" }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": { "main": [[{ "node": "Parse Input", "type": "main", "index": 0 }]] },
+    "Parse Input": { "main": [[{ "node": "Busca Agendamentos", "type": "main", "index": 0 }]] },
+    "Busca Agendamentos": { "main": [[{ "node": "Formata Resultado", "type": "main", "index": 0 }]] }
+  }
+}

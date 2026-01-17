@@ -1,0 +1,27 @@
+{
+  "id": "4DNyXp5fPPfsFOnR",
+  "name": "Botfy - Tool: Atualizar Dados Paciente",
+  "active": false,
+  "nodes": [
+    {"parameters": {"httpMethod": "POST", "path": "atualizar-paciente", "responseMode": "responseNode", "options": {}}, "id": "trigger", "name": "Webhook Trigger", "type": "n8n-nodes-base.webhook", "typeVersion": 2, "position": [240, 304]},
+    {"parameters": {"assignments": {"assignments": [{"id": "paciente_id", "name": "paciente_id", "type": "number", "value": "={{ $json.body.paciente_id }}"}, {"id": "campo", "name": "campo", "type": "string", "value": "={{ $json.body.campo }}"}, {"id": "valor", "name": "valor", "type": "string", "value": "={{ $json.body.valor }}"}, {"id": "pre_checkin_id", "name": "pre_checkin_id", "type": "number", "value": "={{ $json.body.pre_checkin_id || null }}"}]}, "options": {}}, "id": "extrair_params", "name": "Extrair Parametros", "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [464, 304]},
+    {"parameters": {"conditions": {"options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict"}, "combinator": "and", "conditions": [{"leftValue": "={{ ['nome', 'email', 'telefone', 'data_nascimento', 'cpf', 'endereco', 'convenio', 'numero_carteirinha'].includes($json.campo) }}", "rightValue": true, "operator": {"type": "boolean", "operation": "true"}}]}, "options": {}}, "id": "validar_campo", "name": "Validar Campo Permitido", "type": "n8n-nodes-base.if", "typeVersion": 2, "position": [688, 304]},
+    {"parameters": {"operation": "executeQuery", "query": "={{ 'UPDATE pacientes SET ' + $json.campo + ' = \\'' + $json.valor + '\\', updated_at = NOW() WHERE id = ' + $json.paciente_id + ' RETURNING id, nome, email, telefone' }}", "options": {}}, "id": "atualizar_paciente", "name": "Atualizar no Postgres", "type": "n8n-nodes-base.postgres", "typeVersion": 2.5, "position": [912, 208]},
+    {"parameters": {"operation": "executeQuery", "query": "={{ 'UPDATE pre_checkin SET dados_confirmados = true, status = CASE WHEN status = \\'pendente\\' THEN \\'em_andamento\\' ELSE status END, updated_at = NOW() WHERE ' + ($('Extrair Parametros').item.json.pre_checkin_id ? 'id = ' + $('Extrair Parametros').item.json.pre_checkin_id : 'paciente_id = ' + $('Extrair Parametros').item.json.paciente_id + ' AND status IN (\\'pendente\\', \\'em_andamento\\')') }}", "options": {}}, "id": "atualizar_precheckin", "name": "Marcar Dados Confirmados", "type": "n8n-nodes-base.postgres", "typeVersion": 2.5, "position": [1120, 208]},
+    {"parameters": {"assignments": {"assignments": [{"id": "success", "name": "success", "type": "boolean", "value": true}, {"id": "mensagem", "name": "mensagem", "type": "string", "value": "=Dados atualizados com sucesso. Campo {{ $('Extrair Parametros').item.json.campo }} alterado."}]}, "options": {}}, "id": "resposta_sucesso", "name": "Resposta Sucesso", "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [1344, 208]},
+    {"parameters": {"assignments": {"assignments": [{"id": "success", "name": "success", "type": "boolean", "value": false}, {"id": "mensagem", "name": "mensagem", "type": "string", "value": "=Campo '{{ $('Extrair Parametros').item.json.campo }}' não é permitido para atualização. Campos permitidos: nome, email, telefone, data_nascimento, cpf, endereco, convenio, numero_carteirinha"}]}, "options": {}}, "id": "resposta_erro", "name": "Resposta Erro", "type": "n8n-nodes-base.set", "typeVersion": 3.4, "position": [912, 400]},
+    {"parameters": {"mode": "chooseBranch", "output": "empty"}, "id": "merge", "name": "Merge Respostas", "type": "n8n-nodes-base.merge", "typeVersion": 3, "position": [1344, 400]},
+    {"parameters": {"respondWith": "json", "responseBody": "={{ $json }}", "options": {}}, "id": "resposta", "name": "Responder Webhook", "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.1, "position": [1568, 304]}
+  ],
+  "connections": {
+    "Webhook Trigger": {"main": [[{"node": "Extrair Parametros", "type": "main", "index": 0}]]},
+    "Extrair Parametros": {"main": [[{"node": "Validar Campo Permitido", "type": "main", "index": 0}]]},
+    "Validar Campo Permitido": {"main": [[{"node": "Atualizar no Postgres", "type": "main", "index": 0}], [{"node": "Resposta Erro", "type": "main", "index": 0}]]},
+    "Atualizar no Postgres": {"main": [[{"node": "Marcar Dados Confirmados", "type": "main", "index": 0}]]},
+    "Marcar Dados Confirmados": {"main": [[{"node": "Resposta Sucesso", "type": "main", "index": 0}]]},
+    "Resposta Sucesso": {"main": [[{"node": "Merge Respostas", "type": "main", "index": 0}]]},
+    "Resposta Erro": {"main": [[{"node": "Merge Respostas", "type": "main", "index": 1}]]},
+    "Merge Respostas": {"main": [[{"node": "Responder Webhook", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1"}
+}

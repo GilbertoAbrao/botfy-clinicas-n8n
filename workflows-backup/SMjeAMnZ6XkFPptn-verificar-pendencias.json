@@ -1,0 +1,14 @@
+{
+  "updatedAt": "2026-01-17T15:09:18.527Z",
+  "createdAt": "2026-01-14T12:12:06.474Z",
+  "id": "SMjeAMnZ6XkFPptn",
+  "name": "Botfy - Verificar Pendencias Pre Check-In",
+  "active": true,
+  "webhooks": [
+    {
+      "path": "/test/verificar-pendencias",
+      "method": "POST",
+      "responseMode": "onReceived"
+    }
+  ]
+}

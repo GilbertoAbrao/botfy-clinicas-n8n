@@ -1,0 +1,562 @@
+{
+  "updatedAt": "2026-01-17T15:09:19.648Z",
+  "createdAt": "2026-01-14T12:08:28.933Z",
+  "id": "BWDsb4A0GVs2NQnM",
+  "name": "Botfy - Pre Check-In",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Disparo Agendado",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -608,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "config_globais",
+        "limit": 1,
+        "matchType": "allFilters"
+      },
+      "id": "variaveis-globais",
+      "name": "Variáveis Globais",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        304
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "vjxdwL14zFNscRrD",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  a.id as agendamento_id,\n  a.data_hora,\n  a.tipo_consulta,\n  a.duracao_minutos,\n  a.profissional,\n  p.id as paciente_id,\n  p.nome as paciente_nome,\n  p.telefone as paciente_telefone,\n  p.email as paciente_email,\n  p.cpf as paciente_cpf,\n  p.convenio,\n  p.numero_carteirinha\nFROM agendamentos a\nJOIN pacientes p ON a.paciente_id = p.id\nWHERE a.status IN ('agendada', 'confirmado')\n  AND a.data_hora BETWEEN NOW() + INTERVAL '23 hours' AND NOW() + INTERVAL '25 hours'\nORDER BY a.data_hora ASC;"
+      },
+      "id": "busca-agendamentos",
+      "name": "Busca Agendamentos Proximos",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        -208,
+        304
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "xwAYczJevSyqr2Is",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ 'SELECT id FROM pre_checkin WHERE agendamento_id = ' + $json.id }}",
+        "options": {}
+      },
+      "id": "verifica-pre-checkin",
+      "name": "Verifica Pre Check-In Existente",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        304
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "xwAYczJevSyqr2Is",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-nao-existe",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "notExists"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "if-nao-existe",
+      "name": "Pre Check-In Existe?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO pre_checkin (\n  agendamento_id,\n  paciente_id,\n  status,\n  dados_confirmados,\n  documentos_enviados,\n  instrucoes_enviadas,\n  mensagem_enviada_em\n) VALUES (\n  {{ $('Busca Agendamentos Proximos').item.json.agendamento_id }},\n  {{ $('Busca Agendamentos Proximos').item.json.paciente_id }},\n  'pendente',\n  false,\n  false,\n  false,\n  NOW()\n)\nON CONFLICT (agendamento_id) DO NOTHING\nRETURNING *;"
+      },
+      "id": "cria-pre-checkin",
+      "name": "Cria Pre Check-In",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        416,
+        208
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "xwAYczJevSyqr2Is",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "telefone",
+              "name": "telefone",
+              "value": "={{ $('Busca Agendamentos Proximos').item.json.paciente_telefone }}",
+              "type": "string"
+            },
+            {
+              "id": "nome_paciente",
+              "name": "nome_paciente",
+              "value": "={{ $('Busca Agendamentos Proximos').item.json.paciente_nome }}",
+              "type": "string"
+            },
+            {
+              "id": "tipo_consulta",
+              "name": "tipo_consulta",
+              "value": "={{ $('Busca Agendamentos Proximos').item.json.tipo_consulta }}",
+              "type": "string"
+            },
+            {
+              "id": "data_hora_consulta",
+              "name": "data_hora_consulta",
+              "value": "={{ $('Busca Agendamentos Proximos').item.json.data_hora }}",
+              "type": "string"
+            },
+            {
+              "id": "data_formatada",
+              "name": "data_formatada",
+              "value": "={{ DateTime.fromISO($('Busca Agendamentos Proximos').item.json.data_hora).setZone('America/Sao_Paulo').toFormat('dd/MM/yyyy') }}",
+              "type": "string"
+            },
+            {
+              "id": "horario",
+              "name": "horario",
+              "value": "={{ DateTime.fromISO($('Busca Agendamentos Proximos').item.json.data_hora).setZone('America/Sao_Paulo').toFormat('HH:mm') }}",
+              "type": "string"
+            },
+            {
+              "id": "mensagem",
+              "name": "mensagem",
+              "value": "=Olá {{ $json.nome_paciente }}! 👋\n\nSua consulta de {{ $json.tipo_consulta }} está agendada para:\n📅 *{{ $json.data_formatada }} {{ $json.horario }}*\n\nPara agilizar seu atendimento, confirme seus dados:\n\n✅ Nome completo\n✅ Telefone\n✅ Email (se tiver)\n✅ Convênio e número da carteirinha (se usar)\n\nSe seus dados estão corretos, responda \"está tudo certo\" ✨",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prepara-mensagem",
+      "name": "Prepara Mensagem",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        608,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Variáveis Globais').item.json.evolution_api_url + '/message/sendText/' + $('Variáveis Globais').item.json.evolution_instance }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $('Variáveis Globais').item.json.evolution_api_key }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"number\": \"{{ $json.telefone }}\",\n    \"text\": \"{{ $json.mensagem.replace(/\\n/g, '\\\\n') }}\"\n}",
+        "options": {}
+      },
+      "id": "envia-whatsapp",
+      "name": "Envia WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        816,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=INSERT INTO n8n_chat_histories (session_id, message)\nVALUES (\n  '{{ $('Busca Agendamentos Proximos').item.json.paciente_telefone }}@s.whatsapp.net-calendar',\n  '{\n    \"type\": \"ai\",\n    \"content\": \"{{ $('Prepara Mensagem').item.json.mensagem.replace(/\"/g, '\\\\\"').replace(/\\n/g, '\\\\n').replace(/'/g, \"''\") }}\",\n    \"tool_calls\": [],\n    \"additional_kwargs\": {},\n    \"response_metadata\": {},\n    \"invalid_tool_calls\": []\n  }'::jsonb\n);\n"
+      },
+      "id": "log-sucesso",
+      "name": "Log Sucesso",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1008,
+        208
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "xwAYczJevSyqr2Is",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "ja-existe",
+      "name": "Ja Existe - Ignora",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        416,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/test/pre-checkin",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-test",
+      "name": "Webhook Teste",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -608,
+        512
+      ],
+      "webhookId": "266f6e2a-f0bc-4487-8466-41b8c5a466d1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "agendamento-id",
+              "name": "agendamento_id",
+              "value": "={{ $json.body?.agendamento_id }}",
+              "type": "number"
+            },
+            {
+              "id": "bypass-timing",
+              "name": "bypass_timing",
+              "value": "={{ $json.body?.bypass_timing || false }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "parse-test-payload",
+      "name": "Parse Test Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -400,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "has-id",
+              "leftValue": "={{ $json.agendamento_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists"
+              }
+            }
+          ]
+        },
+        "looseTypeValidation": true
+      },
+      "id": "if-specific-agendamento",
+      "name": "Tem Agendamento Específico?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -208,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT a.id as agendamento_id, a.data_hora, a.tipo_consulta, a.duracao_minutos, a.profissional, p.id as paciente_id, p.nome as paciente_nome, p.telefone as paciente_telefone, p.email as paciente_email, p.cpf as paciente_cpf, p.convenio, p.numero_carteirinha FROM agendamentos a JOIN pacientes p ON a.paciente_id = p.id WHERE a.id = {{ $json.agendamento_id }}"
+      },
+      "id": "busca-agendamento-test",
+      "name": "Busca Agendamento Teste",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "xwAYczJevSyqr2Is",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "config_globais",
+        "returnAll": false,
+        "limit": 1,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "1"
+            }
+          ]
+        }
+      },
+      "id": "variaveis-globais-test",
+      "name": "Variáveis Globais Teste",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        0,
+        608
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "vjxdwL14zFNscRrD",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Disparo Agendado": {
+      "main": [
+        [
+          {
+            "node": "Variáveis Globais",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Variáveis Globais": {
+      "main": [
+        [
+          {
+            "node": "Busca Agendamentos Proximos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca Agendamentos Proximos": {
+      "main": [
+        [
+          {
+            "node": "Verifica Pre Check-In Existente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verifica Pre Check-In Existente": {
+      "main": [
+        [
+          {
+            "node": "Pre Check-In Existe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pre Check-In Existe?": {
+      "main": [
+        [
+          {
+            "node": "Cria Pre Check-In",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ja Existe - Ignora",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cria Pre Check-In": {
+      "main": [
+        [
+          {
+            "node": "Prepara Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepara Mensagem": {
+      "main": [
+        [
+          {
+            "node": "Envia WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envia WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Log Sucesso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Teste": {
+      "main": [
+        [
+          {
+            "node": "Parse Test Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Test Payload": {
+      "main": [
+        [
+          {
+            "node": "Tem Agendamento Específico?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tem Agendamento Específico?": {
+      "main": [
+        [
+          {
+            "node": "Busca Agendamento Teste",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Variáveis Globais Teste",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Variáveis Globais Teste": {
+      "main": [
+        [
+          {
+            "node": "Busca Agendamentos Proximos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca Agendamento Teste": {
+      "main": [
+        [
+          {
+            "node": "Verifica Pre Check-In Existente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  }
+}
