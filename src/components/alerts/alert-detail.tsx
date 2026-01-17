@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { AlertWithRelations } from '@/lib/api/alerts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -7,10 +8,11 @@ import { Button } from '@/components/ui/button'
 import { AlertStatusUpdater } from './alert-status-updater'
 import { ConversationThread } from '../conversations/conversation-thread'
 import { ClearMemoryButton } from '../conversations/clear-memory-button'
+import { RescheduleModal, SendMessageModal } from '../interventions'
 import { formatDistanceToNow, format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import Link from 'next/link'
-import { Copy, Phone, Mail, User, Calendar, MessageSquare } from 'lucide-react'
+import { Copy, Phone, Mail, User, Calendar, MessageSquare, CalendarClock, Send } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface AlertDetailProps {
@@ -58,7 +60,44 @@ function copyToClipboard(text: string, label: string) {
 }
 
 export function AlertDetail({ alert, onStatusChange, onStatusChangeStart }: AlertDetailProps) {
+  const [rescheduleOpen, setRescheduleOpen] = useState(false)
+  const [sendMessageOpen, setSendMessageOpen] = useState(false)
+
   const createdAt = new Date(alert.createdAt)
+
+  // Resolve alert via API after successful intervention
+  const resolveAlert = async (interventionType: 'reschedule' | 'send_message' | 'clear_memory') => {
+    try {
+      const response = await fetch(`/api/alerts/${alert.id}/resolve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ interventionType }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Erro ao resolver alerta')
+      }
+
+      // Notify parent to refresh
+      onStatusChange?.()
+    } catch (error) {
+      console.error('Error resolving alert:', error)
+      // Don't show error toast - the intervention was successful, just the auto-resolve failed
+      // The user can manually resolve if needed
+    }
+  }
+
+  const handleRescheduleSuccess = () => {
+    resolveAlert('reschedule')
+    setRescheduleOpen(false)
+    toast.success('Agendamento reagendado e alerta resolvido')
+  }
+
+  const handleSendMessageSuccess = () => {
+    resolveAlert('send_message')
+    setSendMessageOpen(false)
+  }
 
   // Parse conversation messages if available
   // The messages field is JSON, so we need to safely parse it
@@ -356,19 +395,31 @@ export function AlertDetail({ alert, onStatusChange, onStatusChangeStart }: Aler
               Acoes rapidas para resolver este alerta.
             </p>
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" disabled className="h-11 sm:h-auto">
+              {/* Reagendar button - only if appointment exists */}
+              <Button
+                variant="outline"
+                className="h-11 sm:h-auto gap-2"
+                onClick={() => setRescheduleOpen(true)}
+                disabled={!alert.appointment}
+                title={!alert.appointment ? 'Sem agendamento vinculado' : undefined}
+              >
+                <CalendarClock className="h-4 w-4" />
                 Reagendar
-                <span className="ml-2 text-xs text-muted-foreground">
-                  (Fase 6)
-                </span>
               </Button>
-              <Button variant="outline" disabled className="h-11 sm:h-auto">
+
+              {/* Enviar Mensagem button - only if patient phone exists */}
+              <Button
+                variant="outline"
+                className="h-11 sm:h-auto gap-2"
+                onClick={() => setSendMessageOpen(true)}
+                disabled={!alert.patient?.telefone}
+                title={!alert.patient?.telefone ? 'Paciente sem telefone cadastrado' : undefined}
+              >
+                <Send className="h-4 w-4" />
                 Enviar Mensagem
-                <span className="ml-2 text-xs text-muted-foreground">
-                  (Fase 6)
-                </span>
               </Button>
-              {/* Clear Memory is now functional (moved from Phase 6 to Phase 5) */}
+
+              {/* Clear Memory is functional */}
               {alert.chatSessionId && (
                 <ClearMemoryButton sessionId={alert.chatSessionId} />
               )}
@@ -376,6 +427,46 @@ export function AlertDetail({ alert, onStatusChange, onStatusChangeStart }: Aler
           </div>
         </CardContent>
       </Card>
+
+      {/* Reschedule Modal */}
+      {alert.appointment && (
+        <RescheduleModal
+          isOpen={rescheduleOpen}
+          onClose={() => setRescheduleOpen(false)}
+          appointmentId={alert.appointment.id}
+          patientName={alert.patient?.nome || 'Paciente'}
+          serviceName={alert.appointment.serviceType || 'Consulta'}
+          currentDateTime={
+            typeof alert.appointment.scheduledAt === 'string'
+              ? alert.appointment.scheduledAt
+              : alert.appointment.scheduledAt.toISOString()
+          }
+          onSuccess={handleRescheduleSuccess}
+        />
+      )}
+
+      {/* Send Message Modal */}
+      {alert.patient?.telefone && (
+        <SendMessageModal
+          isOpen={sendMessageOpen}
+          onClose={() => setSendMessageOpen(false)}
+          patientName={alert.patient.nome}
+          patientPhone={alert.patient.telefone}
+          alertType={alert.type}
+          appointmentInfo={
+            alert.appointment
+              ? {
+                  serviceName: alert.appointment.serviceType || 'Consulta',
+                  dateTime:
+                    typeof alert.appointment.scheduledAt === 'string'
+                      ? alert.appointment.scheduledAt
+                      : alert.appointment.scheduledAt.toISOString(),
+                }
+              : undefined
+          }
+          onSuccess={handleSendMessageSuccess}
+        />
+      )}
     </div>
   )
 }
