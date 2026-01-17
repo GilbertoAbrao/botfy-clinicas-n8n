@@ -1,29 +1,28 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-17
-**Status:** Phase 7 Complete
-**Current Phase:** Phase 7 - System Configuration (COMPLETE)
+**Status:** Phase 8 In Progress
+**Current Phase:** Phase 8 - Analytics & Smart Features (IN PROGRESS)
 **Current Milestone:** v1.0
 
 ---
 
 ## Current State
 
-**Stage:** Phase 7 Complete - All 4 plans executed and verified
-**Action:** Ready for Phase 8 (Analytics & Smart Features)
+**Stage:** Phase 8 in progress - Plan 08-02 complete
+**Action:** Continue with Phase 8 remaining plans
 **Blockers:** None
 
 **Recently Completed:**
-- [x] **Phase 7 Complete** - System Configuration
-  - 07-01: Database schema (Service, ClinicSettings models)
-  - 07-02: Services CRUD (/admin/servicos)
-  - 07-03: User Management (/admin/usuarios)
-  - 07-04: Business Hours & Notifications (/admin/configuracoes)
-  - All 14 requirements delivered
+- [x] **Plan 08-02** - No-Show Risk Prediction
+  - Heuristic-based predictor with 5 weighted factors
+  - Batch prediction for multiple appointments
+  - LRU cache with 1-hour TTL (max 1000 entries)
+  - Actionable recommendations in Portuguese
 
 **Next Steps:**
-1. **PHASE 7 COMPLETE** - All system configuration features delivered
-2. Ready to start Phase 8 (Analytics & Smart Features) when requested
+1. Continue with remaining Phase 8 plans if any
+2. Integrate no-show predictor into calendar/appointment UI
 
 ---
 
@@ -38,9 +37,9 @@
 | Phase 5: Conversation Monitoring | Complete (All 3 plans done) | 10 | 10 | 100% |
 | Phase 6: One-Click Interventions | Complete (Plan 06-01 done) | 1 | 1 | 100% |
 | Phase 7: System Configuration | Complete (All 4 plans done) | 14 | 14 | 100% |
-| Phase 8: Analytics & Smart Features | Not Started | 2 | 0 | 0% |
+| Phase 8: Analytics & Smart Features | In Progress | 2 | 1 | 50% |
 
-**Overall Progress:** 87/89 requirements (98%)
+**Overall Progress:** 88/89 requirements (99%)
 
 ---
 
@@ -82,21 +81,31 @@
 91. CONF-13: Assign roles (Admin, Atendente) to users
 92. CONF-14: Configure notification preferences
 
+**Phase 8 - Analytics & Smart Features (IN PROGRESS):**
+93. ANLY-02: No-show risk prediction algorithm with caching
+
 ---
 
 ## Recent Decisions
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-01-17 | Risk factor weights: 40% historical, 15% each for time/day/lead/confirmation | Historical no-show rate is most predictive factor |
+| 2026-01-17 | LRU cache with 1-hour TTL, 1000 max entries | Balance freshness with performance |
+| 2026-01-17 | Batch query with groupBy for patient history | Single query more efficient than N+1 for batch predictions |
 | 2026-01-17 | turbopack.root config | Fix workspace root detection issues with multiple lockfiles |
 | 2026-01-17 | Separate create/edit forms in UserFormModal | TypeScript form types don't mix well, cleaner code |
 | 2026-01-17 | Supabase Admin API for user creation | Proper auth flow with email confirmation |
-| 2026-01-17 | Singleton pattern for ClinicSettings | id='default' ensures only one settings row |
-| 2026-01-17 | Json fields for business hours | Flexibility without schema changes for hour formats |
 
 ---
 
 ## Recent Activity
+
+**2026-01-17 - Plan 08-02 Complete**
+- No-show risk predictor with 5 weighted factors
+- Batch prediction for multiple appointments
+- LRU cache (1-hour TTL, 1000 max entries)
+- Recommendations in Portuguese (Ligar para confirmar, etc.)
 
 **2026-01-17 - Phase 7 Complete**
 - All 4 plans executed successfully (07-01 through 07-04)
@@ -123,4 +132,4 @@
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-17 after Phase 7 completion*
+*Last updated: 2026-01-17 after Plan 08-02 completion*
