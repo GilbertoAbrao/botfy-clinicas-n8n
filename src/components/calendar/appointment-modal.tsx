@@ -33,6 +33,7 @@ export function AppointmentModal({
   initialData,
 }: AppointmentModalProps) {
   const [loading, setLoading] = useState(false)
+  const [conflictError, setConflictError] = useState<string | null>(null)
   const [patients, setPatients] = useState<any[]>([])
   const [services, setServices] = useState<any[]>([])
   const [formData, setFormData] = useState({
@@ -64,6 +65,7 @@ export function AppointmentModal({
 
   const handleSave = async () => {
     setLoading(true)
+    setConflictError(null)  // Clear previous errors
 
     try {
       const url = appointmentId
@@ -80,6 +82,14 @@ export function AppointmentModal({
 
       if (!res.ok) {
         const error = await res.json()
+
+        // Handle conflict error specially
+        if (res.status === 409) {
+          setConflictError('Conflito de horário: já existe um agendamento neste horário para este profissional.')
+          toast.error('Horário indisponível')
+          return  // Don't close modal
+        }
+
         throw new Error(error.error || 'Erro ao salvar agendamento')
       }
 
@@ -126,6 +136,13 @@ export function AppointmentModal({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* Conflict error warning */}
+          {conflictError && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">{conflictError}</p>
+            </div>
+          )}
+
           {/* Patient select */}
           <div>
             <Label>Paciente</Label>
