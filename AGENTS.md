@@ -1,0 +1,756 @@
+# Botfy Clinicas - Sistema de Automação para Clínicas
+
+Sistema de automação de atendimento para clínicas via WhatsApp usando N8N, Evolution API e Supabase.
+
+## Arquitetura
+
+```
+[WhatsApp] <--> [Evolution API] <--> [N8N Workflows] <--> [Supabase]
+                                           |
+                                      [OpenAI GPT]
+```
+
+## Fluxograma do Sistema
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                            FLUXO DE ATENDIMENTO                                  │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+    ┌──────────────┐         ┌──────────────────┐         ┌─────────────────┐
+    │   WhatsApp   │ ──────> │  Evolution API   │ ──────> │    Webhook      │
+    │  (Paciente)  │         │  (Gateway)       │         │ /webhook/marilia│
+    └──────────────┘         └──────────────────┘         └────────┬────────┘
+                                                                   │
+                                                                   ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                     WORKFLOW: Botfy - Agendamento (PRINCIPAL)                    │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐       │
+│  │   Buffer    │───>│  Verifica   │───>│  AI Agent   │───>│   Envia     │       │
+│  │  (15 seg)   │    │  Chat/Dup   │    │  (Marília)  │    │  Resposta   │       │
+│  └─────────────┘    └─────────────┘    └──────┬──────┘    └─────────────┘       │
+│                                               │                                  │
+│                     ┌─────────────────────────┼─────────────────────────┐        │
+│                     │                         │                         │        │
+│                     ▼                         ▼                         ▼        │
+│            ┌────────────────┐       ┌────────────────┐       ┌────────────────┐  │
+│            │ buscar_slots   │       │ criar_agend.   │       │ buscar_paciente│  │
+│            │ _disponiveis   │       │ reagendar      │       │ confirmar_pres.│  │
+│            └────────────────┘       │ cancelar       │       └────────────────┘  │
+│                                     └────────────────┘                           │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                            │
+                                            ▼
+                                    ┌───────────────┐
+                                    │   Supabase    │
+                                    │  (PostgreSQL) │
+                                    └───────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                        WORKFLOWS AUTOMATIZADOS (CRON)                            │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                  │
+│  ┌─────────────────────┐      ┌─────────────────────┐     ┌──────────────────┐  │
+│  │  Anti No-Show       │      │  Pre Check-In       │     │  Pre Check-In    │  │
+│  │  (cada 15 min)      │      │  (cada 1 hora)      │     │  Lembrete (2h)   │  │
+│  │                     │      │                     │     │                  │  │
+│  │  - Lembrete 48h     │      │  - Envia 24h antes  │     │  - Reenvia se    │  │
+│  │  - Lembrete 24h     │      │  - Confirma dados   │     │    pendente      │  │
+│  │  - Lembrete 2h      │      │  - Cria registro    │     │  - 12h antes     │  │
+│  └─────────────────────┘      └─────────────────────┘     └──────────────────┘  │
+│                                                                                  │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Integração Principal
+
+- **Evolution API**: Gateway WhatsApp (instância: `Botfy AI - Brazil`)
+- **Webhook**: `/webhook/marilia` - Ponto de entrada único para mensagens
+- **Supabase**: Banco de dados PostgreSQL
+- **OpenAI**: GPT-4o-mini para AI Agent
+
+## Workflows - Tabela Resumida
+
+### Workflows Ativos (Produção)
+
+| ID | Nome | Nodes | Trigger | Função |
+|----|------|-------|---------|--------|
+| `bPJamJhBcrVCKgBg` | Botfy - Agendamento | 82 | Webhook `/webhook/marilia` | **PRINCIPAL** - AI Agent de atendimento |
+| `HTR3ITfFDrK6eP2R` | Botfy - Anti No-Show | 52 | Schedule (15min) | Lembretes automáticos 48h/24h/2h |
+| `BWDsb4A0GVs2NQnM` | Botfy - Pre Check-In | 9 | Schedule (1h) | Envia pré check-in 24h antes |
+| `3ryiGnLNLuPWEfmL` | Botfy - Pre Check-In Lembrete | 6 | Schedule (2h) | Lembrete de pré check-in |
+| `SMjeAMnZ6XkFPptn` | Botfy - Verificar Pendências | 9 | Schedule (2h) | Notifica clínica sobre pendências |
+
+### Tools (Sub-workflows)
+
+| ID | Nome | Função |
+|----|------|--------|
+| `8Bke6sYr7r51aeEq` | Tool: Buscar Slots Disponíveis | Busca horários livres por data/período |
+| `eEx2enJk3YpreNUm` | Tool: Criar Agendamento | Cria paciente (se novo) + agendamento |
+| `21EHe24mkMmfBhK6` | Tool: Reagendar Agendamento | Atualiza data_hora do agendamento |
+| `gE2rpbLVUlnA5yMk` | Tool: Cancelar Agendamento | Marca status = 'cancelada' |
+| `8Ug0F3KuLov6EeCQ` | Tool: Buscar Agendamentos | Lista agendamentos por período |
+| `igG6sZsStxiDzNRY` | Tool: Buscar Paciente | Busca paciente + agendamentos |
+| `4DNyXp5fPPfsFOnR` | Tool: Atualizar Dados Paciente | Atualiza campos do paciente |
+
+---
+
+## Workflows N8N
+
+### Workflows Ativos (Produção)
+
+#### 1. Botfy - Agendamento (bPJamJhBcrVCKgBg) - PRINCIPAL
+**Status**: Ativo | **Nodes**: 82 | **Webhook**: `/webhook/marilia`
+
+Agente central de atendimento. Recebe TODAS as mensagens do WhatsApp e:
+- Agenda, remarca e cancela consultas
+- Confirma presença de pacientes (anti-no-show)
+- Busca horários disponíveis
+- Buffer de mensagens (15s) para acumular mensagens rápidas
+
+**Tools do AI Agent**:
+- `buscar_slots_disponiveis` - Busca horários LIVRES (schema com data + período)
+- `buscar_agendamentos` - Consulta agendamentos existentes
+- `criar_agendamento` - Cria novo agendamento
+- `reagendar_agendamento` - Remarca consulta
+- `cancelar_agendamento` - Cancela consulta
+- `confirmar_presenca` - Confirma presença do paciente
+- `buscar_paciente` - Busca dados do paciente
+
+**Persona**: Marília, atendente virtual da Dra. Paula (esteticista)
+
+---
+
+#### 2. Botfy - Anti No-Show (HTR3ITfFDrK6eP2R)
+**Status**: Ativo | **Nodes**: 52 | **Trigger**: Schedule (cada 15min)
+
+Sistema de lembretes automáticos para reduzir faltas:
+- Envia lembretes 48h, 24h e 2h antes da consulta
+- Registra lembretes enviados em `lembretes_enviados`
+- Calcula risco de no-show por paciente
+- Escala para humano se paciente não responde
+
+---
+
+#### 3. Botfy - Pre Check-In (BWDsb4A0GVs2NQnM)
+**Status**: Ativo | **Nodes**: 9 | **Trigger**: Schedule (1h)
+
+Envia mensagem de pré check-in 24h antes da consulta:
+- Confirma dados cadastrais do paciente
+- Solicita documentos pendentes
+- Cria registro em `pre_checkin`
+
+---
+
+#### 4. Botfy - Pre Check-In Lembrete (3ryiGnLNLuPWEfmL)
+**Status**: Ativo | **Nodes**: 6 | **Trigger**: Schedule (2h)
+
+Envia lembrete para pacientes com pré check-in pendente:
+- Busca pré check-ins não completados
+- Envia lembrete ~12h antes da consulta
+
+---
+
+#### 5. Botfy - Verificar Pendências Pre Check-In (SMjeAMnZ6XkFPptn)
+**Status**: Ativo | **Nodes**: 9 | **Trigger**: Schedule
+
+Monitora pré check-ins pendentes e notifica a clínica:
+- Classifica urgência das pendências
+- Agrega relatório
+- Envia notificação para clínica
+
+---
+
+### Workflows Auxiliares (Tools)
+
+Estes workflows são chamados como sub-workflows pelo Agente principal:
+
+| ID | Nome | Função |
+|----|------|--------|
+| eEx2enJk3YpreNUm | Tool: Criar Agendamento | Cria paciente (se necessário) e agendamento |
+| 21EHe24mkMmfBhK6 | Tool: Reagendar Agendamento | Atualiza data/hora do agendamento |
+| gE2rpbLVUlnA5yMk | Tool: Cancelar Agendamento | Marca agendamento como cancelado |
+| 8Ug0F3KuLov6EeCQ | Tool: Buscar Agendamentos | Busca agendamentos por data/paciente |
+| igG6sZsStxiDzNRY | Tool: Buscar Paciente | Busca dados e agendamentos do paciente |
+
+---
+
+### Workflows Inativos/Legado
+
+| ID | Nome | Status | Motivo |
+|----|------|--------|--------|
+| 3BtsyJCCLRo5wA3v | Agente IA Central | Desativado | Consolidado no Agendamento |
+| p2YTCXaZCvRBB6oY | Router WhatsApp | Desativado | Substituído por webhook único |
+| E7T0VyKgGPBUcdPn | Agendamento - API Oficial | Desativado | Versão antiga |
+
+---
+
+## Dicionário de Dados - Supabase
+
+### Tabela: `pacientes`
+Cadastro de pacientes da clínica.
+
+| Coluna | Tipo | Obrigatório | Descrição |
+|--------|------|-------------|-----------|
+| `id` | SERIAL | PK | Identificador único |
+| `nome` | VARCHAR(255) | Sim | Nome completo do paciente |
+| `telefone` | VARCHAR(20) | Sim | Telefone com DDI (ex: 5511999999999) |
+| `email` | VARCHAR(255) | Não | Email do paciente |
+| `data_nascimento` | DATE | Não | Data de nascimento |
+| `cpf` | VARCHAR(14) | Não | CPF (apenas números ou formatado) |
+| `endereco` | TEXT | Não | Endereço completo |
+| `convenio` | VARCHAR(100) | Não | Nome do convênio |
+| `numero_carteirinha` | VARCHAR(50) | Não | Número da carteirinha do convênio |
+| `created_at` | TIMESTAMP | Auto | Data de criação |
+| `updated_at` | TIMESTAMP | Auto | Data de atualização |
+
+---
+
+### Tabela: `servicos`
+Procedimentos oferecidos pela clínica.
+
+| Coluna | Tipo | Obrigatório | Descrição |
+|--------|------|-------------|-----------|
+| `id` | SERIAL | PK | Identificador único |
+| `nome` | VARCHAR(100) | Sim | Nome do procedimento |
+| `duracao_minutos` | INTEGER | Sim | Duração em minutos |
+| `ativo` | BOOLEAN | Sim | Se o serviço está disponível |
+| `preco` | DECIMAL(10,2) | Não | Preço do procedimento |
+
+**Serviços Cadastrados:**
+- Avaliação Facial (30 min)
+- Limpeza de Pele (60 min)
+- Peeling (45 min)
+- Botox (30 min)
+- Preenchimento (45 min)
+
+---
+
+### Tabela: `agendamentos`
+Consultas agendadas.
+
+| Coluna | Tipo | Obrigatório | Descrição |
+|--------|------|-------------|-----------|
+| `id` | SERIAL | PK | Identificador único |
+| `paciente_id` | INTEGER | FK | Referência para pacientes.id |
+| `servico_id` | INTEGER | FK | Referência para servicos.id |
+| `data_hora` | TIMESTAMP | Sim | Data e hora do agendamento |
+| `tipo_consulta` | VARCHAR(100) | Não | Nome do procedimento (redundante) |
+| `profissional` | VARCHAR(100) | Sim | Nome do profissional (default: Dra. Paula) |
+| `duracao_minutos` | INTEGER | Não | Duração em minutos |
+| `status` | VARCHAR(20) | Sim | Status: `agendada`, `confirmado`, `cancelada`, `realizada`, `faltou` |
+| `observacoes` | TEXT | Não | Observações do agendamento |
+| `created_at` | TIMESTAMP | Auto | Data de criação |
+| `updated_at` | TIMESTAMP | Auto | Data de atualização |
+
+**Status possíveis:**
+```
+agendada    -> Agendamento criado, aguardando confirmação
+confirmado  -> Paciente confirmou presença
+cancelada   -> Agendamento cancelado
+realizada   -> Consulta realizada
+faltou      -> Paciente não compareceu (no-show)
+```
+
+---
+
+### Tabela: `chats`
+Sessões de conversa WhatsApp.
+
+| Coluna | Tipo | Obrigatório | Descrição |
+|--------|------|-------------|-----------|
+| `id` | SERIAL | PK | Identificador único |
+| `remotejID` | VARCHAR(50) | Sim | ID do WhatsApp (ex: 5511999999999@s.whatsapp.net) |
+| `status` | VARCHAR(20) | Sim | Status: `I.A`, `Humano`, `Finalizado` |
+| `created_at` | TIMESTAMP | Auto | Data de criação |
+| `updated_at` | TIMESTAMP | Auto | Data de atualização |
+
+**Status possíveis:**
+```
+I.A       -> Atendimento automático pela Marília
+Humano    -> Transferido para atendente humano
+Finalizado -> Conversa encerrada
+```
+
+---
+
+### Tabela: `lembretes_enviados`
+Tracking de lembretes anti no-show.
+
+| Coluna | Tipo | Obrigatório | Descrição |
+|--------|------|-------------|-----------|
+| `id` | SERIAL | PK | Identificador único |
+| `agendamento_id` | INTEGER | FK | Referência para agendamentos.id |
+| `telefone` | VARCHAR(20) | Sim | Telefone do paciente |
+| `tipo_lembrete` | VARCHAR(20) | Sim | Tipo: `48h`, `24h`, `2h` |
+| `status_resposta` | VARCHAR(20) | Sim | Status: `pendente`, `confirmado`, `cancelado` |
+| `evento_id` | VARCHAR(100) | Não | ID do evento externo |
+| `enviado_em` | TIMESTAMP | Auto | Data/hora do envio |
+| `respondido_em` | TIMESTAMP | Não | Data/hora da resposta |
+
+---
+
+### Tabela: `pre_checkin`
+Status de pré check-in por agendamento.
+
+| Coluna | Tipo | Obrigatório | Descrição |
+|--------|------|-------------|-----------|
+| `id` | SERIAL | PK | Identificador único |
+| `agendamento_id` | INTEGER | FK | Referência para agendamentos.id |
+| `paciente_id` | INTEGER | FK | Referência para pacientes.id |
+| `status` | VARCHAR(20) | Sim | Status: `pendente`, `em_andamento`, `completo`, `incompleto` |
+| `dados_confirmados` | BOOLEAN | Não | Se os dados foram confirmados |
+| `documentos_enviados` | BOOLEAN | Não | Se os documentos foram enviados |
+| `instrucoes_enviadas` | BOOLEAN | Não | Se as instruções foram enviadas |
+| `pendencias` | JSONB | Não | Lista de pendências |
+| `mensagem_enviada_em` | TIMESTAMP | Não | Data/hora da mensagem inicial |
+| `lembrete_enviado_em` | TIMESTAMP | Não | Data/hora do lembrete |
+| `created_at` | TIMESTAMP | Auto | Data de criação |
+| `updated_at` | TIMESTAMP | Auto | Data de atualização |
+
+---
+
+### Tabela: `n8n_chat_histories`
+Memória do AI Agent (histórico de conversas).
+
+| Coluna | Tipo | Obrigatório | Descrição |
+|--------|------|-------------|-----------|
+| `id` | SERIAL | PK | Identificador único |
+| `session_id` | VARCHAR(100) | Sim | ID da sessão (ex: 5511999999999@s.whatsapp.net-calendar) |
+| `message` | JSONB | Sim | Mensagem no formato {role, content} |
+| `created_at` | TIMESTAMP | Auto | Data de criação |
+
+**Para limpar memória de um paciente:**
+```sql
+DELETE FROM n8n_chat_histories
+WHERE session_id LIKE '5511999999999%';
+```
+
+---
+
+### View: `agendamentos_completos`
+View que junta agendamentos + pacientes + servicos.
+
+| Coluna | Origem |
+|--------|--------|
+| `id` | agendamentos.id |
+| `data_hora` | agendamentos.data_hora |
+| `status` | agendamentos.status |
+| `paciente_nome` | pacientes.nome |
+| `paciente_telefone` | pacientes.telefone |
+| `servico_nome` | servicos.nome |
+| `servico_duracao` | servicos.duracao_minutos |
+
+---
+
+### Diagrama de Relacionamentos
+
+```
+┌─────────────┐       ┌─────────────────┐       ┌─────────────┐
+│  pacientes  │───┐   │   agendamentos  │   ┌───│  servicos   │
+└─────────────┘   │   └─────────────────┘   │   └─────────────┘
+                  │           │             │
+                  └───────────┴─────────────┘
+                              │
+              ┌───────────────┼───────────────┐
+              │               │               │
+              ▼               ▼               ▼
+     ┌────────────────┐ ┌───────────┐ ┌──────────────┐
+     │lembretes_enviad│ │pre_checkin│ │n8n_chat_hist.│
+     └────────────────┘ └───────────┘ └──────────────┘
+```
+
+---
+
+## Variáveis de Ambiente N8N
+
+```
+EVOLUTION_API_URL=https://botfy-ai-agency-evolution-api.tb0oe2.easypanel.host
+EVOLUTION_INSTANCE=Botfy AI - Brazil
+EVOLUTION_API_KEY=6AD9F1ACABE9-4EF0-A554-B059D1A29264
+SUPABASE_URL=https://gkweofpjwzsvlvnvfbom.supabase.co
+SUPABASE_KEY=<anon_key>
+```
+
+---
+
+## Configurações da Clínica
+
+- **Horário**: 08:00 às 20:00 (seg-sex)
+- **Almoço**: 12:00 às 13:00
+- **Antecedência mínima**: 2 horas
+- **Profissional**: Dra. Paula
+
+### Serviços Disponíveis
+- Avaliação Facial (30 min)
+- Limpeza de Pele (60 min)
+- Peeling (45 min)
+- Botox (30 min)
+- Preenchimento (45 min)
+
+---
+
+## Backup de Workflows
+
+Workflows salvos em `workflows-backup/`:
+- `bPJamJhBcrVCKgBg-agendamento.json`
+- `HTR3ITfFDrK6eP2R-anti-no-show.json`
+- Demais workflows com formato `{id}-{nome}.json`
+
+---
+
+## IMPORTANTE: Consultar Documentação com Context7
+
+**SEMPRE use o MCP context7 quando tiver dúvidas sobre configuração.**
+
+```bash
+# 1. Resolver ID da biblioteca
+mcp__context7__resolve-library-id (query: "n8n", libraryName: "n8n")
+
+# 2. Consultar documentação
+mcp__context7__query-docs (libraryId: "/n8n/n8n-docs", query: "Code Tool input schema")
+```
+
+**NÃO perca tempo adivinhando. Consulte a documentação primeiro.**
+
+---
+
+## Webhooks de Teste
+
+Todos os workflows automatizados possuem webhooks de teste para facilitar desenvolvimento e debugging.
+
+### Endpoints Disponíveis
+
+| Workflow | Path | Payload | Descrição |
+|----------|------|---------|-----------|
+| Anti No-Show | `/webhook/test/anti-no-show` | `{"agendamento_id": 123}` | Testa lembretes (opcional: agendamento específico) |
+| Pre Check-In | `/webhook/test/pre-checkin` | `{"agendamento_id": 123, "bypass_timing": true}` | Testa pré check-in (opcional: agendamento específico) |
+| Pre Check-In Lembrete | `/webhook/test/pre-checkin-lembrete` | `{"pre_checkin_id": 123}` | Testa lembrete (opcional: pré check-in específico) |
+| Verificar Pendências | `/webhook/test/verificar-pendencias` | `{}` | Testa verificação de pendências |
+
+### Script Automatizado
+
+Execute todos os testes de uma vez:
+
+```bash
+./test-workflows.sh
+```
+
+O script:
+- Testa todos os webhooks sequencialmente
+- Exibe resultados coloridos no terminal
+- Mostra exemplos de uso manual
+- Requer variável `N8N_URL` no `.env`
+
+### Exemplos de Uso Manual
+
+**Anti No-Show - Teste Geral:**
+```bash
+curl -X POST "$N8N_URL/webhook/test/anti-no-show" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+**Pre Check-In - Agendamento Específico:**
+```bash
+curl -X POST "$N8N_URL/webhook/test/pre-checkin" \
+  -H "Content-Type: application/json" \
+  -d '{"agendamento_id": 123, "bypass_timing": true}'
+```
+
+**Pre Check-In Lembrete - Pre Check-In Específico:**
+```bash
+curl -X POST "$N8N_URL/webhook/test/pre-checkin-lembrete" \
+  -H "Content-Type: application/json" \
+  -d '{"pre_checkin_id": 123}'
+```
+
+**Verificar Pendências:**
+```bash
+curl -X POST "$N8N_URL/webhook/test/verificar-pendencias" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+### Comportamento dos Webhooks
+
+1. **Teste Geral (payload vazio)**: Executa workflow com critérios normais (data/hora)
+2. **Teste Específico (com ID)**: Força execução em um registro específico
+3. **bypass_timing**: Ignora restrições de timing (ex: executar fora da janela de 24h)
+
+### Debugging
+
+- **Logs**: Acesse N8N → Executions para ver detalhes
+- **Status 200**: Sucesso (mesmo que retorne array vazio)
+- **Array vazio**: Normal quando não há dados no período
+- **Erro 404**: Webhook path incorreto ou workflow inativo
+
+---
+
+## Troubleshooting
+
+### AI Agent não chama tools
+- Verificar se tool tem `toolSchema` JSON definido
+- Verificar descrição da tool no prompt
+- Checar execução: node deve aparecer com `itemsInput > 0`
+
+### Code Tool com itemsInput=0
+- **CAUSA**: Falta `specifyInputSchema: true` no node
+- **SOLUÇÃO**: Adicionar ao node:
+  ```json
+  {
+    "specifyInputSchema": true,
+    "schemaType": "manual",
+    "inputSchema": "{ JSON Schema aqui }"
+  }
+  ```
+
+### Erro "Wrong output type returned"
+- **CAUSA**: Code Tool retornando objeto JSON
+- **SOLUÇÃO**: Retornar STRING, não objeto
+  ```javascript
+  return `Resultado: ${valor}`;  // CORRETO
+  return { valor: valor };        // ERRADO
+  ```
+
+### Erro "No prompt specified"
+- Usar referência de node: `$('nodeName').first().json.campo`
+- Não usar `$json` diretamente após nodes que sobrescrevem input
+
+### AI inventa horários
+- Fortalecer prompt com instruções OBRIGATÓRIAS
+- Verificar se `buscar_slots_disponiveis` tem schema correto
+- Adicionar tabela de referência de datas no prompt
+
+### AI repete perguntas ou fica confusa
+- **CAUSA**: Memória do chat com histórico de erros
+- **SOLUÇÃO**: Limpar memória do paciente
+  ```sql
+  DELETE FROM n8n_chat_histories
+  WHERE session_id = 'TELEFONE@s.whatsapp.net-calendar';
+  ```
+
+### CRÍTICO: $fromAI() em Tools - Parâmetros undefined
+
+**Sintoma**: Tool é chamada mas parâmetros chegam como `undefined` no sub-workflow.
+
+**Causa**: O `$fromAI()` no node Edit Fields/Set não está configurado corretamente.
+
+**Solução**:
+```javascript
+// ERRADO - $fromAI sem configuração completa
+{
+  "data": "$fromAI",
+  "periodo": "{{ $json.periodo }}"
+}
+
+// CORRETO - $fromAI() com nome, descrição e tipo
+{
+  "data": "={{ $fromAI('data', 'Data no formato YYYY-MM-DD', 'string') }}",
+  "periodo": "={{ $fromAI('periodo', 'Período: manha, tarde ou qualquer', 'string') }}"
+}
+```
+
+**Estrutura**: `$fromAI(nome, descricao, tipo)`
+- `nome`: identificador do parâmetro
+- `descricao`: texto para o AI entender quando usar
+- `tipo`: 'string', 'number', 'boolean', 'json'
+
+**IMPORTANTE**:
+- Use em nodes **Edit Fields/Set** que preparam dados para sub-workflows
+- NÃO use em Code Tools (lá você usa a variável `query`)
+- Sempre verifique na execução se os valores estão chegando
+
+---
+
+## Histórico de Correções
+
+### Janeiro 2026 - Correções de Produção
+
+#### 1. Webhook responseMode: "No item to return was found"
+
+**Sintoma**: Webhooks de teste retornavam HTTP 500 com erro "No item to return was found"
+
+**Causa**: Webhook configurado com `responseMode: "lastNode"` mas último node não retornava dados em alguns casos
+
+**Solução**: Alterar `responseMode` para `"onReceived"`
+
+```json
+// ANTES (causava erro)
+{
+  "path": "/test/anti-no-show",
+  "method": "POST",
+  "responseMode": "lastNode"  // ❌ Erro se último node vazio
+}
+
+// DEPOIS (funciona sempre)
+{
+  "path": "/test/anti-no-show",
+  "method": "POST",
+  "responseMode": "onReceived"  // ✅ Responde imediatamente
+}
+```
+
+**Workflows corrigidos**:
+- HTR3ITfFDrK6eP2R (Anti No-Show)
+- BWDsb4A0GVs2NQnM (Pre Check-In)
+- 3ryiGnLNLuPWEfmL (Pre Check-In Lembrete)
+- SMjeAMnZ6XkFPptn (Verificar Pendências)
+
+---
+
+#### 2. Nodes Supabase → Postgres
+
+**Sintoma**: Nodes Supabase deprecated, causando avisos e possíveis erros futuros
+
+**Causa**: N8N descontinuou nodes Supabase em favor de nodes Postgres nativos
+
+**Solução**: Converter para nodes Postgres com `executeQuery`
+
+```json
+// ANTES - Node Supabase
+{
+  "type": "n8n-nodes-base.supabase",
+  "operation": "getAll",
+  "tableId": "pre_checkin",
+  "returnAll": true,
+  "filters": {
+    "conditions": [
+      {
+        "keyName": "status",
+        "condition": "eq",
+        "keyValue": "pendente"
+      }
+    ]
+  }
+}
+
+// DEPOIS - Node Postgres
+{
+  "type": "n8n-nodes-base.postgres",
+  "operation": "executeQuery",
+  "query": "SELECT * FROM pre_checkin WHERE status = 'pendente'",
+  "options": {
+    "typeValidation": "loose"  // Importante para flexibilidade
+  }
+}
+```
+
+**Workflows convertidos**:
+- BWDsb4A0GVs2NQnM (Pre Check-In): 3 nodes Supabase → Postgres
+- 3ryiGnLNLuPWEfmL (Pre Check-In Lembrete): 2 nodes Supabase → Postgres
+- SMjeAMnZ6XkFPptn (Verificar Pendências): 2 nodes Supabase → Postgres
+
+**Workflow NÃO convertido**:
+- HTR3ITfFDrK6eP2R (Anti No-Show): Mantido com Supabase (ainda funcional, complexo demais para converter)
+
+---
+
+#### 3. Type Validation em Nodes Postgres
+
+**Sintoma**: Erros de validação de tipos em queries SQL com JSONB ou tipos dinâmicos
+
+**Causa**: Type validation stricta do Postgres node incompatível com tipos dinâmicos do Supabase
+
+**Solução**: Adicionar `typeValidation: "loose"` nas opções do node
+
+```json
+{
+  "type": "n8n-nodes-base.postgres",
+  "operation": "executeQuery",
+  "query": "SELECT * FROM agendamentos WHERE id = $1",
+  "options": {
+    "typeValidation": "loose"  // ✅ Permite tipos dinâmicos
+  }
+}
+```
+
+**Por que "loose"?**:
+- Supabase usa tipos PostgreSQL estendidos (JSONB, arrays, etc)
+- N8N type validation stricta pode rejeitar esses tipos
+- "loose" permite flexibilidade mantendo funcionalidade
+
+---
+
+#### 4. Parsing de .env no test-workflows.sh
+
+**Sintoma**: Script falhava ao carregar variáveis com espaços ou hífens (ex: `EVOLUTION_INSTANCE=Botfy AI - Brazil`)
+
+**Causa**: Parser simples `export $(cat .env | grep -v '^#' | xargs)` não lida com:
+- Valores com espaços
+- Valores com hífens
+- Linhas vazias
+- Comentários inline
+
+**Solução**: Parser robusto linha por linha
+
+```bash
+# ANTES (falhava com espaços)
+export $(cat .env | grep -v '^#' | xargs)
+
+# DEPOIS (funciona com qualquer valor)
+while IFS='=' read -r key value; do
+    # Ignora linhas vazias e comentários
+    if [[ -z "$key" ]] || [[ "$key" =~ ^[[:space:]]*# ]]; then
+        continue
+    fi
+    # Remove espaços em branco ao redor
+    key=$(echo "$key" | xargs)
+    value=$(echo "$value" | xargs)
+    # Exporta variável
+    export "$key=$value"
+done < <(grep -v '^#' .env | grep -v '^$')
+```
+
+---
+
+#### 5. Backups de Workflows
+
+**Implementação**: Sistema de backup automatizado via N8N MCP
+
+**Estrutura**:
+```
+workflows-backup/
+├── {workflow_id}-{nome-kebab}.json
+├── bPJamJhBcrVCKgBg-agendamento.json
+├── HTR3ITfFDrK6eP2R-anti-no-show.json
+├── BWDsb4A0GVs2NQnM-pre-checkin.json
+├── 3ryiGnLNLuPWEfmL-pre-checkin-lembrete.json
+└── SMjeAMnZ6XkFPptn-verificar-pendencias.json
+```
+
+**Formato**: JSON completo do workflow (nodes, connections, settings)
+
+**Quando fazer backup**:
+- Antes de mudanças significativas
+- Após correções importantes
+- Periodicamente (ex: semanal)
+
+**Como restaurar**:
+1. Importar JSON no N8N
+2. Verificar credenciais
+3. Ativar workflow
+4. Testar webhooks
+
+---
+
+### Status Atual (2026-01-17)
+
+**Todos os workflows funcionando**:
+- ✅ Botfy - Agendamento (bPJamJhBcrVCKgBg)
+- ✅ Botfy - Anti No-Show (HTR3ITfFDrK6eP2R)
+- ✅ Botfy - Pre Check-In (BWDsb4A0GVs2NQnM)
+- ✅ Botfy - Pre Check-In Lembrete (3ryiGnLNLuPWEfmL)
+- ✅ Botfy - Verificar Pendências (SMjeAMnZ6XkFPptn)
+
+**Todos os testes passando** (4/4):
+- `/test/anti-no-show` → HTTP 200
+- `/test/pre-checkin` → HTTP 200
+- `/test/pre-checkin-lembrete` → HTTP 200
+- `/test/verificar-pendencias` → HTTP 200
+
+**Próximos passos recomendados**:
+1. Converter Anti No-Show para Postgres (quando possível)
+2. Adicionar mais testes automatizados
+3. Implementar monitoramento de erros
+4. Documentar casos de uso complexos
