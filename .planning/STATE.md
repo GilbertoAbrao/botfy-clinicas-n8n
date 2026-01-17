@@ -9,8 +9,8 @@
 
 ## Current State
 
-**Stage:** Phase 8 in progress - Plans 08-01 and 08-02 complete
-**Action:** Continue with Phase 8 remaining plans (08-03, 08-04, 08-05)
+**Stage:** Phase 8 in progress - Plans 08-01, 08-02, and 08-03 complete
+**Action:** Continue with Phase 8 remaining plans (08-04, 08-05)
 **Blockers:** None
 
 **Recently Completed:**
@@ -23,11 +23,15 @@
   - Batch prediction for multiple appointments
   - LRU cache with 1-hour TTL (max 1000 entries)
   - Actionable recommendations in Portuguese
+- [x] **Plan 08-03** - Analytics API Endpoints
+  - GET /api/analytics - Main analytics endpoint (KPIs + patterns)
+  - GET /api/analytics/alerts/[id]/priority - Alert priority scoring
+  - GET /api/analytics/appointments/[id]/risk - No-show risk prediction
+  - GET /api/export - CSV export with HIPAA-compliant audit logging
 
 **Next Steps:**
-1. Continue with Plan 08-03 (Analytics API endpoints)
-2. Plan 08-04 (Analytics Dashboard UI)
-3. Plan 08-05 (Smart predictions integration)
+1. Plan 08-04 (Analytics Dashboard UI)
+2. Plan 08-05 (Smart predictions integration)
 
 ---
 
@@ -86,9 +90,10 @@
 91. CONF-13: Assign roles (Admin, Atendente) to users
 92. CONF-14: Configure notification preferences
 
-**Phase 8 - Analytics & Smart Features (COMPLETE):**
+**Phase 8 - Analytics & Smart Features (IN PROGRESS):**
 93. ANLY-01: Core analytics algorithms (priority scorer, pattern detector, KPI calculator)
 94. ANLY-02: No-show risk prediction algorithm with caching
+95. ANLY-03: Analytics API endpoints (main, priority, risk, export)
 
 ---
 
@@ -102,10 +107,21 @@
 | 2026-01-17 | Risk factor weights: 40% historical, 15% each for time/day/lead/confirmation | Historical no-show rate is most predictive factor |
 | 2026-01-17 | LRU cache with 1-hour TTL, 1000 max entries | Balance freshness with performance |
 | 2026-01-17 | Batch query with groupBy for patient history | Single query more efficient than N+1 for batch predictions |
+| 2026-01-17 | Max periodDays = 90 for analytics | Prevent excessive queries while allowing quarterly analysis |
+| 2026-01-17 | ADMIN-only export | HIPAA compliance - data export is sensitive operation |
+| 2026-01-17 | Use serviceType directly in export | Appointment model uses serviceType string, not service relation |
 
 ---
 
 ## Recent Activity
+
+**2026-01-17 - Plan 08-03 Complete**
+- GET /api/analytics - Main analytics endpoint returning KPIs and patterns
+- GET /api/analytics/alerts/[id]/priority - Alert priority scoring (1-100)
+- GET /api/analytics/appointments/[id]/risk - No-show risk prediction
+- GET /api/export - CSV export (appointments, alerts, kpis)
+- ADMIN-only access for export with audit logging
+- Added EXPORT_DATA to AuditAction enum
 
 **2026-01-17 - Plan 08-01 Complete**
 - Priority scorer algorithm (4 weighted factors, 1-100 scale)
@@ -144,4 +160,4 @@
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-17 after Plan 08-01 completion*
+*Last updated: 2026-01-17 after Plan 08-03 completion*
