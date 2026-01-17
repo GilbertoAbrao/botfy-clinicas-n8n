@@ -4,12 +4,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Users,
+  UserCog,
   Calendar,
   MessageSquare,
   AlertCircle,
   LayoutDashboard,
   Settings,
-  FileText
+  FileText,
+  Package,
 } from 'lucide-react';
 
 const navigation = [
@@ -44,10 +46,25 @@ const navigation = [
     enabled: true,
   },
   {
+    name: 'Usuarios',
+    href: '/admin/usuarios',
+    icon: UserCog,
+    enabled: true,
+    adminOnly: true,
+  },
+  {
     name: 'Audit Logs',
     href: '/admin/audit-logs',
     icon: FileText,
     enabled: true,
+    adminOnly: true,
+  },
+  {
+    name: 'Servicos',
+    href: '/admin/servicos',
+    icon: Package,
+    enabled: true,
+    adminOnly: true,
   },
   {
     name: 'Configuracoes',

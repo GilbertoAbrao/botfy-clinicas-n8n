@@ -21,8 +21,8 @@ export const serviceSchema = z.object({
     .min(0, 'Preço não pode ser negativo')
     .max(99999.99, 'Preço máximo é R$ 99.999,99'),
 
-  // Optional fields
-  ativo: z.boolean().optional().default(true),
+  // Status field (required)
+  ativo: z.boolean(),
 });
 
 /**

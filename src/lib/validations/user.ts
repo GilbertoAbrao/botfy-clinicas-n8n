@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { Role } from '@prisma/client';
 
+// Role values as const tuple for Zod enum
+const roleValues = ['ADMIN', 'ATENDENTE'] as const;
+
 /**
  * Schema for creating a new user
  * Requires email, password, and role
@@ -8,23 +11,23 @@ import { Role } from '@prisma/client';
 export const createUserSchema = z.object({
   email: z
     .string()
-    .email('Email inválido')
-    .max(255, 'Email não pode ter mais de 255 caracteres'),
+    .email('Email invalido')
+    .max(255, 'Email nao pode ter mais de 255 caracteres'),
 
   password: z
     .string()
     .min(8, 'Senha deve ter pelo menos 8 caracteres')
-    .max(72, 'Senha não pode ter mais de 72 caracteres'), // bcrypt limit
+    .max(72, 'Senha nao pode ter mais de 72 caracteres'), // bcrypt limit
 
   passwordConfirmation: z
     .string()
-    .min(1, 'Confirmação de senha é obrigatória'),
+    .min(1, 'Confirmacao de senha e obrigatoria'),
 
-  role: z.enum([Role.ADMIN, Role.ATENDENTE], {
-    errorMap: () => ({ message: 'Role deve ser ADMIN ou ATENDENTE' }),
+  role: z.enum(roleValues, {
+    message: 'Role deve ser ADMIN ou ATENDENTE',
   }),
 }).refine(data => data.password === data.passwordConfirmation, {
-  message: 'As senhas não coincidem',
+  message: 'As senhas nao coincidem',
   path: ['passwordConfirmation'],
 });
 
@@ -35,11 +38,11 @@ export const createUserSchema = z.object({
 export const updateUserSchema = z.object({
   email: z
     .string()
-    .email('Email inválido')
-    .max(255, 'Email não pode ter mais de 255 caracteres'),
+    .email('Email invalido')
+    .max(255, 'Email nao pode ter mais de 255 caracteres'),
 
-  role: z.enum([Role.ADMIN, Role.ATENDENTE], {
-    errorMap: () => ({ message: 'Role deve ser ADMIN ou ATENDENTE' }),
+  role: z.enum(roleValues, {
+    message: 'Role deve ser ADMIN ou ATENDENTE',
   }),
 });
 
