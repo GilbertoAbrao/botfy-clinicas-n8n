@@ -1,14 +1,20 @@
+'use client'
+
+import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
-import { formatDistanceToNow, format } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { MessageSquare, User, Bot, Headset } from 'lucide-react'
+import { MessageSquare, ExternalLink, Bot, Headset, CheckCircle } from 'lucide-react'
+import { ConversationThread } from '@/components/conversations/conversation-thread'
+import { ClearMemoryButton } from '@/components/conversations/clear-memory-button'
 
 interface Message {
   timestamp: string
@@ -28,56 +34,35 @@ interface ConversationHistoryProps {
   conversations: Conversation[]
 }
 
-function getStatusBadgeVariant(
-  status: string
-): 'default' | 'secondary' | 'outline' {
-  switch (status) {
-    case 'IA':
-      return 'default' // blue
-    case 'HUMANO':
-      return 'secondary' // yellow
-    case 'FINALIZADO':
-      return 'outline' // gray
-    default:
-      return 'outline'
-  }
+// Status badge colors matching Botfy brand
+const statusColors: Record<string, string> = {
+  IA: 'bg-purple-500 hover:bg-purple-600 text-white',
+  HUMANO: 'bg-yellow-500 hover:bg-yellow-600 text-white',
+  FINALIZADO: 'bg-gray-400 hover:bg-gray-500 text-white',
 }
 
-function getStatusLabel(status: string): string {
-  const labels: Record<string, string> = {
-    IA: 'IA',
-    HUMANO: 'Humano',
-    FINALIZADO: 'Finalizado',
-  }
-  return labels[status] || status
+const statusLabels: Record<string, string> = {
+  IA: 'IA',
+  HUMANO: 'Humano',
+  FINALIZADO: 'Finalizado',
 }
 
-function getSenderLabel(sender: string): string {
-  const labels: Record<string, string> = {
-    patient: 'Paciente',
-    ai: 'IA',
-    human: 'Atendente Humano',
-  }
-  return labels[sender] || sender
-}
-
-function getSenderIcon(sender: string) {
-  switch (sender) {
-    case 'patient':
-      return <User className="h-4 w-4" />
-    case 'ai':
-      return <Bot className="h-4 w-4" />
-    case 'human':
-      return <Headset className="h-4 w-4" />
-    default:
-      return <MessageSquare className="h-4 w-4" />
-  }
+const statusIcons: Record<string, React.ReactNode> = {
+  IA: <Bot className="h-3 w-3 mr-1" />,
+  HUMANO: <Headset className="h-3 w-3 mr-1" />,
+  FINALIZADO: <CheckCircle className="h-3 w-3 mr-1" />,
 }
 
 function isMessageArray(value: unknown): value is Message[] {
   return Array.isArray(value)
 }
 
+/**
+ * Conversation history component for patient profile.
+ *
+ * Shows accordion of conversations with WhatsApp-style message threading
+ * and Clear Memory button for each conversation.
+ */
 export function ConversationHistory({
   conversations,
 }: ConversationHistoryProps) {
@@ -92,9 +77,12 @@ export function ConversationHistory({
     return (
       <Card>
         <CardContent className="py-12">
-          <p className="text-center text-sm text-gray-500">
-            Nenhuma conversa registrada
-          </p>
+          <div className="text-center space-y-2">
+            <MessageSquare className="h-12 w-12 mx-auto text-gray-300" />
+            <p className="text-sm text-gray-500">
+              Nenhuma conversa registrada para este paciente
+            </p>
+          </div>
         </CardContent>
       </Card>
     )
@@ -105,9 +93,17 @@ export function ConversationHistory({
       <Accordion type="single" collapsible className="space-y-4">
         {sortedConversations.map((conversation) => {
           // Safe JSON parsing with type guard
-          const messages = isMessageArray(conversation.messages)
+          const rawMessages = isMessageArray(conversation.messages)
             ? conversation.messages
             : []
+
+          // Convert to format expected by ConversationThread
+          const formattedMessages = rawMessages.map((msg, index) => ({
+            id: `${conversation.id}-${index}`,
+            content: msg.content,
+            sender: msg.sender as 'patient' | 'ai' | 'human' | 'system',
+            sentAt: msg.timestamp,
+          }))
 
           return (
             <AccordionItem
@@ -122,15 +118,16 @@ export function ConversationHistory({
                     <div className="text-left">
                       <div className="flex items-center gap-2">
                         <p className="font-semibold text-gray-900">
-                          WhatsApp: {conversation.whatsappId}
+                          {conversation.whatsappId.split('@')[0]}
                         </p>
-                        <Badge variant={getStatusBadgeVariant(conversation.status)}>
-                          {getStatusLabel(conversation.status)}
+                        <Badge className={statusColors[conversation.status] || 'bg-gray-400 text-white'}>
+                          {statusIcons[conversation.status]}
+                          {statusLabels[conversation.status] || conversation.status}
                         </Badge>
                       </div>
                       <p className="text-sm text-gray-600">
-                        {messages.length}{' '}
-                        {messages.length === 1 ? 'mensagem' : 'mensagens'} •{' '}
+                        {rawMessages.length}{' '}
+                        {rawMessages.length === 1 ? 'mensagem' : 'mensagens'} •{' '}
                         {formatDistanceToNow(
                           new Date(conversation.lastMessageAt),
                           {
@@ -146,41 +143,25 @@ export function ConversationHistory({
 
               <AccordionContent>
                 <div className="space-y-4 pt-4">
-                  {messages.map((message, index) => (
-                    <div key={index} className="flex gap-3">
-                      <div className="flex-shrink-0">
-                        <div
-                          className={`rounded-full p-2 ${
-                            message.sender === 'patient'
-                              ? 'bg-blue-100 text-blue-600'
-                              : message.sender === 'ai'
-                                ? 'bg-purple-100 text-purple-600'
-                                : 'bg-green-100 text-green-600'
-                          }`}
-                        >
-                          {getSenderIcon(message.sender)}
-                        </div>
-                      </div>
+                  {/* Action bar */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b">
+                    <ClearMemoryButton sessionId={conversation.whatsappId} />
+                    <Link href={`/conversas/${encodeURIComponent(conversation.whatsappId)}`}>
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <ExternalLink className="h-3 w-3" />
+                        Ver no painel
+                      </Button>
+                    </Link>
+                  </div>
 
-                      <div className="flex-1">
-                        <div className="mb-1 flex items-center gap-2">
-                          <p className="text-sm font-medium text-gray-900">
-                            {getSenderLabel(message.sender)}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {format(
-                              new Date(message.timestamp),
-                              "dd/MM/yyyy 'às' HH:mm",
-                              { locale: ptBR }
-                            )}
-                          </p>
-                        </div>
-                        <p className="text-sm text-gray-700">
-                          {message.content}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                  {/* WhatsApp-style conversation thread */}
+                  <div className="bg-gray-50 rounded-lg p-3 border">
+                    <ConversationThread
+                      messages={formattedMessages}
+                      compact={false}
+                      conversationId={conversation.whatsappId}
+                    />
+                  </div>
                 </div>
               </AccordionContent>
             </AccordionItem>
