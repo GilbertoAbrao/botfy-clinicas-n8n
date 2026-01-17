@@ -52,7 +52,7 @@ export function useAlertSubscription(
         {
           event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
           schema: 'public',
-          table: 'Alert',
+          table: 'alerts',
         },
         (payload: RealtimePostgresChangesPayload<Alert>) => {
           // Transform payload to our event type
@@ -159,7 +159,7 @@ export function useAlertDetailSubscription(
         {
           event: 'UPDATE',
           schema: 'public',
-          table: 'Alert',
+          table: 'alerts',
           filter: `id=eq.${alertId}`,
         },
         (payload: RealtimePostgresChangesPayload<Alert>) => {
