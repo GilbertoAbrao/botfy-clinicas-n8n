@@ -579,3 +579,197 @@ curl -X POST "$N8N_URL/webhook/test/verificar-pendencias" \
 - Use em nodes **Edit Fields/Set** que preparam dados para sub-workflows
 - NAO use em Code Tools (la voce usa a variavel `query`)
 - Sempre verifique na execucao se os valores estao chegando
+
+---
+
+## Historico de Correcoes
+
+### Janeiro 2026 - Correcoes de Producao
+
+#### 1. Webhook responseMode: "No item to return was found"
+
+**Sintoma**: Webhooks de teste retornavam HTTP 500 com erro "No item to return was found"
+
+**Causa**: Webhook configurado com `responseMode: "lastNode"` mas ultimo node nao retornava dados em alguns casos
+
+**Solucao**: Alterar `responseMode` para `"onReceived"`
+
+```json
+// ANTES (causava erro)
+{
+  "path": "/test/anti-no-show",
+  "method": "POST",
+  "responseMode": "lastNode"  // ❌ Erro se ultimo node vazio
+}
+
+// DEPOIS (funciona sempre)
+{
+  "path": "/test/anti-no-show",
+  "method": "POST",
+  "responseMode": "onReceived"  // ✅ Responde imediatamente
+}
+```
+
+**Workflows corrigidos**:
+- HTR3ITfFDrK6eP2R (Anti No-Show)
+- BWDsb4A0GVs2NQnM (Pre Check-In)
+- 3ryiGnLNLuPWEfmL (Pre Check-In Lembrete)
+- SMjeAMnZ6XkFPptn (Verificar Pendencias)
+
+---
+
+#### 2. Nodes Supabase → Postgres
+
+**Sintoma**: Nodes Supabase deprecated, causando avisos e possiveis erros futuros
+
+**Causa**: N8N descontinuou nodes Supabase em favor de nodes Postgres nativos
+
+**Solucao**: Converter para nodes Postgres com `executeQuery`
+
+```json
+// ANTES - Node Supabase
+{
+  "type": "n8n-nodes-base.supabase",
+  "operation": "getAll",
+  "tableId": "pre_checkin",
+  "returnAll": true,
+  "filters": {
+    "conditions": [
+      {
+        "keyName": "status",
+        "condition": "eq",
+        "keyValue": "pendente"
+      }
+    ]
+  }
+}
+
+// DEPOIS - Node Postgres
+{
+  "type": "n8n-nodes-base.postgres",
+  "operation": "executeQuery",
+  "query": "SELECT * FROM pre_checkin WHERE status = 'pendente'",
+  "options": {
+    "typeValidation": "loose"  // Importante para flexibilidade
+  }
+}
+```
+
+**Workflows convertidos**:
+- BWDsb4A0GVs2NQnM (Pre Check-In): 3 nodes Supabase → Postgres
+- 3ryiGnLNLuPWEfmL (Pre Check-In Lembrete): 2 nodes Supabase → Postgres
+- SMjeAMnZ6XkFPptn (Verificar Pendencias): 2 nodes Supabase → Postgres
+
+**Workflow NAO convertido**:
+- HTR3ITfFDrK6eP2R (Anti No-Show): Mantido com Supabase (ainda funcional, complexo demais para converter)
+
+---
+
+#### 3. Type Validation em Nodes Postgres
+
+**Sintoma**: Erros de validacao de tipos em queries SQL com JSONB ou tipos dinamicos
+
+**Causa**: Type validation stricta do Postgres node incompativel com tipos dinamicos do Supabase
+
+**Solucao**: Adicionar `typeValidation: "loose"` nas opcoes do node
+
+```json
+{
+  "type": "n8n-nodes-base.postgres",
+  "operation": "executeQuery",
+  "query": "SELECT * FROM agendamentos WHERE id = $1",
+  "options": {
+    "typeValidation": "loose"  // ✅ Permite tipos dinamicos
+  }
+}
+```
+
+**Por que "loose"?**:
+- Supabase usa tipos PostgreSQL estendidos (JSONB, arrays, etc)
+- N8N type validation stricta pode rejeitar esses tipos
+- "loose" permite flexibilidade mantendo funcionalidade
+
+---
+
+#### 4. Parsing de .env no test-workflows.sh
+
+**Sintoma**: Script falhava ao carregar variaveis com espacos ou hifens (ex: `EVOLUTION_INSTANCE=Botfy AI - Brazil`)
+
+**Causa**: Parser simples `export $(cat .env | grep -v '^#' | xargs)` nao lida com:
+- Valores com espacos
+- Valores com hifens
+- Linhas vazias
+- Comentarios inline
+
+**Solucao**: Parser robusto linha por linha
+
+```bash
+# ANTES (falhava com espacos)
+export $(cat .env | grep -v '^#' | xargs)
+
+# DEPOIS (funciona com qualquer valor)
+while IFS='=' read -r key value; do
+    # Ignora linhas vazias e comentarios
+    if [[ -z "$key" ]] || [[ "$key" =~ ^[[:space:]]*# ]]; then
+        continue
+    fi
+    # Remove espacos em branco ao redor
+    key=$(echo "$key" | xargs)
+    value=$(echo "$value" | xargs)
+    # Exporta variavel
+    export "$key=$value"
+done < <(grep -v '^#' .env | grep -v '^$')
+```
+
+---
+
+#### 5. Backups de Workflows
+
+**Implementacao**: Sistema de backup automatizado via N8N MCP
+
+**Estrutura**:
+```
+workflows-backup/
+├── {workflow_id}-{nome-kebab}.json
+├── bPJamJhBcrVCKgBg-agendamento.json
+├── HTR3ITfFDrK6eP2R-anti-no-show.json
+├── BWDsb4A0GVs2NQnM-pre-checkin.json
+├── 3ryiGnLNLuPWEfmL-pre-checkin-lembrete.json
+└── SMjeAMnZ6XkFPptn-verificar-pendencias.json
+```
+
+**Formato**: JSON completo do workflow (nodes, connections, settings)
+
+**Quando fazer backup**:
+- Antes de mudancas significativas
+- Apos correcoes importantes
+- Periodicamente (ex: semanal)
+
+**Como restaurar**:
+1. Importar JSON no N8N
+2. Verificar credenciais
+3. Ativar workflow
+4. Testar webhooks
+
+---
+
+### Status Atual (2026-01-17)
+
+**Todos os workflows funcionando**:
+- ✅ Botfy - Agendamento (bPJamJhBcrVCKgBg)
+- ✅ Botfy - Anti No-Show (HTR3ITfFDrK6eP2R)
+- ✅ Botfy - Pre Check-In (BWDsb4A0GVs2NQnM)
+- ✅ Botfy - Pre Check-In Lembrete (3ryiGnLNLuPWEfmL)
+- ✅ Botfy - Verificar Pendencias (SMjeAMnZ6XkFPptn)
+
+**Todos os testes passando** (7/7):
+- `/test/anti-no-show` → HTTP 200
+- `/test/pre-checkin` → HTTP 200
+- `/test/pre-checkin-lembrete` → HTTP 200
+- `/test/verificar-pendencias` → HTTP 200
+
+**Proximos passos recomendados**:
+1. Converter Anti No-Show para Postgres (quando possivel)
+2. Adicionar mais testes automatizados
+3. Implementar monitoramento de erros
+4. Documentar casos de uso complexos

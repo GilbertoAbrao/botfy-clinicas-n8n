@@ -283,6 +283,64 @@ Após executar um teste:
 | Sem resposta | Workflow desativado | Ativar workflow no N8N |
 | Dados não processados | Timing validation | Usar `bypass_timing: true` |
 
+### Status Atual dos Testes
+
+✅ **Todos os 7 webhooks de teste passando** (última verificação: 2026-01-17)
+
+| Workflow | Webhooks | Status |
+|----------|----------|--------|
+| Anti No-Show | `/test/anti-no-show` (2 testes) | ✅ HTTP 200 |
+| Pre Check-In | `/test/pre-checkin` (2 testes) | ✅ HTTP 200 |
+| Pre Check-In Lembrete | `/test/pre-checkin-lembrete` (2 testes) | ✅ HTTP 200 |
+| Verificar Pendências | `/test/verificar-pendencias` (1 teste) | ✅ HTTP 200 |
+
+## Correções Recentes
+
+### Janeiro 2026 - Correções de Produção
+
+#### Problemas Corrigidos nos Workflows
+
+1. **Webhook Response Mode**
+   - **Problema**: Webhooks retornavam erro "No item to return was found"
+   - **Solução**: Alterado `responseMode` de `lastNode` para `onReceived` em todos os webhooks de teste
+   - **Workflows afetados**: Anti No-Show, Pre Check-In, Pre Check-In Lembrete, Verificar Pendências
+
+2. **Conversão Supabase → Postgres**
+   - **Problema**: Nodes Supabase deprecated causando erros de execução
+   - **Solução**: Convertidos para nodes Postgres com `executeQuery`
+   - **Workflows afetados**: Pre Check-In, Pre Check-In Lembrete, Verificar Pendências
+   - **Nota**: Anti No-Show mantém nodes Supabase (ainda funcional)
+
+3. **Type Validation**
+   - **Problema**: Erros de validação de tipos em queries SQL
+   - **Solução**: Configurado `typeValidation: "loose"` nos nodes Postgres
+   - **Benefício**: Maior flexibilidade com tipos dinâmicos do Supabase
+
+4. **Parsing de .env no Script de Teste**
+   - **Problema**: Script falhava com variáveis contendo espaços ou hífens
+   - **Solução**: Reescrito parser para lidar corretamente com:
+     - Linhas vazias
+     - Comentários
+     - Valores com espaços
+     - Valores com caracteres especiais
+   - **Arquivo**: `test-workflows.sh`
+
+#### Melhorias Implementadas
+
+1. **Configuração Simplificada**
+   - Adicionado `N8N_URL` ao `.env` para facilitar testes
+   - Script `test-workflows.sh` agora carrega automaticamente do `.env`
+
+2. **Backups Automatizados**
+   - Todos os workflows de produção com backups atualizados em `workflows-backup/`
+   - Formato: `{workflow_id}-{nome-kebab}.json`
+   - Backups incluem configuração completa de nodes e connections
+
+3. **Documentação de Webhooks**
+   - Todos os endpoints de teste documentados
+   - Exemplos de payloads para cada workflow
+   - Guia de troubleshooting específico para webhooks
+
 ## Troubleshooting
 
 | Problema | Causa | Solução |

@@ -472,6 +472,59 @@ $fromAI(nome, descricao, tipo)
 - Em nodes **Edit Fields** ou **Set** que preparam dados para sub-workflows
 - NAO usar em Code Tools (use `query` diretamente)
 
+## Correcoes Recentes (Janeiro 2026)
+
+### ✅ Problemas Resolvidos
+
+1. **Webhook responseMode: "onReceived"**
+   - Todos os webhooks de teste agora usam `responseMode: "onReceived"`
+   - Evita erros "No item to return was found"
+   - Workflows: Anti No-Show, Pre Check-In, Pre Check-In Lembrete, Verificar Pendencias
+
+2. **Nodes Supabase → Postgres**
+   - Pre Check-In, Pre Check-In Lembrete e Verificar Pendencias convertidos para Postgres
+   - Anti No-Show ainda usa Supabase (funcional, complexo demais para converter agora)
+   - Usar `typeValidation: "loose"` nos nodes Postgres
+
+3. **Parsing de .env Melhorado**
+   - Script `test-workflows.sh` agora lida com espacos, hifens e caracteres especiais
+   - Valores como `Botfy AI - Brazil` funcionam corretamente
+
+4. **Todos os Testes Passando**
+   - 7/7 webhooks retornando HTTP 200
+   - Backups atualizados de todos os workflows
+
+### 🚨 Atencao ao Modificar Workflows
+
+**Se encontrar erro de webhook:**
+1. Verificar `responseMode: "onReceived"` no webhook config
+2. Testar com `curl -X POST $N8N_URL/webhook/test/{path}`
+
+**Se converter nodes Supabase:**
+1. Usar node Postgres com `operation: "executeQuery"`
+2. Adicionar `typeValidation: "loose"` nas options
+3. Reescrever filters como SQL WHERE clauses
+4. Testar todas as queries antes de fazer deploy
+
+**Exemplo de conversao**:
+```json
+// ANTES - Supabase
+{
+  "type": "n8n-nodes-base.supabase",
+  "operation": "getAll",
+  "tableId": "agendamentos",
+  "filters": {"conditions": [{"keyName": "status", "condition": "eq", "keyValue": "pendente"}]}
+}
+
+// DEPOIS - Postgres
+{
+  "type": "n8n-nodes-base.postgres",
+  "operation": "executeQuery",
+  "query": "SELECT * FROM agendamentos WHERE status = 'pendente'",
+  "options": {"typeValidation": "loose"}
+}
+```
+
 ## Arquivos de Backup
 
 Workflows salvos em `workflows-backup/`:
@@ -479,7 +532,17 @@ Workflows salvos em `workflows-backup/`:
 {workflow_id}-{nome-kebab}.json
 ```
 
-Atualizar backups apos modificacoes significativas.
+**Backups atualizados (2026-01-17)**:
+- bPJamJhBcrVCKgBg-agendamento.json
+- HTR3ITfFDrK6eP2R-anti-no-show.json
+- BWDsb4A0GVs2NQnM-pre-checkin.json
+- 3ryiGnLNLuPWEfmL-pre-checkin-lembrete.json
+- SMjeAMnZ6XkFPptn-verificar-pendencias.json
+
+**Quando fazer backup**:
+- Antes de modificacoes significativas
+- Apos correcoes criticas
+- Periodicamente (recomendado: semanal)
 
 ## MCP Tools Disponiveis
 
