@@ -1,33 +1,28 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-16
-**Status:** Phase 3 Complete ✅
-**Current Phase:** Phase 3 - Patient Management (COMPLETE)
+**Status:** Phase 4 Planned 📋
+**Current Phase:** Phase 4 - Calendar & Scheduling (PLANNED)
 **Current Milestone:** v1.0
 
 ---
 
 ## Current State
 
-**Stage:** Phase 3 Complete - All 4 plans executed
-**Action:** Ready for next phase or additional patient features
+**Stage:** Phase 4 Planned - Ready for execution
+**Action:** Execute Phase 4 plans (6 plans, 4 waves)
 **Blockers:** None
 
 **Recently Completed:**
-- [x] **Plan 03-04: Patient Document Management** ✅
-  - ✅ Supabase Storage bucket with RLS policies (10MB limit, PDF/JPG/PNG)
-  - ✅ PatientDocument model with cascade delete
-  - ✅ Document upload API with multipart form data
-  - ✅ Signed download URLs with 1-hour expiry
-  - ✅ Delete API with confirmation
-  - ✅ Document section component with drag-and-drop
-  - ✅ Documentos tab in patient profile
-  - ✅ Audit logging for all document operations
-  - 📦 6 atomic commits created (12 min execution)
+- [x] **Phase 4 Planning Complete** ✅
+  - ✅ Comprehensive research (Schedule-X, date-fns/tz, healthcare patterns)
+  - ✅ 6 plans created with wave-based execution
+  - ✅ Checkpoints for schema changes (Plan 03) and N8N config (Plan 06)
+  - 📦 Plan structure: Wave 1 (foundation), Wave 2 (CRUD + multi-provider), Wave 3 (conflicts + waitlist), Wave 4 (N8N integration)
 
 **Next Steps:**
-1. **READY:** Plan Phase 4 (Calendar & Scheduling)
-2. **OR:** Add more Phase 3 features (lab results, consent forms, etc.)
+1. **READY:** Execute Phase 4 plans with `/gsd:execute-phase 4`
+2. **OR:** Execute individual plans starting with 04-01
 
 ---
 
@@ -38,7 +33,7 @@
 | Phase 1: Secure Foundation | ✅ Complete (All 5 plans done) | 17 | 17 | 100% |
 | Phase 2: Alert Dashboard | ✅ Complete (All 4 plans done) | 16 | 16 | 100% |
 | Phase 3: Patient Management | ✅ Complete (All 4 plans done) | 14 | 14 | 100% |
-| Phase 4: Calendar & Scheduling | Not Started | 15 | 0 | 0% |
+| Phase 4: Calendar & Scheduling | 📋 Planned (6 plans ready) | 15 | 0 | 0% |
 | Phase 5: Conversation Monitoring | Not Started | 10 | 0 | 0% |
 | Phase 6: One-Click Interventions | Not Started | 1 | 0 | 0% |
 | Phase 7: System Configuration | Not Started | 14 | 0 | 0% |
@@ -80,18 +75,26 @@
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-01-16 | Schedule-X over FullCalendar for calendar | Modern, lightweight (88.5 benchmark), accessible, no premium license required |
+| 2026-01-16 | @date-fns/tz with TZDate for timezones | DST-aware calculations, IANA timezone support, prevents hour-shift bugs |
+| 2026-01-16 | 15-minute buffer times between appointments | Healthcare best practice, prevents provider burnout from delays |
+| 2026-01-16 | Interval overlap algorithm (O(n log n)) | Performance with 100+ appointments, avoids O(n²) brute force |
+| 2026-01-16 | Priority queue for waitlist (URGENT first) | Medical urgency over convenience, FIFO within priority |
+| 2026-01-16 | Webhook integration with N8N | Leverage existing automation, sync reminders with manual appointments |
 | 2026-01-16 | Supabase Storage over direct uploads | Leverage existing infrastructure for scalability and reliability |
 | 2026-01-16 | Signed URLs with 1-hour expiry | Security without persistent sessions for download links |
-| 2026-01-16 | Cascade delete on patient | Prevent orphaned files when patient records removed |
-| 2026-01-16 | Client and server validation | Client for UX, server for security on file uploads |
-| 2026-01-16 | Tab navigation for profile sections | Organize dense information without overwhelming |
-| 2026-01-16 | Separate upcoming and past appointments | Users primarily care about future |
-| 2026-01-16 | Accordion for conversation threads | Lengthy conversations - collapsible keeps page scannable |
-| 2026-01-16 | Safe JSON parsing with type guards | Prisma JsonValue needs runtime validation |
 
 ---
 
 ## Recent Activity
+
+**2026-01-16 - Phase 4 Planning Complete 📋**
+- ✅ Comprehensive research on calendar libraries and healthcare scheduling
+- ✅ 6 executable plans created (04-01 through 04-06)
+- ✅ Wave structure: 1 plan in Wave 1, 2 in Wave 2, 2 in Wave 3, 1 in Wave 4
+- ✅ Checkpoints for user input on schema changes and N8N configuration
+- 🎯 Coverage: CAL-01 through CAL-15 (all calendar requirements)
+- 📦 Plans cover: Calendar views, CRUD, multi-provider, conflicts, waitlist, N8N sync
 
 **2026-01-16 - Plan 03-04 Complete ✅**
 - ✅ Document storage with Supabase Storage and RLS
@@ -120,4 +123,4 @@
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-16 after Plan 03-04 execution*
+*Last updated: 2026-01-16 after Phase 4 planning*
