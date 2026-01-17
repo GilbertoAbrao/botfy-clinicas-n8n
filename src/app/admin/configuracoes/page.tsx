@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { BusinessHoursForm } from '@/components/settings/business-hours-form';
 import { LunchBreakForm } from '@/components/settings/lunch-break-form';
 import { BookingSettingsForm } from '@/components/settings/booking-settings-form';
@@ -51,68 +52,70 @@ export default async function ConfiguracoesPage() {
   const settings = await getSettings();
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Configuracoes</h1>
-        <p className="text-muted-foreground">
-          Configure horarios de funcionamento, preferencias de agendamento e notificacoes.
-        </p>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold">Configuracoes</h1>
+          <p className="text-muted-foreground">
+            Configure horarios de funcionamento, preferencias de agendamento e notificacoes.
+          </p>
+        </div>
+
+        <Separator />
+
+        {/* Section: Horario de Funcionamento */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Horario de Funcionamento</CardTitle>
+            <CardDescription>
+              Configure os horarios de abertura e fechamento para cada dia da semana.
+              Dias desmarcados serao considerados fechados.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <BusinessHoursForm initialData={settings.businessHours} />
+          </CardContent>
+        </Card>
+
+        {/* Section: Horario de Almoco */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Horario de Almoco</CardTitle>
+            <CardDescription>
+              Configure o intervalo de almoco. Durante este periodo, nao serao agendados atendimentos.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <LunchBreakForm initialData={settings.lunchBreak} />
+          </CardContent>
+        </Card>
+
+        {/* Section: Preferencias de Agendamento */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Preferencias de Agendamento</CardTitle>
+            <CardDescription>
+              Configure a antecedencia minima para marcacao de consultas pelo chatbot.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <BookingSettingsForm initialData={settings.antecedenciaMinima} />
+          </CardContent>
+        </Card>
+
+        {/* Section: Notificacoes */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Notificacoes</CardTitle>
+            <CardDescription>
+              Configure quais notificacoes voce deseja receber. As notificacoes sao enviadas via workflows do N8N.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <NotificationPreferencesForm initialData={settings.notificationPreferences} />
+          </CardContent>
+        </Card>
       </div>
-
-      <Separator />
-
-      {/* Section: Horario de Funcionamento */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Horario de Funcionamento</CardTitle>
-          <CardDescription>
-            Configure os horarios de abertura e fechamento para cada dia da semana.
-            Dias desmarcados serao considerados fechados.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <BusinessHoursForm initialData={settings.businessHours} />
-        </CardContent>
-      </Card>
-
-      {/* Section: Horario de Almoco */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Horario de Almoco</CardTitle>
-          <CardDescription>
-            Configure o intervalo de almoco. Durante este periodo, nao serao agendados atendimentos.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <LunchBreakForm initialData={settings.lunchBreak} />
-        </CardContent>
-      </Card>
-
-      {/* Section: Preferencias de Agendamento */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Preferencias de Agendamento</CardTitle>
-          <CardDescription>
-            Configure a antecedencia minima para marcacao de consultas pelo chatbot.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <BookingSettingsForm initialData={settings.antecedenciaMinima} />
-        </CardContent>
-      </Card>
-
-      {/* Section: Notificacoes */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Notificacoes</CardTitle>
-          <CardDescription>
-            Configure quais notificacoes voce deseja receber. As notificacoes sao enviadas via workflows do N8N.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <NotificationPreferencesForm initialData={settings.notificationPreferences} />
-        </CardContent>
-      </Card>
-    </div>
+    </DashboardLayout>
   );
 }

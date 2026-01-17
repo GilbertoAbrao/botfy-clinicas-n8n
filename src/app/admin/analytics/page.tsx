@@ -1,7 +1,10 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
 import { getCurrentUserWithRole } from '@/lib/auth/session'
 import { AnalyticsDashboard } from './analytics-dashboard'
 import { ExportButton } from '@/components/analytics/export-button'
+import { Button } from '@/components/ui/button'
 
 /**
  * Analytics Page Metadata
@@ -39,6 +42,16 @@ export default async function AnalyticsPage() {
 
   return (
     <div className="space-y-6 p-6">
+      {/* Back Button */}
+      <div>
+        <Link href="/dashboard">
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Voltar para Dashboard
+          </Button>
+        </Link>
+      </div>
+
       {/* Header with export buttons */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
