@@ -1,32 +1,34 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-17
-**Status:** Phase 4 Complete ✅
-**Current Phase:** Phase 4 - Calendar & Scheduling (COMPLETE)
+**Status:** Phase 5 In Progress
+**Current Phase:** Phase 5 - Conversation Monitoring
 **Current Milestone:** v1.0
 
 ---
 
 ## Current State
 
-**Stage:** Phase 4 Complete - All 6 Plans Done
-**Action:** Ready for Phase 5 (Conversation Monitoring) or user testing
+**Stage:** Phase 5 Plan 01 Complete
+**Action:** Continue with Phase 5 Plan 02 or subsequent plans
 **Blockers:** None
 
 **Recently Completed:**
-- [x] **Plan 04-06 Complete** ✅
-  - ✅ N8N sync utility functions (n8n-sync.ts)
-  - ✅ Appointment created webhook integration
-  - ✅ Appointment updated webhook integration
-  - ✅ Appointment cancelled webhook integration
-  - ✅ Async webhook calls (don't block API responses)
-  - ✅ Graceful handling when webhooks not configured
-  - 📦 1 atomic commit created
+- [x] **Plan 05-01 Complete** ✅
+  - ✅ WhatsApp-style MessageBubble component
+  - ✅ Patient messages left-aligned (green), clinic right-aligned (white)
+  - ✅ AI badge (purple "IA") and Human badge (blue "Humano")
+  - ✅ Delivery status indicators (checkmarks)
+  - ✅ Timestamps in ptBR format
+  - ✅ Scroll-to-bottom behavior
+  - ✅ Enhanced ConversationThread with new styling
+  - ✅ Multiple pre-existing build issues fixed
+  - 📦 3 atomic commits created (~42 min execution)
 
 **Next Steps:**
-1. 🎉 **PHASE 4 COMPLETE** - All calendar and scheduling features delivered
-2. Configure N8N webhook URLs in .env.local
-3. Ready to start Phase 5 (Conversation Monitoring) when requested
+1. Continue with Plan 05-02 (if not already done) or subsequent plans
+2. Check `.planning/phases/05-conversation-monitoring/` for remaining plans
+3. Complete Phase 5 (Conversation Monitoring)
 
 ---
 
@@ -38,12 +40,12 @@
 | Phase 2: Alert Dashboard | ✅ Complete (All 4 plans done) | 16 | 16 | 100% |
 | Phase 3: Patient Management | ✅ Complete (All 4 plans done) | 14 | 14 | 100% |
 | Phase 4: Calendar & Scheduling | ✅ Complete (All 6 plans done) | 15 | 15 | 100% |
-| Phase 5: Conversation Monitoring | Not Started | 10 | 0 | 0% |
+| Phase 5: Conversation Monitoring | 🔄 In Progress (Plan 01 done) | 10 | 2 | 20% |
 | Phase 6: One-Click Interventions | Not Started | 1 | 0 | 0% |
 | Phase 7: System Configuration | Not Started | 14 | 0 | 0% |
 | Phase 8: Analytics & Smart Features | Not Started | 2 | 0 | 0% |
 
-**Overall Progress:** 62/79 requirements (78%)
+**Overall Progress:** 64/79 requirements (81%)
 
 ---
 
@@ -90,12 +92,24 @@
 64. ✅ User can add patient to waitlist (CAL-14)
 65. ✅ Calendar syncs with N8N workflows (CAL-15)
 
+**Phase 5 - Conversation Monitoring (IN PROGRESS):**
+66. ✅ WhatsApp-style message bubbles display (CONV-01)
+67. ✅ AI/Human badge distinction on messages (CONV-02)
+68. ⬜ Real-time conversation updates (CONV-03)
+69. ⬜ Conversation filtering and search (CONV-04)
+70. ⬜ Clear AI memory functionality (CONV-05)
+... (remaining requirements pending)
+
 ---
 
 ## Recent Decisions
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-01-17 | WhatsApp-style bubbles for conversations | Familiar UX, clear visual distinction between patient/clinic messages |
+| 2026-01-17 | Purple AI badge, blue Human badge | Distinct colors help quickly identify message source |
+| 2026-01-17 | Default 'delivered' status | Full status tracking requires N8N integration, out of scope for Plan 01 |
+| 2026-01-17 | 5 messages in compact mode (was 10) | Better visual density while maintaining context |
 | 2026-01-16 | Schedule-X over FullCalendar for calendar | Modern, lightweight (88.5 benchmark), accessible, no premium license required |
 | 2026-01-16 | @date-fns/tz with TZDate for timezones | DST-aware calculations, IANA timezone support, prevents hour-shift bugs |
 | 2026-01-16 | 15-minute buffer times between appointments | Healthcare best practice, prevents provider burnout from delays |
@@ -104,16 +118,22 @@
 | 2026-01-16 | Webhook integration with N8N | Leverage existing automation, sync reminders with manual appointments |
 | 2026-01-16 | Supabase Storage over direct uploads | Leverage existing infrastructure for scalability and reliability |
 | 2026-01-16 | Signed URLs with 1-hour expiry | Security without persistent sessions for download links |
-| 2026-01-17 | Free Schedule-X color-coding over premium resource scheduler | Avoid paid license, use calendar categories with custom provider colors |
-| 2026-01-17 | Provider name prefix in event titles | Visual distinction alongside colors: [Provider] Patient - Service |
-| 2026-01-17 | Client-side filtering with useMemo | Instant UI updates without server round-trip |
-| 2026-01-17 | String servico_tipo instead of Service model relation | Match existing database schema with tipo_consulta field |
-| 2026-01-17 | Manual SQL migration for waitlist table | Shadow database limitation with Supabase pooled connections |
-| 2026-01-17 | Async waitlist notification on delete | Avoid blocking delete response, error resilience |
 
 ---
 
 ## Recent Activity
+
+**2026-01-17 - Plan 05-01 Complete ✅**
+- ✅ WhatsApp-style MessageBubble component created
+- ✅ Patient messages left-aligned (green), clinic messages right-aligned (white)
+- ✅ AI badge (purple "IA") and Human badge (blue "Humano")
+- ✅ Delivery status indicators (single check, double check, blue double check)
+- ✅ Timestamps in ptBR format (14:30, Ontem 14:30, 15/01 14:30)
+- ✅ Scroll-to-bottom behavior on load/update
+- ✅ Compact mode shows last 5 messages
+- ✅ Multiple pre-existing TypeScript build errors fixed
+- 📦 3 atomic commits created (~42 min execution)
+- 🎯 Requirements: CONV-01 (WhatsApp-style display), CONV-02 (AI/Human badges)
 
 **2026-01-17 - Plan 04-06 Complete ✅ - PHASE 4 COMPLETE**
 - ✅ N8N sync utility functions (n8n-sync.ts)
@@ -187,22 +207,7 @@
 - 📦 6 atomic commits created (12 min execution)
 - 🎉 **PHASE 3 COMPLETE** - All patient management features delivered
 
-**2026-01-16 - Plan 03-03 Complete ✅**
-- ✅ Patient validation schema with CPF checksum
-- ✅ CRUD operations for patient records
-- ✅ RLS policies for role-based mutations
-- 📦 6 atomic commits created (15 min execution)
-
-**2026-01-16 - Plan 03-02 Complete ✅**
-- ✅ Patient profile page with comprehensive view
-- ✅ Tab navigation and attendance metrics
-- 📦 8 atomic commits created (18 min execution)
-
-**2026-01-16 - Plan 03-01 Complete ✅**
-- ✅ Patient search and list functionality
-- 📦 8 atomic commits created (23 min execution)
-
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-17 after Plan 04-06 execution (Phase 4 Complete)*
+*Last updated: 2026-01-17 after Plan 05-01 execution*
