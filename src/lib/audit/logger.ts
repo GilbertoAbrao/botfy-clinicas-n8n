@@ -36,11 +36,21 @@ export enum AuditAction {
   // Conversation management
   CLEAR_CHAT_MEMORY = 'CLEAR_CHAT_MEMORY',
 
+  // Service management
+  VIEW_SERVICE = 'VIEW_SERVICE',
+  CREATE_SERVICE = 'CREATE_SERVICE',
+  UPDATE_SERVICE = 'UPDATE_SERVICE',
+  DELETE_SERVICE = 'DELETE_SERVICE',
+
   // System admin actions
   VIEW_AUDIT_LOGS = 'VIEW_AUDIT_LOGS',
   CREATE_USER = 'CREATE_USER',
   UPDATE_USER = 'UPDATE_USER',
   DELETE_USER = 'DELETE_USER',
+  DEACTIVATE_USER = 'DEACTIVATE_USER',
+
+  // System configuration
+  UPDATE_SETTINGS = 'UPDATE_SETTINGS',
 }
 
 interface LogAuditParams {
