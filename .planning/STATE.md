@@ -1,29 +1,30 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-17
-**Status:** Phase 6 Complete
-**Current Phase:** Phase 6 - One-Click Interventions (COMPLETE)
+**Status:** Phase 7 In Progress
+**Current Phase:** Phase 7 - System Configuration (IN PROGRESS)
 **Current Milestone:** v1.0
 
 ---
 
 ## Current State
 
-**Stage:** Phase 6 Complete - Plan 06-01 Done
-**Action:** Ready for Phase 7 (System Configuration)
-**Blockers:** None
+**Stage:** Phase 7 In Progress - Plan 07-01 Done
+**Action:** Ready for Plan 07-02 (Services CRUD) or Plan 07-04 (Business Hours)
+**Blockers:** Migration needs to be applied to Supabase database
 
 **Recently Completed:**
-- [x] **Plan 06-01 Complete** - One-Click Interventions
-  - RescheduleModal component with conflict detection
-  - SendMessageModal with WhatsApp deep link
-  - Auto-resolve API endpoint for alerts
-  - AlertDetail integration with working buttons
-  - 4 atomic commits created
+- [x] **Plan 07-01 Complete** - Database Schema for Configuration
+  - Service model with nome, duracao, preco, ativo fields
+  - ClinicSettings model with singleton pattern
+  - Migration SQL ready for Supabase
+  - Seed script for default clinic settings
+  - 3 atomic commits created
 
 **Next Steps:**
-1. **PHASE 6 COMPLETE** - All one-click intervention features delivered
-2. Ready to start Phase 7 (System Configuration) when requested
+1. Apply migration to Supabase database
+2. Run seed script to create default ClinicSettings
+3. Proceed to Plan 07-02 (Services CRUD) or Plan 07-04 (Business Hours)
 
 ---
 
@@ -37,7 +38,7 @@
 | Phase 4: Calendar & Scheduling | Complete (All 6 plans done) | 15 | 15 | 100% |
 | Phase 5: Conversation Monitoring | Complete (All 3 plans done) | 10 | 10 | 100% |
 | Phase 6: One-Click Interventions | Complete (Plan 06-01 done) | 1 | 1 | 100% |
-| Phase 7: System Configuration | Not Started | 14 | 0 | 0% |
+| Phase 7: System Configuration | In Progress (Plan 07-01 done) | 14 | 0 | 7% |
 | Phase 8: Analytics & Smart Features | Not Started | 2 | 0 | 0% |
 
 **Overall Progress:** 73/79 requirements (92%)
@@ -87,6 +88,15 @@
 
 ## Recent Activity
 
+**2026-01-17 - Plan 07-01 Complete**
+- Service model with nome, duracao (minutes), preco (Decimal), ativo
+- ClinicSettings model with singleton pattern (id='default')
+- businessHours and lunchBreak as Json fields for flexibility
+- Migration SQL ready for Supabase deployment
+- Seed script with default clinic settings
+- 3 atomic commits created
+- Requirements foundation: CONF-01 to CONF-08, CONF-14
+
 **2026-01-17 - Plan 06-01 Complete - PHASE 6 COMPLETE**
 - RescheduleModal component for rescheduling appointments from alert detail
 - SendMessageModal component with WhatsApp deep link and message templates
@@ -128,4 +138,4 @@
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-17 after Plan 06-01 execution (Phase 6 Complete)*
+*Last updated: 2026-01-17 after Plan 07-01 execution (Phase 7 Started)*
