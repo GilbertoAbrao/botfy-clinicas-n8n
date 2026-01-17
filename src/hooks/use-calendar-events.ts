@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createBrowserClient } from '@/lib/supabase/client'
 import { dbTimestampToTZDate } from '@/lib/calendar/time-zone-utils'
 
@@ -19,50 +19,54 @@ export function useCalendarEvents(startDate: Date, endDate: Date) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchEvents = async () => {
-      setLoading(true)
-      setError(null)
+  const fetchEvents = useCallback(async () => {
+    setLoading(true)
+    setError(null)
 
-      try {
-        const supabase = createBrowserClient()
+    try {
+      const supabase = createBrowserClient()
 
-        // Fetch appointments from view with patient and service data
-        const { data, error: fetchError } = await supabase
-          .from('agendamentos_completos')
-          .select('*')
-          .gte('data_hora', startDate.toISOString())
-          .lte('data_hora', endDate.toISOString())
-          .order('data_hora', { ascending: true })
+      // Fetch appointments from view with patient and service data
+      const { data, error: fetchError } = await supabase
+        .from('agendamentos_completos')
+        .select('*')
+        .gte('data_hora', startDate.toISOString())
+        .lte('data_hora', endDate.toISOString())
+        .order('data_hora', { ascending: true })
 
-        if (fetchError) throw fetchError
+      if (fetchError) throw fetchError
 
-        // Transform to calendar events
-        const calendarEvents: CalendarEvent[] = (data || []).map(apt => {
-          const start = dbTimestampToTZDate(apt.data_hora)
-          const end = new Date(start.getTime() + (apt.servico_duracao_minutos || 60) * 60000)
+      // Transform to calendar events
+      const calendarEvents: CalendarEvent[] = (data || []).map(apt => {
+        const start = dbTimestampToTZDate(apt.data_hora)
+        const end = new Date(start.getTime() + (apt.servico_duracao_minutos || 60) * 60000)
 
-          return {
-            id: apt.id,
-            title: `${apt.paciente_nome} - ${apt.servico_nome}`,
-            start,
-            end,
-            patientId: apt.paciente_id,
-            serviceId: apt.servico_id,
-            status: apt.status,
-          }
-        })
+        return {
+          id: apt.id,
+          title: `${apt.paciente_nome} - ${apt.servico_nome}`,
+          start,
+          end,
+          patientId: apt.paciente_id,
+          serviceId: apt.servico_id,
+          status: apt.status,
+        }
+      })
 
-        setEvents(calendarEvents)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch appointments')
-      } finally {
-        setLoading(false)
-      }
+      setEvents(calendarEvents)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch appointments')
+    } finally {
+      setLoading(false)
     }
-
-    fetchEvents()
   }, [startDate, endDate])
 
-  return { events, loading, error, refetch: () => {} }
+  useEffect(() => {
+    fetchEvents()
+  }, [fetchEvents])
+
+  const refetch = useCallback(() => {
+    fetchEvents()
+  }, [fetchEvents])
+
+  return { events, loading, error, refetch }
 }
