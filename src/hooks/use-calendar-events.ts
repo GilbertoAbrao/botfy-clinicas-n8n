@@ -11,6 +11,9 @@ export interface CalendarEvent {
   end: Date
   patientId: string
   serviceId: string
+  providerId: string
+  providerName: string
+  providerColor: string
   status: string
 }
 
@@ -26,28 +29,50 @@ export function useCalendarEvents(startDate: Date, endDate: Date) {
     try {
       const supabase = createBrowserClient()
 
-      // Fetch appointments from view with patient and service data
+      // Fetch appointments from appointments table with patient and provider joins
       const { data, error: fetchError } = await supabase
-        .from('agendamentos_completos')
-        .select('*')
-        .gte('data_hora', startDate.toISOString())
-        .lte('data_hora', endDate.toISOString())
-        .order('data_hora', { ascending: true })
+        .from('appointments')
+        .select(`
+          id,
+          service_type,
+          scheduled_at,
+          duration,
+          status,
+          patient:patients!patient_id (
+            id,
+            nome
+          ),
+          provider:providers!provider_id (
+            id,
+            nome,
+            cor_calendario
+          )
+        `)
+        .gte('scheduled_at', startDate.toISOString())
+        .lte('scheduled_at', endDate.toISOString())
+        .order('scheduled_at', { ascending: true })
 
       if (fetchError) throw fetchError
 
       // Transform to calendar events
       const calendarEvents: CalendarEvent[] = (data || []).map(apt => {
-        const start = dbTimestampToTZDate(apt.data_hora)
-        const end = new Date(start.getTime() + (apt.servico_duracao_minutos || 60) * 60000)
+        const start = dbTimestampToTZDate(apt.scheduled_at)
+        const end = new Date(start.getTime() + (apt.duration || 60) * 60000)
+
+        // Handle patient and provider data (can be null)
+        const patient = Array.isArray(apt.patient) ? apt.patient[0] : apt.patient
+        const provider = Array.isArray(apt.provider) ? apt.provider[0] : apt.provider
 
         return {
           id: apt.id,
-          title: `${apt.paciente_nome} - ${apt.servico_nome}`,
+          title: `${patient?.nome || 'Sem paciente'} - ${apt.service_type}`,
           start,
           end,
-          patientId: apt.paciente_id,
-          serviceId: apt.servico_id,
+          patientId: patient?.id || '',
+          serviceId: apt.service_type,
+          providerId: provider?.id || '',
+          providerName: provider?.nome || 'Sem profissional',
+          providerColor: provider?.cor_calendario || '#8B5CF6',
           status: apt.status,
         }
       })
