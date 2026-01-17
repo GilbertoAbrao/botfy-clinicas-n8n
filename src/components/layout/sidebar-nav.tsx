@@ -35,7 +35,7 @@ const navigation = [
     name: 'Conversas',
     href: '/conversas',
     icon: MessageSquare,
-    enabled: false, // Em breve
+    enabled: true,
   },
   {
     name: 'Alertas',
