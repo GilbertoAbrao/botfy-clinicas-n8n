@@ -103,6 +103,21 @@ model Patient {
   @@map("patients")
 }
 
+// Provider/Professional information
+model Provider {
+  id               String   @id @default(uuid()) @db.Uuid
+  nome             String
+  especialidade    String?
+  cor_calendario   String   @default("#8B5CF6") // Purple default
+  ativo            Boolean  @default(true)
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  appointments Appointment[] @relation("ProviderAppointments")
+
+  @@map("providers")
+}
+
 // Appointment scheduling
 model Appointment {
   id          String            @id @default(uuid()) @db.Uuid
@@ -118,9 +133,11 @@ model Appointment {
   updatedAt   DateTime          @updatedAt @map("updated_at")
 
   patient     Patient           @relation(fields: [patientId], references: [id])
+  provider    Provider?         @relation("ProviderAppointments", fields: [providerId], references: [id])
   alerts      Alert[]
 
   @@index([patientId])
+  @@index([providerId])
   @@index([scheduledAt])
   @@index([status])
   @@map("appointments")
