@@ -12,7 +12,17 @@ NC='\033[0m' # No Color
 
 # Carregar variáveis de ambiente
 if [ -f .env ]; then
-    export $(cat .env | grep -v '^#' | xargs)
+    while IFS='=' read -r key value; do
+        # Ignorar linhas vazias e comentários
+        if [[ -z "$key" ]] || [[ "$key" =~ ^[[:space:]]*# ]]; then
+            continue
+        fi
+        # Remover espaços em branco ao redor
+        key=$(echo "$key" | xargs)
+        value=$(echo "$value" | xargs)
+        # Exportar variável
+        export "$key=$value"
+    done < <(grep -v '^#' .env | grep -v '^$')
 else
     echo -e "${RED}Erro: Arquivo .env não encontrado${NC}"
     exit 1

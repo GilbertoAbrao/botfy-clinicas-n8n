@@ -1,0 +1,14 @@
+{
+  "updatedAt": "2026-01-17T15:09:19.280Z",
+  "createdAt": "2026-01-14T12:08:47.828Z",
+  "id": "3ryiGnLNLuPWEfmL",
+  "name": "Botfy - Pre Check-In Lembrete",
+  "active": true,
+  "webhooks": [
+    {
+      "path": "/test/pre-checkin-lembrete",
+      "method": "POST",
+      "responseMode": "onReceived"
+    }
+  ]
+}
