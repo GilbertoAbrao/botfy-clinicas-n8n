@@ -1,37 +1,31 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-17
-**Status:** Phase 8 In Progress
-**Current Phase:** Phase 8 - Analytics & Smart Features (IN PROGRESS)
+**Status:** Phase 8 Complete
+**Current Phase:** Phase 8 - Analytics & Smart Features (COMPLETE)
 **Current Milestone:** v1.0
 
 ---
 
 ## Current State
 
-**Stage:** Phase 8 in progress - Plans 08-01, 08-02, and 08-03 complete
-**Action:** Continue with Phase 8 remaining plans (08-04, 08-05)
+**Stage:** Phase 8 complete - All 5 plans executed
+**Action:** Milestone v1.0 complete - ready for /gsd:complete-milestone
 **Blockers:** None
 
 **Recently Completed:**
 - [x] **Plan 08-01** - Core Analytics Algorithms
-  - Priority scorer with 4 weighted factors (1-100 scale)
-  - Pattern detector for recurring failures (4 pattern types)
-  - Extended KPI calculator with trend analysis
 - [x] **Plan 08-02** - No-Show Risk Prediction
-  - Heuristic-based predictor with 5 weighted factors
-  - Batch prediction for multiple appointments
-  - LRU cache with 1-hour TTL (max 1000 entries)
-  - Actionable recommendations in Portuguese
 - [x] **Plan 08-03** - Analytics API Endpoints
-  - GET /api/analytics - Main analytics endpoint (KPIs + patterns)
-  - GET /api/analytics/alerts/[id]/priority - Alert priority scoring
-  - GET /api/analytics/appointments/[id]/risk - No-show risk prediction
-  - GET /api/export - CSV export with HIPAA-compliant audit logging
+- [x] **Plan 08-04** - Analytics Dashboard UI
+- [x] **Plan 08-05** - Smart Predictions Integration
+  - AlertPriorityBadge component (color-coded priority score 1-100)
+  - NoShowRiskBadge component (Alto/Medio/Baixo with recommendations)
+  - Integrated badges into alert list and appointment modal
+  - Shadcn Tooltip component added
 
 **Next Steps:**
-1. Plan 08-04 (Analytics Dashboard UI)
-2. Plan 08-05 (Smart predictions integration)
+1. Run `/gsd:complete-milestone` to archive v1.0
 
 ---
 
@@ -46,7 +40,7 @@
 | Phase 5: Conversation Monitoring | Complete (All 3 plans done) | 10 | 10 | 100% |
 | Phase 6: One-Click Interventions | Complete (Plan 06-01 done) | 1 | 1 | 100% |
 | Phase 7: System Configuration | Complete (All 4 plans done) | 14 | 14 | 100% |
-| Phase 8: Analytics & Smart Features | In Progress | 2 | 2 | 100% |
+| Phase 8: Analytics & Smart Features | Complete (All 5 plans done) | 2 | 2 | 100% |
 
 **Overall Progress:** 89/89 requirements (100%)
 
@@ -75,25 +69,14 @@
 76-78. [Previous Phase 6 requirements - all complete]
 
 **Phase 7 - System Configuration (COMPLETE):**
-79. CONF-01: Configure business hours (days of week, opening/closing times)
-80. CONF-02: Configure lunch break hours
-81. CONF-03: View list of services offered
-82. CONF-04: Create new service (nome, duração, preço, ativo/inativo)
-83. CONF-05: Edit existing service
-84. CONF-06: Activate/deactivate service
-85. CONF-07: Delete service
-86. CONF-08: Configure antecedência mínima for appointments
-87. CONF-09: View list of system users
-88. CONF-10: Create new user account (email, senha, role)
-89. CONF-11: Edit user account (email, role)
-90. CONF-12: Deactivate user account
-91. CONF-13: Assign roles (Admin, Atendente) to users
-92. CONF-14: Configure notification preferences
+79-92. [Previous Phase 7 requirements - all complete]
 
-**Phase 8 - Analytics & Smart Features (IN PROGRESS):**
+**Phase 8 - Analytics & Smart Features (COMPLETE):**
 93. ANLY-01: Core analytics algorithms (priority scorer, pattern detector, KPI calculator)
 94. ANLY-02: No-show risk prediction algorithm with caching
 95. ANLY-03: Analytics API endpoints (main, priority, risk, export)
+96. ANLY-04: Analytics dashboard UI (KPI cards, insights panel)
+97. ANLY-05: Smart predictions integration (badges in operational views)
 
 ---
 
@@ -101,63 +84,50 @@
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-01-17 | Badges fetch on mount with skeleton loading | Don't block main content while analytics loads |
+| 2026-01-17 | Error in badge hides silently | Operational views shouldn't break if analytics fails |
+| 2026-01-17 | Risk badge for future non-cancelled appointments only | Past/cancelled appointments don't need risk prediction |
 | 2026-01-17 | Priority scorer 4 factors with max 110 total points | Type (40), age (20), patient history (25), proximity (25) cover all relevant contexts |
 | 2026-01-17 | Pattern detector uses Prisma groupBy | More efficient than raw SQL, type-safe results |
 | 2026-01-17 | KPI trend threshold 5% for stable | Small fluctuations shouldn't show as trend changes |
 | 2026-01-17 | Risk factor weights: 40% historical, 15% each for time/day/lead/confirmation | Historical no-show rate is most predictive factor |
 | 2026-01-17 | LRU cache with 1-hour TTL, 1000 max entries | Balance freshness with performance |
-| 2026-01-17 | Batch query with groupBy for patient history | Single query more efficient than N+1 for batch predictions |
-| 2026-01-17 | Max periodDays = 90 for analytics | Prevent excessive queries while allowing quarterly analysis |
 | 2026-01-17 | ADMIN-only export | HIPAA compliance - data export is sensitive operation |
-| 2026-01-17 | Use serviceType directly in export | Appointment model uses serviceType string, not service relation |
 
 ---
 
 ## Recent Activity
+
+**2026-01-17 - Plan 08-05 Complete**
+- AlertPriorityBadge component (fetches /api/analytics/alerts/{id}/priority)
+- NoShowRiskBadge component (fetches /api/analytics/appointments/{id}/risk)
+- Integrated priority badges into alert list (desktop + mobile)
+- Integrated risk badges into appointment modal (future appointments only)
+- Added shadcn Tooltip component for explanations
+
+**2026-01-17 - Plan 08-04 Complete**
+- KPICards component showing success/no-show/cancellation rates
+- InsightsPanel component showing detected patterns
+- AnalyticsDashboard combining both with auto-refresh
+- /admin/analytics page for analytics access
 
 **2026-01-17 - Plan 08-03 Complete**
 - GET /api/analytics - Main analytics endpoint returning KPIs and patterns
 - GET /api/analytics/alerts/[id]/priority - Alert priority scoring (1-100)
 - GET /api/analytics/appointments/[id]/risk - No-show risk prediction
 - GET /api/export - CSV export (appointments, alerts, kpis)
-- ADMIN-only access for export with audit logging
-- Added EXPORT_DATA to AuditAction enum
-
-**2026-01-17 - Plan 08-01 Complete**
-- Priority scorer algorithm (4 weighted factors, 1-100 scale)
-- Pattern detector (4 pattern types: time_slot, provider, alert_type, day_of_week)
-- Extended KPI calculator (rates, trends, health status)
-- All modules use Prisma + date-fns, no new dependencies
 
 **2026-01-17 - Plan 08-02 Complete**
 - No-show risk predictor with 5 weighted factors
 - Batch prediction for multiple appointments
 - LRU cache (1-hour TTL, 1000 max entries)
-- Recommendations in Portuguese (Ligar para confirmar, etc.)
 
-**2026-01-17 - Phase 7 Complete**
-- All 4 plans executed successfully (07-01 through 07-04)
-- Phase verification passed
-- 14 requirements delivered
-- New admin pages: /admin/servicos, /admin/usuarios, /admin/configuracoes
-- New API endpoints: /api/servicos, /api/usuarios, /api/configuracoes
-
-**2026-01-17 - Plan 07-04 Complete**
-- Settings API (GET/PUT /api/configuracoes) with RBAC
-- /admin/configuracoes page with business hours, lunch, booking, notifications forms
-
-**2026-01-17 - Plan 07-03 Complete**
-- User management API and /admin/usuarios page
-- Create/edit users with Supabase Auth integration
-
-**2026-01-17 - Plan 07-02 Complete**
-- Services CRUD API and /admin/servicos page
-
-**2026-01-17 - Plan 07-01 Complete**
-- Service and ClinicSettings Prisma models
-- Migration and seed script
+**2026-01-17 - Plan 08-01 Complete**
+- Priority scorer algorithm (4 weighted factors, 1-100 scale)
+- Pattern detector (4 pattern types)
+- Extended KPI calculator (rates, trends)
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-17 after Plan 08-03 completion*
+*Last updated: 2026-01-17 after Plan 08-05 completion*
