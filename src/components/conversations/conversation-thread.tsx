@@ -1,129 +1,114 @@
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+'use client'
+
+import { useRef, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
+import { MessageBubble, type MessageSender, type MessageStatus } from './message-bubble'
 
 interface Message {
-  id: string;
-  content: string;
-  sender: 'patient' | 'ai' | 'system';
-  sentAt: Date | string;
+  id: string
+  content: string
+  sender: 'patient' | 'ai' | 'human' | 'system'
+  sentAt: Date | string
+  // Optional delivery status (extracted from additional_kwargs if available)
+  status?: MessageStatus
 }
 
 interface ConversationThreadProps {
-  messages: Message[];
-  compact?: boolean;
-  conversationId?: string;
+  messages: Message[]
+  compact?: boolean
+  conversationId?: string
 }
 
-function getSenderLabel(sender: Message['sender']): string {
-  switch (sender) {
-    case 'patient':
-      return 'Paciente';
-    case 'ai':
-      return 'I.A';
-    case 'system':
-      return 'Sistema';
-    default:
-      return 'Desconhecido';
-  }
-}
-
-function getSenderColor(sender: Message['sender']): string {
-  switch (sender) {
-    case 'patient':
-      return 'bg-blue-50 border-blue-200';
-    case 'ai':
-      return 'bg-purple-50 border-purple-200';
-    case 'system':
-      return 'bg-gray-50 border-gray-200';
-    default:
-      return 'bg-gray-50 border-gray-200';
-  }
-}
-
+/**
+ * WhatsApp-style conversation thread component
+ *
+ * Displays messages in a scrollable container with:
+ * - Patient messages on the left (green)
+ * - Clinic messages (AI/Human) on the right (white/gray)
+ * - Auto-scroll to most recent messages
+ * - Compact mode shows last 5 messages with "Ver mais..." link
+ */
 export function ConversationThread({
   messages,
   compact = false,
   conversationId
 }: ConversationThreadProps) {
-  // In compact mode, show only last 10 messages
-  const displayMessages = compact && messages.length > 10
-    ? messages.slice(-10)
-    : messages;
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
-  const hasMoreMessages = compact && messages.length > 10;
+  // Sort messages by sentAt ascending (oldest first, newest at bottom)
+  const sortedMessages = [...messages].sort((a, b) => {
+    const dateA = typeof a.sentAt === 'string' ? new Date(a.sentAt) : a.sentAt
+    const dateB = typeof b.sentAt === 'string' ? new Date(b.sentAt) : b.sentAt
+    return dateA.getTime() - dateB.getTime()
+  })
+
+  // In compact mode, show only last 5 messages
+  const displayMessages = compact && sortedMessages.length > 5
+    ? sortedMessages.slice(-5)
+    : sortedMessages
+
+  const hasMoreMessages = compact && sortedMessages.length > 5
+
+  // Scroll to bottom when messages change or on initial load
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      })
+    }
+  }, [displayMessages.length])
 
   if (!messages || messages.length === 0) {
     return (
       <div className="flex items-center justify-center p-8 text-muted-foreground">
         <p>Nenhuma mensagem disponível</p>
       </div>
-    );
+    )
   }
 
   return (
     <div className="space-y-4">
       {hasMoreMessages && (
-        <div className="text-center text-sm text-muted-foreground">
-          <p>Mostrando as últimas 10 de {messages.length} mensagens</p>
+        <div className="text-center text-sm text-muted-foreground py-2">
+          <p>Mostrando as últimas 5 de {sortedMessages.length} mensagens</p>
+          {conversationId && (
+            <Link
+              href={`/conversas/${conversationId}`}
+              className="text-primary hover:underline text-xs"
+            >
+              Ver mais...
+            </Link>
+          )}
         </div>
       )}
 
-      <div className="space-y-3 max-h-[600px] overflow-y-auto">
-        {displayMessages.map((message, index) => {
-          const isPatient = message.sender === 'patient';
-          const timestamp = typeof message.sentAt === 'string'
-            ? new Date(message.sentAt)
-            : message.sentAt;
-
-          return (
-            <div
-              key={message.id || index}
-              className={`flex ${isPatient ? 'justify-start' : 'justify-end'}`}
-            >
-              <div className={`max-w-[80%] ${isPatient ? 'items-start' : 'items-end'}`}>
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge
-                    variant="outline"
-                    className="text-xs"
-                  >
-                    {getSenderLabel(message.sender)}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(timestamp, {
-                      addSuffix: true,
-                      locale: ptBR,
-                    })}
-                  </span>
-                </div>
-
-                <Card
-                  className={`p-3 ${getSenderColor(message.sender)} ${
-                    isPatient ? 'rounded-tl-none' : 'rounded-tr-none'
-                  } border`}
-                >
-                  <p className="text-sm whitespace-pre-wrap break-words">
-                    {message.content}
-                  </p>
-                </Card>
-              </div>
-            </div>
-          );
-        })}
+      <div
+        ref={scrollContainerRef}
+        className="space-y-3 max-h-[600px] overflow-y-auto px-2 py-2"
+      >
+        {displayMessages.map((message, index) => (
+          <MessageBubble
+            key={message.id || index}
+            content={message.content}
+            sender={message.sender as MessageSender}
+            timestamp={message.sentAt}
+            status={message.status || 'delivered'}
+            isCompact={compact}
+          />
+        ))}
       </div>
 
       {hasMoreMessages && conversationId && (
         <div className="flex justify-center pt-4 border-t">
           <Button variant="outline" asChild>
-            <Link href={`/dashboard/conversations/${conversationId}`}>
+            <Link href={`/conversas/${conversationId}`}>
               Ver conversa completa
             </Link>
           </Button>
         </div>
       )}
     </div>
-  );
+  )
 }
