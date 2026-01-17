@@ -193,6 +193,96 @@ Marília: Prontinho, Maria! Sua avaliação facial está agendada:
          Te envio um lembrete antes da consulta. Até lá!
 ```
 
+## Testing Workflows
+
+Todos os workflows principais possuem webhooks de teste que permitem executá-los manualmente para fins de validação e debugging.
+
+### Webhooks de Teste Disponíveis
+
+| Workflow | Path | Payload Opcional |
+|----------|------|------------------|
+| Anti No-Show | `/test/anti-no-show` | `{"agendamento_id": number, "bypass_timing": boolean}` |
+| Pre Check-In | `/test/pre-checkin` | `{"agendamento_id": number, "bypass_timing": boolean}` |
+| Pre Check-In Lembrete | `/test/pre-checkin-lembrete` | `{"pre_checkin_id": number}` |
+| Verificar Pendências | `/test/verificar-pendencias` | `{}` |
+
+### Executando Testes
+
+#### Opção 1: Script Automatizado
+
+```bash
+# Configure a URL do seu N8N
+export N8N_URL=https://seu-n8n.com
+
+# Execute o script de testes
+./test-workflows.sh
+```
+
+#### Opção 2: Testes Manuais com curl
+
+**Anti No-Show - Testar agendamento específico:**
+```bash
+curl -X POST $N8N_URL/webhook/test/anti-no-show \
+  -H "Content-Type: application/json" \
+  -d '{"agendamento_id": 10}'
+```
+
+**Pre Check-In - Com bypass de janela de tempo:**
+```bash
+curl -X POST $N8N_URL/webhook/test/pre-checkin \
+  -H "Content-Type: application/json" \
+  -d '{"agendamento_id": 10, "bypass_timing": true}'
+```
+
+**Pre Check-In Lembrete - Testar pre check-in específico:**
+```bash
+curl -X POST $N8N_URL/webhook/test/pre-checkin-lembrete \
+  -H "Content-Type: application/json" \
+  -d '{"pre_checkin_id": 5}'
+```
+
+**Verificar Pendências - Executar verificação completa:**
+```bash
+curl -X POST $N8N_URL/webhook/test/verificar-pendencias \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+### Parâmetros de Teste
+
+#### `agendamento_id` (número, opcional)
+- Se fornecido: busca e processa apenas este agendamento específico
+- Se omitido: executa busca normal (todos agendamentos elegíveis)
+
+#### `bypass_timing` (boolean, opcional)
+- `true`: Ignora validações de janela de tempo (útil para testar agendamentos fora da janela)
+- `false` ou omitido: Usa validação normal de timing
+
+#### `pre_checkin_id` (número, opcional)
+- Se fornecido: busca e processa apenas este pre check-in específico
+- Se omitido: executa busca normal (todos pre check-ins pendentes)
+
+### Validação de Testes
+
+Após executar um teste:
+
+1. **Verificar resposta HTTP**: Deve retornar `200 OK`
+2. **Verificar logs no N8N**:
+   - Acessar histórico de execuções
+   - Verificar cada node executado
+   - Confirmar que dados foram processados corretamente
+3. **Verificar WhatsApp**: Se aplicável, confirmar que mensagens foram enviadas
+4. **Verificar banco**: Confirmar que registros foram criados/atualizados
+
+### Troubleshooting de Testes
+
+| Erro | Causa Provável | Solução |
+|------|----------------|---------|
+| 404 Not Found | Webhook path incorreto | Verificar path no workflow |
+| 500 Error | Dados inválidos no payload | Verificar se IDs existem no banco |
+| Sem resposta | Workflow desativado | Ativar workflow no N8N |
+| Dados não processados | Timing validation | Usar `bypass_timing: true` |
+
 ## Troubleshooting
 
 | Problema | Causa | Solução |

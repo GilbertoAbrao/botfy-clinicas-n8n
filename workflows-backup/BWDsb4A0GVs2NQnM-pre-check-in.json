@@ -1,47 +1,92 @@
 {
+  "updatedAt": "2026-01-16T15:17:48.588Z",
+  "createdAt": "2026-01-14T12:08:28.933Z",
   "id": "BWDsb4A0GVs2NQnM",
   "name": "Botfy - Pre Check-In",
+  "description": null,
   "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
         "rule": {
-          "interval": [{"field": "hours"}]
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
         }
       },
       "id": "schedule-trigger",
       "name": "Disparo Agendado",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [-608, 304]
+      "position": [
+        -608,
+        304
+      ]
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT a.*, p.nome as paciente_nome, p.telefone as paciente_telefone, p.email as paciente_email, s.nome as servico_nome FROM agendamentos a JOIN pacientes p ON a.paciente_id = p.id LEFT JOIN servicos s ON a.servico_id = s.id WHERE a.status = 'confirmado' AND a.data_hora >= NOW() + INTERVAL '23 hours' AND a.data_hora <= NOW() + INTERVAL '25 hours'"
+        "query": "SELECT a.*, p.nome as paciente_nome, p.telefone as paciente_telefone, p.email as paciente_email, s.nome as servico_nome FROM agendamentos a JOIN pacientes p ON a.paciente_id = p.id LEFT JOIN servicos s ON a.servico_id = s.id WHERE a.status IN ('agendada', 'confirmado') AND a.data_hora >= NOW() + INTERVAL '23 hours' AND a.data_hora <= NOW() + INTERVAL '25 hours'"
       },
       "id": "busca-agendamentos",
       "name": "Busca Agendamentos Proximos",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [-400, 304]
+      "position": [
+        -400,
+        304
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "xwAYczJevSyqr2Is",
+          "name": "Postgres account"
+        }
+      }
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "={{ 'SELECT id FROM pre_checkin WHERE agendamento_id = ' + $json.id }}"
+        "query": "={{ 'SELECT id FROM pre_checkin WHERE agendamento_id = ' + $json.id }}",
+        "options": {}
       },
       "id": "verifica-pre-checkin",
       "name": "Verifica Pre Check-In Existente",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [-208, 304]
+      "position": [
+        -208,
+        304
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "xwAYczJevSyqr2Is",
+          "name": "Postgres account"
+        }
+      }
     },
     {
       "parameters": {
         "conditions": {
-          "options": {"version": 2, "leftValue": "", "caseSensitive": true, "typeValidation": "loose"},
-          "conditions": [{"id": "cond-nao-existe", "leftValue": "={{ $json.id }}", "rightValue": "", "operator": {"type": "number", "operation": "notExists"}}],
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-nao-existe",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "notExists"
+              }
+            }
+          ],
           "combinator": "and"
         },
         "looseTypeValidation": true,
@@ -51,30 +96,78 @@
       "name": "Pre Check-In Existe?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [0, 304]
+      "position": [
+        0,
+        304
+      ]
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "={{ 'INSERT INTO pre_checkin (agendamento_id, paciente_id, status, mensagem_enviada_em) VALUES (' + $json.id + ', ' + $json.paciente_id + ', \\'pendente\\', NOW()) RETURNING id' }}"
+        "query": "={{ 'INSERT INTO pre_checkin (agendamento_id, paciente_id, status, mensagem_enviada_em) VALUES (' + $json.id + ', ' + $json.paciente_id + ', \\'pendente\\', NOW()) RETURNING id' }}",
+        "options": {}
       },
       "id": "cria-pre-checkin",
       "name": "Cria Pre Check-In",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [208, 208]
+      "position": [
+        208,
+        208
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "xwAYczJevSyqr2Is",
+          "name": "Postgres account"
+        }
+      }
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
-            {"id": "telefone", "name": "telefone", "value": "={{ $('Busca Agendamentos Proximos').item.json.paciente_telefone }}", "type": "string"},
-            {"id": "nome", "name": "nome_paciente", "value": "={{ $('Busca Agendamentos Proximos').item.json.paciente_nome.split(' ')[0] }}", "type": "string"},
-            {"id": "data_consulta", "name": "data_consulta", "value": "={{ DateTime.fromISO($('Busca Agendamentos Proximos').item.json.data_hora).setZone('America/Sao_Paulo').toFormat('dd/MM/yyyy HH:mm') }}", "type": "string"},
-            {"id": "procedimento", "name": "procedimento", "value": "={{ $('Busca Agendamentos Proximos').item.json.servico_nome || $('Busca Agendamentos Proximos').item.json.tipo_consulta }}", "type": "string"},
-            {"id": "profissional", "name": "profissional", "value": "={{ $('Busca Agendamentos Proximos').item.json.profissional }}", "type": "string"},
-            {"id": "mensagem", "name": "mensagem", "value": "=Olá {{ $json.nome_paciente }}! 👋\n\nVocê tem uma consulta agendada:\n\n📅 *{{ $json.data_consulta }}*\n💆 *{{ $json.procedimento }}*\n👩‍⚕️ *{{ $json.profissional }}*\n\nPara agilizar seu atendimento, vamos fazer um *pré-check-in* rápido!\n\nPor favor, confirme seus dados ou me envie as correções:\n\n📱 Telefone: {{ $('Busca Agendamentos Proximos').item.json.paciente_telefone }}\n📧 Email: {{ $('Busca Agendamentos Proximos').item.json.paciente_email || 'Não informado' }}\n\nSeus dados estão corretos? Responda *SIM* para confirmar ou me diga o que precisa atualizar.", "type": "string"},
-            {"id": "pre_checkin_id", "name": "pre_checkin_id", "value": "={{ $('Cria Pre Check-In').item.json.id }}", "type": "number"}
+            {
+              "id": "telefone",
+              "name": "telefone",
+              "value": "={{ $('Busca Agendamentos Proximos').item.json.paciente_telefone }}",
+              "type": "string"
+            },
+            {
+              "id": "nome",
+              "name": "nome_paciente",
+              "value": "={{ $('Busca Agendamentos Proximos').item.json.paciente_nome.split(' ')[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "data_consulta",
+              "name": "data_consulta",
+              "value": "={{ DateTime.fromISO($('Busca Agendamentos Proximos').item.json.data_hora).setZone('America/Sao_Paulo').toFormat('dd/MM/yyyy HH:mm') }}",
+              "type": "string"
+            },
+            {
+              "id": "procedimento",
+              "name": "procedimento",
+              "value": "={{ $('Busca Agendamentos Proximos').item.json.servico_nome || $('Busca Agendamentos Proximos').item.json.tipo_consulta }}",
+              "type": "string"
+            },
+            {
+              "id": "profissional",
+              "name": "profissional",
+              "value": "={{ $('Busca Agendamentos Proximos').item.json.profissional }}",
+              "type": "string"
+            },
+            {
+              "id": "mensagem",
+              "name": "mensagem",
+              "value": "=Olá {{ $json.nome_paciente }}! 👋\n\nVocê tem uma consulta agendada:\n\n📅 *{{ $json.data_consulta }}*\n💆 *{{ $json.procedimento }}*\n👩‍⚕️ *{{ $json.profissional }}*\n\nPara agilizar seu atendimento, vamos fazer um *pré-check-in* rápido!\n\nPor favor, confirme seus dados ou me envie as correções:\n\n📱 Telefone: {{ $('Busca Agendamentos Proximos').item.json.paciente_telefone }}\n📧 Email: {{ $('Busca Agendamentos Proximos').item.json.paciente_email || 'Não informado' }}\n\nSeus dados estão corretos? Responda *SIM* para confirmar ou me diga o que precisa atualizar.",
+              "type": "string"
+            },
+            {
+              "id": "pre_checkin_id",
+              "name": "pre_checkin_id",
+              "value": "={{ $('Cria Pre Check-In').item.json.id }}",
+              "type": "number"
+            }
           ]
         },
         "options": {}
@@ -83,14 +176,24 @@
       "name": "Prepara Mensagem",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [400, 208]
+      "position": [
+        400,
+        208
+      ]
     },
     {
       "parameters": {
         "method": "POST",
         "url": "={{ $env.EVOLUTION_API_URL }}/message/sendText/{{ $env.EVOLUTION_INSTANCE }}",
         "sendHeaders": true,
-        "headerParameters": {"parameters": [{"name": "apikey", "value": "={{ $env.EVOLUTION_API_KEY }}"}]},
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.EVOLUTION_API_KEY }}"
+            }
+          ]
+        },
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n    \"number\": \"{{ $json.telefone }}\",\n    \"text\": \"{{ $json.mensagem.replace(/\\n/g, '\\\\n') }}\"\n}",
@@ -100,12 +203,22 @@
       "name": "Envia WhatsApp",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [608, 208]
+      "position": [
+        608,
+        208
+      ]
     },
     {
       "parameters": {
         "assignments": {
-          "assignments": [{"id": "resultado", "name": "resultado", "value": "=Pre check-in enviado para {{ $json.nome_paciente }} ({{ $json.telefone }}) - Consulta: {{ $json.data_consulta }}", "type": "string"}]
+          "assignments": [
+            {
+              "id": "resultado",
+              "name": "resultado",
+              "value": "=Pre check-in enviado para {{ $json.nome_paciente }} ({{ $json.telefone }}) - Consulta: {{ $json.data_consulta }}",
+              "type": "string"
+            }
+          ]
         },
         "options": {}
       },
@@ -113,7 +226,10 @@
       "name": "Log Sucesso",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [800, 208]
+      "position": [
+        800,
+        208
+      ]
     },
     {
       "parameters": {},
@@ -121,17 +237,99 @@
       "name": "Ja Existe - Ignora",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [208, 400]
+      "position": [
+        208,
+        400
+      ]
     }
   ],
   "connections": {
-    "Disparo Agendado": {"main": [[{"node": "Busca Agendamentos Proximos", "type": "main", "index": 0}]]},
-    "Busca Agendamentos Proximos": {"main": [[{"node": "Verifica Pre Check-In Existente", "type": "main", "index": 0}]]},
-    "Verifica Pre Check-In Existente": {"main": [[{"node": "Pre Check-In Existe?", "type": "main", "index": 0}]]},
-    "Pre Check-In Existe?": {"main": [[{"node": "Cria Pre Check-In", "type": "main", "index": 0}], [{"node": "Ja Existe - Ignora", "type": "main", "index": 0}]]},
-    "Cria Pre Check-In": {"main": [[{"node": "Prepara Mensagem", "type": "main", "index": 0}]]},
-    "Prepara Mensagem": {"main": [[{"node": "Envia WhatsApp", "type": "main", "index": 0}]]},
-    "Envia WhatsApp": {"main": [[{"node": "Log Sucesso", "type": "main", "index": 0}]]}
+    "Disparo Agendado": {
+      "main": [
+        [
+          {
+            "node": "Busca Agendamentos Proximos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Busca Agendamentos Proximos": {
+      "main": [
+        [
+          {
+            "node": "Verifica Pre Check-In Existente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verifica Pre Check-In Existente": {
+      "main": [
+        [
+          {
+            "node": "Pre Check-In Existe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pre Check-In Existe?": {
+      "main": [
+        [
+          {
+            "node": "Cria Pre Check-In",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ja Existe - Ignora",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cria Pre Check-In": {
+      "main": [
+        [
+          {
+            "node": "Prepara Mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepara Mensagem": {
+      "main": [
+        [
+          {
+            "node": "Envia WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envia WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Log Sucesso",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
-  "settings": {"executionOrder": "v1"}
+  "settings": {
+    "executionOrder": "v1"
+  }
 }

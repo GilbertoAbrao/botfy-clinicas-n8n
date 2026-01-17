@@ -434,6 +434,78 @@ mcp__context7__query-docs (libraryId: "/n8n/n8n-docs", query: "Code Tool input s
 
 ---
 
+## Webhooks de Teste
+
+Todos os workflows automatizados possuem webhooks de teste para facilitar desenvolvimento e debugging.
+
+### Endpoints Disponiveis
+
+| Workflow | Path | Payload | Descricao |
+|----------|------|---------|-----------|
+| Anti No-Show | `/webhook/test/anti-no-show` | `{"agendamento_id": 123}` | Testa lembretes (opcional: agendamento especifico) |
+| Pre Check-In | `/webhook/test/pre-checkin` | `{"agendamento_id": 123, "bypass_timing": true}` | Testa pre check-in (opcional: agendamento especifico) |
+| Pre Check-In Lembrete | `/webhook/test/pre-checkin-lembrete` | `{"pre_checkin_id": 123}` | Testa lembrete (opcional: pre check-in especifico) |
+| Verificar Pendencias | `/webhook/test/verificar-pendencias` | `{}` | Testa verificacao de pendencias |
+
+### Script Automatizado
+
+Execute todos os testes de uma vez:
+
+```bash
+./test-workflows.sh
+```
+
+O script:
+- Testa todos os webhooks sequencialmente
+- Exibe resultados coloridos no terminal
+- Mostra exemplos de uso manual
+- Requer variavel `N8N_URL` no `.env`
+
+### Exemplos de Uso Manual
+
+**Anti No-Show - Teste Geral:**
+```bash
+curl -X POST "$N8N_URL/webhook/test/anti-no-show" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+**Pre Check-In - Agendamento Especifico:**
+```bash
+curl -X POST "$N8N_URL/webhook/test/pre-checkin" \
+  -H "Content-Type: application/json" \
+  -d '{"agendamento_id": 123, "bypass_timing": true}'
+```
+
+**Pre Check-In Lembrete - Pre Check-In Especifico:**
+```bash
+curl -X POST "$N8N_URL/webhook/test/pre-checkin-lembrete" \
+  -H "Content-Type: application/json" \
+  -d '{"pre_checkin_id": 123}'
+```
+
+**Verificar Pendencias:**
+```bash
+curl -X POST "$N8N_URL/webhook/test/verificar-pendencias" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+```
+
+### Comportamento dos Webhooks
+
+1. **Teste Geral (payload vazio)**: Executa workflow com criterios normais (data/hora)
+2. **Teste Especifico (com ID)**: Força execucao em um registro especifico
+3. **bypass_timing**: Ignora restricoes de timing (ex: executar fora da janela de 24h)
+
+### Debugging
+
+- **Logs**: Acesse N8N → Executions para ver detalhes
+- **Status 200**: Sucesso (mesmo que retorne array vazio)
+- **Array vazio**: Normal quando nao ha dados no periodo
+- **Erro 404**: Webhook path incorreto ou workflow inativo
+
+---
+
 ## Troubleshooting
 
 ### AI Agent nao chama tools
