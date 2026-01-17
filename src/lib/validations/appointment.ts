@@ -4,6 +4,7 @@ import { z } from 'zod'
 export const createAppointmentSchema = z.object({
   pacienteId: z.string().uuid({ message: 'ID do paciente inválido' }),
   servicoId: z.string().uuid({ message: 'ID do serviço inválido' }),
+  providerId: z.string().uuid({ message: 'ID do profissional inválido' }).optional(),
   dataHora: z.string().datetime({ message: 'Data e hora inválidas' }),
   observacoes: z.string().optional(),
   status: z.enum(['AGENDADO', 'CONFIRMADO', 'REALIZADO', 'CANCELADO', 'FALTOU']).default('AGENDADO'),
@@ -13,6 +14,7 @@ export const createAppointmentSchema = z.object({
 export const updateAppointmentSchema = z.object({
   pacienteId: z.string().uuid().optional(),
   servicoId: z.string().uuid().optional(),
+  providerId: z.string().uuid().optional(),
   dataHora: z.string().datetime().optional(),
   observacoes: z.string().optional(),
   status: z.enum(['AGENDADO', 'CONFIRMADO', 'REALIZADO', 'CANCELADO', 'FALTOU']).optional(),
