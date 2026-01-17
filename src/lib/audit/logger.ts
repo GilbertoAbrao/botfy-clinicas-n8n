@@ -21,6 +21,7 @@ export enum AuditAction {
   // Alert management
   VIEW_ALERT = 'VIEW_ALERT',
   UPDATE_ALERT_STATUS = 'UPDATE_ALERT_STATUS',
+  RESOLVE_ALERT = 'RESOLVE_ALERT',
 
   // Waitlist management
   ADD_WAITLIST = 'ADD_WAITLIST',
