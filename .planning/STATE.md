@@ -9,22 +9,22 @@
 
 ## Current State
 
-**Stage:** Phase 4 Execution - Plan 02 Complete
-**Action:** Execute Plan 04-03 (Multi-Provider Support)
+**Stage:** Phase 4 Execution - Plan 03 Complete
+**Action:** Execute Plan 04-04 (Conflict Detection) or Plan 04-05 (Waitlist) - Wave 3
 **Blockers:** None
 
 **Recently Completed:**
-- [x] **Plan 04-02 Complete** ✅
-  - ✅ Appointment CRUD operations with modal dialogs
-  - ✅ Zod validation schemas for create/update
-  - ✅ API endpoints with role-based authorization
-  - ✅ Calendar click handlers for create/edit
-  - ✅ Audit logging for all operations
-  - 📦 5 atomic commits created (2 min execution)
+- [x] **Plan 04-03 Complete** ✅
+  - ✅ Provider model with specialty and calendar colors
+  - ✅ Provider-patient appointments relation
+  - ✅ Color-coded calendar events by provider
+  - ✅ Provider and service filters for calendar
+  - ✅ Default provider seeded with existing appointments linked
+  - 📦 5 atomic commits created (8 min execution)
 
 **Next Steps:**
-1. **READY:** Execute Plan 04-03 (Multi-Provider Support and Filtering)
-2. Wave 2 in progress (plan 1 of 2 complete)
+1. **READY:** Wave 3 - Execute Plan 04-04 (Conflict Detection) OR Plan 04-05 (Waitlist)
+2. Wave 2 complete (2 of 2 plans done)
 
 ---
 
@@ -35,13 +35,13 @@
 | Phase 1: Secure Foundation | ✅ Complete (All 5 plans done) | 17 | 17 | 100% |
 | Phase 2: Alert Dashboard | ✅ Complete (All 4 plans done) | 16 | 16 | 100% |
 | Phase 3: Patient Management | ✅ Complete (All 4 plans done) | 14 | 14 | 100% |
-| Phase 4: Calendar & Scheduling | 🚧 In Progress (2/6 plans done) | 15 | 6 | 40% |
+| Phase 4: Calendar & Scheduling | 🚧 In Progress (3/6 plans done) | 15 | 9 | 60% |
 | Phase 5: Conversation Monitoring | Not Started | 10 | 0 | 0% |
 | Phase 6: One-Click Interventions | Not Started | 1 | 0 | 0% |
 | Phase 7: System Configuration | Not Started | 14 | 0 | 0% |
 | Phase 8: Analytics & Smart Features | Not Started | 2 | 0 | 0% |
 
-**Overall Progress:** 53/79 requirements (67%)
+**Overall Progress:** 56/79 requirements (71%)
 
 ---
 
@@ -78,6 +78,9 @@
 54. ✅ User can edit existing appointment (CAL-06)
 55. ✅ User can cancel appointment (CAL-08)
 56. ✅ User can view appointment details (CAL-09)
+57. ✅ User can see all providers' schedules in calendar (CAL-02)
+58. ✅ User can filter calendar by provider (CAL-10)
+59. ✅ User can filter calendar by service type (CAL-11)
 
 ---
 
@@ -93,10 +96,22 @@
 | 2026-01-16 | Webhook integration with N8N | Leverage existing automation, sync reminders with manual appointments |
 | 2026-01-16 | Supabase Storage over direct uploads | Leverage existing infrastructure for scalability and reliability |
 | 2026-01-16 | Signed URLs with 1-hour expiry | Security without persistent sessions for download links |
+| 2026-01-17 | Free Schedule-X color-coding over premium resource scheduler | Avoid paid license, use calendar categories with custom provider colors |
+| 2026-01-17 | Provider name prefix in event titles | Visual distinction alongside colors: [Provider] Patient - Service |
+| 2026-01-17 | Client-side filtering with useMemo | Instant UI updates without server round-trip |
 
 ---
 
 ## Recent Activity
+
+**2026-01-17 - Plan 04-03 Complete ✅**
+- ✅ Multi-provider support with color-coded calendar events
+- ✅ Provider model with specialty and calendar color fields
+- ✅ Provider and service filters for calendar
+- ✅ Calendar events include provider ID, name, and color
+- ✅ Default provider seeded and linked to existing appointments
+- 📦 5 atomic commits created (8 min execution)
+- 🎯 Requirements: CAL-02, CAL-10, CAL-11
 
 **2026-01-17 - Plan 04-02 Complete ✅**
 - ✅ Appointment CRUD operations with modal dialogs
@@ -150,4 +165,4 @@
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-17 after Plan 04-02 execution*
+*Last updated: 2026-01-17 after Plan 04-03 execution*
