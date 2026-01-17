@@ -12,6 +12,7 @@ import {
   Settings,
   FileText,
   Package,
+  BarChart3,
 } from 'lucide-react';
 
 const navigation = [
@@ -63,6 +64,13 @@ const navigation = [
     name: 'Servicos',
     href: '/admin/servicos',
     icon: Package,
+    enabled: true,
+    adminOnly: true,
+  },
+  {
+    name: 'Analytics',
+    href: '/admin/analytics',
+    icon: BarChart3,
     enabled: true,
     adminOnly: true,
   },
