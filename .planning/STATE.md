@@ -1,133 +1,85 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-17
-**Status:** Phase 8 Complete
-**Current Phase:** Phase 8 - Analytics & Smart Features (COMPLETE)
-**Current Milestone:** v1.0
+**Status:** v1.0 Complete
+**Current Milestone:** v1.0 SHIPPED
 
 ---
 
-## Current State
+## Project Reference
 
-**Stage:** Phase 8 complete - All 5 plans executed
-**Action:** Milestone v1.0 complete - ready for /gsd:complete-milestone
-**Blockers:** None
+See: `.planning/PROJECT.md` (updated 2026-01-17)
 
-**Recently Completed:**
-- [x] **Plan 08-01** - Core Analytics Algorithms
-- [x] **Plan 08-02** - No-Show Risk Prediction
-- [x] **Plan 08-03** - Analytics API Endpoints
-- [x] **Plan 08-04** - Analytics Dashboard UI
-- [x] **Plan 08-05** - Smart Predictions Integration
-  - AlertPriorityBadge component (color-coded priority score 1-100)
-  - NoShowRiskBadge component (Alto/Medio/Baixo with recommendations)
-  - Integrated badges into alert list and appointment modal
-  - Shadcn Tooltip component added
-
-**Next Steps:**
-1. Run `/gsd:complete-milestone` to archive v1.0
+**Core value:** Dashboard de alertas que mostra "at glance" tudo que precisa de atenção
+**Current focus:** v1.0 shipped — ready for production deployment or v1.1 planning
 
 ---
 
-## Phase Progress
+## Current Position
 
-| Phase | Status | Requirements | Completed | Progress |
-|-------|--------|--------------|-----------|----------|
-| Phase 1: Secure Foundation | Complete (All 5 plans done) | 17 | 17 | 100% |
-| Phase 2: Alert Dashboard | Complete (All 4 plans done) | 16 | 16 | 100% |
-| Phase 3: Patient Management | Complete (All 4 plans done) | 14 | 14 | 100% |
-| Phase 4: Calendar & Scheduling | Complete (All 6 plans done) | 15 | 15 | 100% |
-| Phase 5: Conversation Monitoring | Complete (All 3 plans done) | 10 | 10 | 100% |
-| Phase 6: One-Click Interventions | Complete (Plan 06-01 done) | 1 | 1 | 100% |
-| Phase 7: System Configuration | Complete (All 4 plans done) | 14 | 14 | 100% |
-| Phase 8: Analytics & Smart Features | Complete (All 5 plans done) | 2 | 2 | 100% |
+**Milestone:** v1.0 MVP — SHIPPED
+**Phase:** All 8 phases complete
+**Plan:** All 32 plans executed
+**Status:** Ready for next milestone
 
-**Overall Progress:** 89/89 requirements (100%)
+**Last activity:** 2026-01-17 — v1.0 milestone complete
+
+**Progress:** ████████████████████ 100% (79/79 requirements)
 
 ---
 
-## Requirement Status
+## Milestone Summary
 
-### Completed Requirements
+**v1.0 MVP (Shipped 2026-01-17)**
 
-**Phase 1 - Secure Foundation (COMPLETE):**
-1-17. [Previous Phase 1 requirements - all complete]
+| Phase | Status | Plans |
+|-------|--------|-------|
+| 1. Secure Foundation | Complete | 5/5 |
+| 2. Alert Dashboard | Complete | 4/4 |
+| 3. Patient Management | Complete | 4/4 |
+| 4. Calendar & Scheduling | Complete | 5/5 |
+| 5. Conversation Monitoring | Complete | 3/3 |
+| 6. One-Click Interventions | Complete | 1/1 |
+| 7. System Configuration | Complete | 4/4 |
+| 8. Analytics & Smart Features | Complete | 5/5 |
 
-**Phase 2 - Alert Dashboard (COMPLETE):**
-18-36. [Previous Phase 2 requirements - all complete]
-
-**Phase 3 - Patient Management (COMPLETE):**
-37-50. [Previous Phase 3 requirements - all complete]
-
-**Phase 4 - Calendar & Scheduling (COMPLETE):**
-51-65. [Previous Phase 4 requirements - all complete]
-
-**Phase 5 - Conversation Monitoring (COMPLETE):**
-66-75. [Previous Phase 5 requirements - all complete]
-
-**Phase 6 - One-Click Interventions (COMPLETE):**
-76-78. [Previous Phase 6 requirements - all complete]
-
-**Phase 7 - System Configuration (COMPLETE):**
-79-92. [Previous Phase 7 requirements - all complete]
-
-**Phase 8 - Analytics & Smart Features (COMPLETE):**
-93. ANLY-01: Core analytics algorithms (priority scorer, pattern detector, KPI calculator)
-94. ANLY-02: No-show risk prediction algorithm with caching
-95. ANLY-03: Analytics API endpoints (main, priority, risk, export)
-96. ANLY-04: Analytics dashboard UI (KPI cards, insights panel)
-97. ANLY-05: Smart predictions integration (badges in operational views)
+**Stats:**
+- 8 phases, 32 plans, 79 requirements
+- 244 files, 21,654 lines TypeScript
+- 3 days (2026-01-15 → 2026-01-17)
 
 ---
 
-## Recent Decisions
+## Archives
 
-| Date | Decision | Rationale |
-|------|----------|-----------|
-| 2026-01-17 | Badges fetch on mount with skeleton loading | Don't block main content while analytics loads |
-| 2026-01-17 | Error in badge hides silently | Operational views shouldn't break if analytics fails |
-| 2026-01-17 | Risk badge for future non-cancelled appointments only | Past/cancelled appointments don't need risk prediction |
-| 2026-01-17 | Priority scorer 4 factors with max 110 total points | Type (40), age (20), patient history (25), proximity (25) cover all relevant contexts |
-| 2026-01-17 | Pattern detector uses Prisma groupBy | More efficient than raw SQL, type-safe results |
-| 2026-01-17 | KPI trend threshold 5% for stable | Small fluctuations shouldn't show as trend changes |
-| 2026-01-17 | Risk factor weights: 40% historical, 15% each for time/day/lead/confirmation | Historical no-show rate is most predictive factor |
-| 2026-01-17 | LRU cache with 1-hour TTL, 1000 max entries | Balance freshness with performance |
-| 2026-01-17 | ADMIN-only export | HIPAA compliance - data export is sensitive operation |
+**v1.0 archives (created 2026-01-17):**
+- `.planning/milestones/v1.0-ROADMAP.md` — Full phase details
+- `.planning/milestones/v1.0-REQUIREMENTS.md` — All 79 requirements with status
+- `.planning/milestones/v1.0-MILESTONE-AUDIT.md` — Verification report
+- `.planning/MILESTONES.md` — Summary entry
 
 ---
 
-## Recent Activity
+## Next Steps
 
-**2026-01-17 - Plan 08-05 Complete**
-- AlertPriorityBadge component (fetches /api/analytics/alerts/{id}/priority)
-- NoShowRiskBadge component (fetches /api/analytics/appointments/{id}/risk)
-- Integrated priority badges into alert list (desktop + mobile)
-- Integrated risk badges into appointment modal (future appointments only)
-- Added shadcn Tooltip component for explanations
+1. **Production deployment** — Apply RLS policies, configure N8N webhooks, create users
+2. **OR** `/gsd:discuss-milestone` — Plan v1.1 with deferred features (2FA, ML predictions)
 
-**2026-01-17 - Plan 08-04 Complete**
-- KPICards component showing success/no-show/cancellation rates
-- InsightsPanel component showing detected patterns
-- AnalyticsDashboard combining both with auto-refresh
-- /admin/analytics page for analytics access
+---
 
-**2026-01-17 - Plan 08-03 Complete**
-- GET /api/analytics - Main analytics endpoint returning KPIs and patterns
-- GET /api/analytics/alerts/[id]/priority - Alert priority scoring (1-100)
-- GET /api/analytics/appointments/[id]/risk - No-show risk prediction
-- GET /api/export - CSV export (appointments, alerts, kpis)
+## Open Blockers
 
-**2026-01-17 - Plan 08-02 Complete**
-- No-show risk predictor with 5 weighted factors
-- Batch prediction for multiple appointments
-- LRU cache (1-hour TTL, 1000 max entries)
+None — v1.0 complete
 
-**2026-01-17 - Plan 08-01 Complete**
-- Priority scorer algorithm (4 weighted factors, 1-100 scale)
-- Pattern detector (4 pattern types)
-- Extended KPI calculator (rates, trends)
+---
+
+## Tech Debt (Tracked)
+
+- formatPhone/formatCPF duplicated in components
+- Missing VERIFICATION.md for phases 4, 5, 6
+- REQUIREMENTS.md traceability was stale (now archived)
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-17 after Plan 08-05 completion*
+*Last updated: 2026-01-17 after v1.0 milestone completion*
