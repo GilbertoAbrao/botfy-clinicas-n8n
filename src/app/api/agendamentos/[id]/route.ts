@@ -3,6 +3,7 @@ import { getCurrentUserWithRole } from '@/lib/auth/session'
 import { createServerClient } from '@/lib/supabase/server'
 import { updateAppointmentSchema } from '@/lib/validations/appointment'
 import { logAudit, AuditAction } from '@/lib/audit/logger'
+import { findConflicts, addBufferTime, TimeSlot } from '@/lib/calendar/conflict-detection'
 
 export async function PUT(
   req: NextRequest,
@@ -20,10 +21,92 @@ export async function PUT(
 
     const supabase = await createServerClient()
 
-    // Update appointment
+    // Fetch original appointment
+    const { data: original } = await supabase
+      .from('agendamentos')
+      .select('data_hora, provider_id, servico_id')
+      .eq('id', id)
+      .single()
+
+    if (!original) {
+      return NextResponse.json({ error: 'Agendamento não encontrado' }, { status: 404 })
+    }
+
+    // Only check conflicts if time or provider changed
+    const timeChanged = validatedData.dataHora && validatedData.dataHora !== original.data_hora
+    const providerChanged = validatedData.providerId && validatedData.providerId !== original.provider_id
+
+    if (timeChanged || providerChanged) {
+      // Fetch service duration
+      const servicoId = validatedData.servicoId || original.servico_id
+      const { data: service } = await supabase
+        .from('servicos')
+        .select('duracao_minutos')
+        .eq('id', servicoId)
+        .single()
+
+      const duration = service?.duracao_minutos || 60
+
+      // Create proposed slot
+      const startTime = new Date(validatedData.dataHora || original.data_hora)
+      const endTime = new Date(startTime.getTime() + duration * 60000)
+
+      const proposedSlot: TimeSlot = {
+        id,  // Include ID for self-exclusion
+        providerId: validatedData.providerId || original.provider_id || 'default-provider-id',
+        start: startTime,
+        end: endTime,
+      }
+
+      const slotWithBuffer = addBufferTime(proposedSlot, 15)
+
+      // Fetch existing appointments (same logic as POST)
+      const startOfDay = new Date(startTime)
+      startOfDay.setHours(0, 0, 0, 0)
+      const endOfDay = new Date(startTime)
+      endOfDay.setHours(23, 59, 59, 999)
+
+      const { data: existingApts } = await supabase
+        .from('agendamentos')
+        .select('id, data_hora, provider_id, servicos(duracao_minutos)')
+        .eq('provider_id', slotWithBuffer.providerId)
+        .gte('data_hora', startOfDay.toISOString())
+        .lte('data_hora', endOfDay.toISOString())
+        .neq('status', 'CANCELADO')
+
+      // Convert to TimeSlot format
+      const existingSlots: TimeSlot[] = (existingApts || []).map(apt => {
+        const start = new Date(apt.data_hora)
+        const duration = (apt.servicos as any)?.duracao_minutos || 60
+        const end = new Date(start.getTime() + duration * 60000)
+
+        return {
+          id: apt.id,
+          providerId: apt.provider_id || 'default-provider-id',
+          start,
+          end,
+        }
+      })
+
+      // Check for conflicts
+      const conflicts = findConflicts(slotWithBuffer, existingSlots)
+
+      if (conflicts.length > 0) {
+        return NextResponse.json(
+          {
+            error: 'Conflito de horário detectado',
+            conflicts: conflicts.map(c => c.id),
+          },
+          { status: 409 }
+        )
+      }
+    }
+
+    // No conflicts or no time change - proceed with update
     const updateData: any = {}
     if (validatedData.pacienteId) updateData.paciente_id = validatedData.pacienteId
     if (validatedData.servicoId) updateData.servico_id = validatedData.servicoId
+    if (validatedData.providerId) updateData.provider_id = validatedData.providerId
     if (validatedData.dataHora) updateData.data_hora = validatedData.dataHora
     if (validatedData.observacoes !== undefined) updateData.observacoes = validatedData.observacoes
     if (validatedData.status) updateData.status = validatedData.status
