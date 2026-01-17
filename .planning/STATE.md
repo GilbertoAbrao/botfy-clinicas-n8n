@@ -9,22 +9,22 @@
 
 ## Current State
 
-**Stage:** Phase 4 Execution - Plan 04 Complete
-**Action:** Execute Plan 04-05 (Waitlist) or Plan 04-06 (N8N Integration) - Wave 3/4
+**Stage:** Phase 4 Execution - Plan 05 Complete
+**Action:** Execute Plan 04-06 (N8N Integration) - Wave 4 Final
 **Blockers:** None
 
 **Recently Completed:**
-- [x] **Plan 04-04 Complete** ✅
-  - ✅ Conflict detection with interval overlap algorithm (O(n log n))
-  - ✅ Available slot calculator with buffer times
-  - ✅ Server-side validation preventing double-booking
-  - ✅ Visual conflict warnings in appointment modal
-  - ✅ 15-minute buffer time enforced between appointments
-  - 📦 5 atomic commits created (3 min execution)
+- [x] **Plan 04-05 Complete** ✅
+  - ✅ Waitlist table with priority queue (URGENT/CONVENIENCE)
+  - ✅ Waitlist API endpoints with duplicate prevention
+  - ✅ Auto-fill notification on appointment cancellation
+  - ✅ Waitlist manager UI component with priority badges
+  - ✅ Sidebar integration in agenda page
+  - 📦 6 atomic commits created (11 min execution)
 
 **Next Steps:**
-1. **READY:** Wave 3 - Execute Plan 04-05 (Waitlist Management)
-2. Wave 3 in progress (1 of 2 plans done)
+1. **READY:** Wave 4 - Execute Plan 04-06 (N8N Integration and Time Zones)
+2. Wave 3 complete (2 of 2 plans done)
 
 ---
 
@@ -35,13 +35,13 @@
 | Phase 1: Secure Foundation | ✅ Complete (All 5 plans done) | 17 | 17 | 100% |
 | Phase 2: Alert Dashboard | ✅ Complete (All 4 plans done) | 16 | 16 | 100% |
 | Phase 3: Patient Management | ✅ Complete (All 4 plans done) | 14 | 14 | 100% |
-| Phase 4: Calendar & Scheduling | 🚧 In Progress (4/6 plans done) | 15 | 11 | 73% |
+| Phase 4: Calendar & Scheduling | 🚧 In Progress (5/6 plans done) | 15 | 14 | 93% |
 | Phase 5: Conversation Monitoring | Not Started | 10 | 0 | 0% |
 | Phase 6: One-Click Interventions | Not Started | 1 | 0 | 0% |
 | Phase 7: System Configuration | Not Started | 14 | 0 | 0% |
 | Phase 8: Analytics & Smart Features | Not Started | 2 | 0 | 0% |
 
-**Overall Progress:** 58/79 requirements (73%)
+**Overall Progress:** 61/79 requirements (77%)
 
 ---
 
@@ -83,6 +83,9 @@
 59. ✅ User can filter calendar by service type (CAL-11)
 60. ✅ System prevents double-booking same provider at same time (CAL-04)
 61. ✅ System enforces buffer time between appointments (CAL-04)
+62. ✅ System manages waitlist (CAL-12)
+63. ✅ System automatically fills cancelled appointments from waitlist (CAL-13)
+64. ✅ User can add patient to waitlist (CAL-14)
 
 ---
 
@@ -101,10 +104,22 @@
 | 2026-01-17 | Free Schedule-X color-coding over premium resource scheduler | Avoid paid license, use calendar categories with custom provider colors |
 | 2026-01-17 | Provider name prefix in event titles | Visual distinction alongside colors: [Provider] Patient - Service |
 | 2026-01-17 | Client-side filtering with useMemo | Instant UI updates without server round-trip |
+| 2026-01-17 | String servico_tipo instead of Service model relation | Match existing database schema with tipo_consulta field |
+| 2026-01-17 | Manual SQL migration for waitlist table | Shadow database limitation with Supabase pooled connections |
+| 2026-01-17 | Async waitlist notification on delete | Avoid blocking delete response, error resilience |
 
 ---
 
 ## Recent Activity
+
+**2026-01-17 - Plan 04-05 Complete ✅**
+- ✅ Waitlist table with priority queue (URGENT/CONVENIENCE)
+- ✅ Waitlist API endpoints with duplicate prevention
+- ✅ Auto-fill notification on appointment cancellation
+- ✅ Waitlist manager UI component with priority badges
+- ✅ Sidebar integration in agenda page
+- 📦 6 atomic commits created (11 min execution)
+- 🎯 Requirements: CAL-12, CAL-13, CAL-14
 
 **2026-01-17 - Plan 04-04 Complete ✅**
 - ✅ Conflict detection with interval overlap algorithm (O(n log n))
@@ -176,4 +191,4 @@
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-17 after Plan 04-04 execution*
+*Last updated: 2026-01-17 after Plan 04-05 execution*
