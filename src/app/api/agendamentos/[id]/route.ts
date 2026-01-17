@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUserWithRole } from '@/lib/auth/session'
-import { createServerClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { updateAppointmentSchema } from '@/lib/validations/appointment'
 import { logAudit, AuditAction } from '@/lib/audit/logger'
 import { findConflicts, addBufferTime, TimeSlot } from '@/lib/calendar/conflict-detection'
@@ -24,7 +24,7 @@ export async function PUT(
     const body = await req.json()
     const validatedData = updateAppointmentSchema.parse(body)
 
-    const supabase = await createServerClient()
+    const supabase = await createServerSupabaseClient()
 
     // Fetch original appointment
     const { data: original } = await supabase
@@ -169,23 +169,26 @@ export async function DELETE(
     }
 
     const { id } = await params
-    const supabase = await createServerClient()
+    const supabase = await createServerSupabaseClient()
 
-    // Fetch appointment details before deleting (include patient/service for N8N)
+    // Fetch appointment details before deleting (from appointments table - same as calendar)
     const { data: appointment } = await supabase
-      .from('agendamentos')
+      .from('appointments')
       .select(`
         *,
-        paciente:pacientes(nome, telefone),
-        servico:servicos(nome),
-        provider:providers(nome)
+        patient:patients!patient_id(id, nome, telefone),
+        provider:providers!provider_id(id, nome)
       `)
       .eq('id', id)
       .single()
 
+    if (!appointment) {
+      return NextResponse.json({ error: 'Agendamento não encontrado' }, { status: 404 })
+    }
+
     // Delete appointment
     const { error } = await supabase
-      .from('agendamentos')
+      .from('appointments')
       .delete()
       .eq('id', id)
 
@@ -195,32 +198,34 @@ export async function DELETE(
     await logAudit({
       userId: user.id,
       action: AuditAction.DELETE_APPOINTMENT,
-      resource: 'agendamentos',
+      resource: 'appointments',
       resourceId: id,
     })
 
-    // Trigger N8N webhook for cancellation (handles reminder cleanup)
-    if (appointment) {
-      notifyN8NAppointmentCancelled({
-        appointmentId: id,
-        patientId: appointment.paciente_id,
-        serviceId: appointment.servico_id,
-        providerId: appointment.provider_id,
-        dataHora: appointment.data_hora,
-        status: appointment.status,
-        patientName: appointment.paciente?.nome,
-        patientPhone: appointment.paciente?.telefone,
-        serviceName: appointment.servico?.nome,
-        providerName: appointment.provider?.nome,
-      }).catch(err => console.error('N8N cancellation sync failed:', err))
+    // Handle patient and provider data (can be array or object)
+    const patient = Array.isArray(appointment.patient) ? appointment.patient[0] : appointment.patient
+    const provider = Array.isArray(appointment.provider) ? appointment.provider[0] : appointment.provider
 
-      // Trigger waitlist notification (async, don't wait)
-      notifyWaitlist({
-        servicoTipo: appointment.tipo_consulta,
-        providerId: appointment.provider_id,
-        dataHora: new Date(appointment.data_hora),
-      }).catch(err => console.error('Waitlist notification failed:', err))
-    }
+    // Trigger N8N webhook for cancellation (handles reminder cleanup)
+    notifyN8NAppointmentCancelled({
+      appointmentId: id,
+      patientId: appointment.patient_id,
+      serviceId: appointment.service_type,
+      providerId: appointment.provider_id,
+      dataHora: appointment.scheduled_at,
+      status: appointment.status,
+      patientName: patient?.nome,
+      patientPhone: patient?.telefone,
+      serviceName: appointment.service_type,
+      providerName: provider?.nome,
+    }).catch(err => console.error('N8N cancellation sync failed:', err))
+
+    // Trigger waitlist notification (async, don't wait)
+    notifyWaitlist({
+      servicoTipo: appointment.service_type || '',
+      providerId: appointment.provider_id,
+      dataHora: new Date(appointment.scheduled_at),
+    }).catch(err => console.error('Waitlist notification failed:', err))
 
     return NextResponse.json({ success: true })
   } catch (error) {

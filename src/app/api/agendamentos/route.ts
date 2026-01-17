@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUserWithRole } from '@/lib/auth/session'
-import { createServerClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { createAppointmentSchema } from '@/lib/validations/appointment'
 import { logAudit, AuditAction } from '@/lib/audit/logger'
 import { findConflicts, addBufferTime, TimeSlot } from '@/lib/calendar/conflict-detection'
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const validatedData = createAppointmentSchema.parse(body)
 
-    const supabase = await createServerClient()
+    const supabase = await createServerSupabaseClient()
 
     // Fetch service to get duration
     const { data: service } = await supabase

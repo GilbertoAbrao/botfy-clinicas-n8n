@@ -1,4 +1,4 @@
-import { createServerClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 /**
  * Notify waitlist when appointment slot becomes available
@@ -12,7 +12,7 @@ export async function notifyWaitlist(
   }
 ) {
   try {
-    const supabase = await createServerClient()
+    const supabase = await createServerSupabaseClient()
 
     // Build query for waitlist entries
     let query = supabase

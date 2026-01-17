@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUserWithRole } from '@/lib/auth/session'
-import { createServerClient } from '@/lib/supabase/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { logAudit, AuditAction } from '@/lib/audit/logger'
 
 // DELETE: Remove from waitlist
@@ -15,7 +15,7 @@ export async function DELETE(
     }
 
     const { id } = await params
-    const supabase = await createServerClient()
+    const supabase = await createServerSupabaseClient()
 
     // Delete waitlist entry
     const { error } = await supabase
@@ -57,7 +57,7 @@ export async function PUT(
     const { id } = await params
     const { status } = await req.json()
 
-    const supabase = await createServerClient()
+    const supabase = await createServerSupabaseClient()
 
     const { data, error } = await supabase
       .from('waitlist')
