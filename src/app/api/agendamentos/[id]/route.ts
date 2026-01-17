@@ -4,6 +4,7 @@ import { createServerClient } from '@/lib/supabase/server'
 import { updateAppointmentSchema } from '@/lib/validations/appointment'
 import { logAudit, AuditAction } from '@/lib/audit/logger'
 import { findConflicts, addBufferTime, TimeSlot } from '@/lib/calendar/conflict-detection'
+import { notifyWaitlist } from '@/lib/waitlist/auto-fill'
 
 export async function PUT(
   req: NextRequest,
@@ -152,6 +153,13 @@ export async function DELETE(
     const { id } = await params
     const supabase = await createServerClient()
 
+    // Fetch appointment details before deleting
+    const { data: appointment } = await supabase
+      .from('agendamentos')
+      .select('tipo_consulta, profissional, data_hora')
+      .eq('id', id)
+      .single()
+
     // Delete appointment
     const { error } = await supabase
       .from('agendamentos')
@@ -167,6 +175,15 @@ export async function DELETE(
       resource: 'agendamentos',
       resourceId: id,
     })
+
+    // Trigger waitlist notification (async, don't wait)
+    if (appointment) {
+      notifyWaitlist({
+        servicoTipo: appointment.tipo_consulta,
+        providerId: null,  // profissional is a string in current schema
+        dataHora: new Date(appointment.data_hora),
+      }).catch(err => console.error('Waitlist notification failed:', err))
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {
