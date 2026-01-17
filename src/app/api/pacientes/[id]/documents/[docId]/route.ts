@@ -1,25 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth/session';
+import { getCurrentUserWithRole } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
-import { logAudit } from '@/lib/audit/logger';
+import { logAudit, AuditAction } from '@/lib/audit/logger';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string; docId: string } }
+  { params }: { params: Promise<{ id: string; docId: string }> }
 ) {
   try {
     // Check authentication and authorization
-    const session = await getSession();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    const user = await getCurrentUserWithRole();
+    if (!user) {
+      return NextResponse.json({ error: 'Nao autenticado' }, { status: 401 });
     }
 
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'ATENDENTE') {
-      return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
+    if (!['ADMIN', 'ATENDENTE'].includes(user.role)) {
+      return NextResponse.json({ error: 'Sem permissao' }, { status: 403 });
     }
 
-    const { id: patientId, docId } = params;
+    const { id: patientId, docId } = await params;
 
     // Fetch document metadata
     const document = await prisma.patientDocument.findUnique({
@@ -27,7 +27,7 @@ export async function GET(
     });
 
     if (!document || document.patientId !== patientId) {
-      return NextResponse.json({ error: 'Documento não encontrado' }, { status: 404 });
+      return NextResponse.json({ error: 'Documento nao encontrado' }, { status: 404 });
     }
 
     // Generate signed URL (1 hour expiry)
@@ -46,8 +46,8 @@ export async function GET(
 
     // Log audit entry
     await logAudit({
-      userId: session.user.id,
-      action: 'VIEW_DOCUMENT',
+      userId: user.id,
+      action: AuditAction.VIEW_DOCUMENT,
       resource: 'patient_documents',
       resourceId: patientId,
       details: { documentId: docId, filename: document.filename },
@@ -67,20 +67,20 @@ export async function GET(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string; docId: string } }
+  { params }: { params: Promise<{ id: string; docId: string }> }
 ) {
   try {
     // Check authentication and authorization
-    const session = await getSession();
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+    const user = await getCurrentUserWithRole();
+    if (!user) {
+      return NextResponse.json({ error: 'Nao autenticado' }, { status: 401 });
     }
 
-    if (session.user.role !== 'ADMIN' && session.user.role !== 'ATENDENTE') {
-      return NextResponse.json({ error: 'Sem permissão' }, { status: 403 });
+    if (!['ADMIN', 'ATENDENTE'].includes(user.role)) {
+      return NextResponse.json({ error: 'Sem permissao' }, { status: 403 });
     }
 
-    const { id: patientId, docId } = params;
+    const { id: patientId, docId } = await params;
 
     // Fetch document metadata
     const document = await prisma.patientDocument.findUnique({
@@ -88,7 +88,7 @@ export async function DELETE(
     });
 
     if (!document || document.patientId !== patientId) {
-      return NextResponse.json({ error: 'Documento não encontrado' }, { status: 404 });
+      return NextResponse.json({ error: 'Documento nao encontrado' }, { status: 404 });
     }
 
     // Delete from Supabase Storage
@@ -112,8 +112,8 @@ export async function DELETE(
 
     // Log audit entry
     await logAudit({
-      userId: session.user.id,
-      action: 'DELETE_DOCUMENT',
+      userId: user.id,
+      action: AuditAction.DELETE_DOCUMENT,
       resource: 'patient_documents',
       resourceId: patientId,
       details: { documentId: docId, filename: document.filename },

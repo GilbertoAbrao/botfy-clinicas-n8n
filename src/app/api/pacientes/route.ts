@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Authorization check (ADMIN or ATENDENTE)
-    if (!checkPermission(user.role, PERMISSIONS.CREATE_PATIENT)) {
+    if (!checkPermission(user.role, PERMISSIONS.MANAGE_PATIENTS)) {
       return NextResponse.json(
         { error: 'Sem permissão para criar pacientes' },
         { status: 403 }
@@ -130,9 +130,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'Dados inválidos',
-          details: validation.error.errors.map(err => ({
-            field: err.path.join('.'),
-            message: err.message,
+          details: validation.error.issues.map(issue => ({
+            field: issue.path.join('.'),
+            message: issue.message,
           })),
         },
         { status: 400 }

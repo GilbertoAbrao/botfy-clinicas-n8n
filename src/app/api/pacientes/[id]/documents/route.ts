@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUserWithRole } from '@/lib/auth/session';
 import { prisma } from '@/lib/prisma';
-import { logAudit } from '@/lib/audit/logger';
+import { logAudit, AuditAction } from '@/lib/audit/logger';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { validateFile } from '@/lib/validations/document';
 
@@ -37,7 +37,7 @@ export async function GET(
     // Log audit entry
     await logAudit({
       userId: user.id,
-      action: 'VIEW_DOCUMENTS',
+      action: AuditAction.VIEW_DOCUMENTS,
       resource: 'patient_documents',
       resourceId: patientId,
       details: { count: documents.length },
@@ -132,7 +132,7 @@ export async function POST(
     // Log audit entry
     await logAudit({
       userId: user.id,
-      action: 'UPLOAD_DOCUMENT',
+      action: AuditAction.UPLOAD_DOCUMENT,
       resource: 'patient_documents',
       resourceId: patientId,
       details: { filename: file.name, size: file.size, type: file.type },

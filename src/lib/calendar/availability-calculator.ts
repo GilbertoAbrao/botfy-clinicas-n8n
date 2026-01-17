@@ -38,17 +38,18 @@ export function calculateAvailableSlots(
       endMin
     )
 
-    let current = periodStart
+    let currentTime = periodStart.getTime()
     const slotDuration = schedule.appointmentDuration + schedule.bufferMinutes
 
     // Generate all possible slots within working hours
-    while (current.getTime() + (schedule.appointmentDuration * 60000) <= periodEnd.getTime()) {
-      const slotEnd = new Date(current.getTime() + schedule.appointmentDuration * 60000)
+    while (currentTime + (schedule.appointmentDuration * 60000) <= periodEnd.getTime()) {
+      const slotStart = new Date(currentTime)
+      const slotEnd = new Date(currentTime + schedule.appointmentDuration * 60000)
 
       // Create proposed slot with buffer
       const proposedSlot: TimeSlot = {
         providerId: schedule.providerId,
-        start: current,
+        start: slotStart,
         end: slotEnd,
       }
 
@@ -56,11 +57,11 @@ export function calculateAvailableSlots(
 
       // Check if slot is available (no conflicts)
       if (isSlotAvailable(slotWithBuffer, existingAppointments)) {
-        slots.push(new Date(current))
+        slots.push(new Date(currentTime))
       }
 
       // Move to next slot (appointment + buffer)
-      current = new Date(current.getTime() + slotDuration * 60000)
+      currentTime = currentTime + slotDuration * 60000
     }
   }
 

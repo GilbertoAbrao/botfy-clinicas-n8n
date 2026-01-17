@@ -41,7 +41,6 @@ export function AlertDetailClient({ alert: initialAlert }: AlertDetailClientProp
       // Keep existing relations (full relations not sent in real-time payload)
       patient: prev.patient,
       appointment: prev.appointment,
-      conversation: prev.conversation,
       resolver: prev.resolver,
     }))
 

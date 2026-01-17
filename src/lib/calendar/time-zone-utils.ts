@@ -1,6 +1,9 @@
-import { TZDate } from "@date-fns/tz"
+import { TZDate as TZDateClass } from "@date-fns/tz"
 import { format, addHours, isSameDay } from "date-fns"
 import { tz } from "@date-fns/tz"
+
+// Re-export TZDate for use in other modules
+export { TZDateClass as TZDate }
 
 // Clinic timezone (São Paulo - most clinics)
 export const CLINIC_TIMEZONE = 'America/Sao_Paulo'
@@ -12,18 +15,18 @@ export function createClinicDate(
   day: number,
   hour: number,
   minute: number
-): TZDate {
-  return new TZDate(year, month, day, hour, minute, 0, CLINIC_TIMEZONE)
+): TZDateClass {
+  return new TZDateClass(year, month, day, hour, minute, 0, CLINIC_TIMEZONE)
 }
 
 // Convert database timestamp to TZDate in clinic timezone
-export function dbTimestampToTZDate(timestamp: string | Date): TZDate {
+export function dbTimestampToTZDate(timestamp: string | Date): TZDateClass {
   const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp
-  return new TZDate(date, CLINIC_TIMEZONE)
+  return new TZDateClass(date, CLINIC_TIMEZONE)
 }
 
 // Format appointment time for display in clinic timezone
-export function formatAppointmentTime(date: Date | TZDate, formatStr: string = "PPpp"): string {
+export function formatAppointmentTime(date: Date | TZDateClass, formatStr: string = "PPpp"): string {
   return format(date, formatStr, { in: tz(CLINIC_TIMEZONE) })
 }
 

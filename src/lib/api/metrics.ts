@@ -110,9 +110,10 @@ export async function getTaxaConfirmacao(): Promise<number | null> {
 
 /**
  * Get count of active conversations
- * Counts conversations with status = ai_handling or human_required (not completed)
+ * Counts distinct session IDs from chat histories
+ * Note: Since n8n_chat_histories doesn't have a status field, we count all distinct sessions
  *
- * @returns Count of active conversations
+ * @returns Count of distinct conversation sessions
  */
 export async function getConversasAtivas(): Promise<number> {
   try {
@@ -122,15 +123,13 @@ export async function getConversasAtivas(): Promise<number> {
       throw new AppError('Unauthorized', 'UNAUTHORIZED', 401)
     }
 
-    const count = await prisma.conversation.count({
-      where: {
-        status: {
-          in: ['IA', 'HUMANO'],
-        },
-      },
+    // Count distinct session IDs from n8n_chat_histories
+    // This gives us the total number of unique conversations
+    const result = await prisma.chatHistory.groupBy({
+      by: ['sessionId'],
     })
 
-    return count
+    return result.length
   } catch (error) {
     console.error('[getConversasAtivas] Error:', error)
     return 0

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { getCurrentUserWithRole } from '@/lib/auth/session'
 import { logAudit, AuditAction } from '@/lib/audit/logger'
+import { fetchConversations } from '@/lib/api/conversations'
 import { PatientHeader } from '@/components/patients/patient-header'
 import { ContactInfoSection } from '@/components/patients/contact-info-section'
 import { PatientStats } from '@/components/patients/patient-stats'
@@ -52,15 +53,39 @@ export default async function PatientProfilePage({ params }: PageProps) {
       appointments: {
         orderBy: { scheduledAt: 'desc' },
       },
-      conversations: {
-        orderBy: { lastMessageAt: 'desc' },
-      },
     },
   })
 
   // Return 404 if not found
   if (!patient) {
     notFound()
+  }
+
+  // Fetch conversations for this patient (by patientId filter)
+  let patientConversations: Array<{
+    id: string
+    whatsappId: string
+    status: string
+    messages: Array<{ timestamp: string; sender: 'patient' | 'ai' | 'human'; content: string }>
+    lastMessageAt: Date
+  }> = []
+
+  try {
+    const allConversations = await fetchConversations({ patientId: patient.id })
+    patientConversations = allConversations.map((thread) => ({
+      id: thread.sessionId,
+      whatsappId: thread.phoneNumber,
+      status: thread.status,
+      messages: thread.messages.map((msg) => ({
+        timestamp: thread.lastMessageAt.toISOString(),
+        sender: msg.type === 'human' ? 'patient' as const : msg.type === 'ai' ? 'ai' as const : 'human' as const,
+        content: msg.content,
+      })),
+      lastMessageAt: thread.lastMessageAt,
+    }))
+  } catch (error) {
+    console.error('Error fetching patient conversations:', error)
+    // Continue without conversations - don't fail the page
   }
 
   // Log audit entry for PHI access (fire-and-forget)
@@ -109,14 +134,7 @@ export default async function PatientProfilePage({ params }: PageProps) {
 
         {/* Conversations Tab */}
         <TabsContent value="conversations">
-          <ConversationHistory
-            conversations={patient.conversations.map((conv) => ({
-              ...conv,
-              messages: Array.isArray(conv.messages)
-                ? (conv.messages as any[])
-                : [],
-            }))}
-          />
+          <ConversationHistory conversations={patientConversations} />
         </TabsContent>
 
         {/* Documents Tab */}

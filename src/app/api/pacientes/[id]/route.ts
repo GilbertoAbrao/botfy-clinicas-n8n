@@ -32,9 +32,6 @@ export async function GET(
         appointments: {
           orderBy: { scheduledAt: 'desc' },
         },
-        conversations: {
-          orderBy: { lastMessageAt: 'desc' },
-        },
       },
     })
 
@@ -52,25 +49,17 @@ export async function GET(
       resourceId: patient.id,
     })
 
-    logAudit({
-      userId: user.id,
-      action: AuditAction.VIEW_APPOINTMENT,
-      resource: 'appointments',
-      resourceId: patient.id,
-      details: {
-        appointmentCount: patient.appointments.length,
-      },
-    })
-
-    logAudit({
-      userId: user.id,
-      action: AuditAction.VIEW_CONVERSATION,
-      resource: 'conversations',
-      resourceId: patient.id,
-      details: {
-        conversationCount: patient.conversations.length,
-      },
-    })
+    if (patient.appointments.length > 0) {
+      logAudit({
+        userId: user.id,
+        action: AuditAction.VIEW_APPOINTMENT,
+        resource: 'appointments',
+        resourceId: patient.id,
+        details: {
+          appointmentCount: patient.appointments.length,
+        },
+      })
+    }
 
     // Return patient with relations
     return NextResponse.json(patient)
@@ -95,7 +84,7 @@ export async function PUT(
     }
 
     // Authorization check (ADMIN or ATENDENTE)
-    if (!checkPermission(user.role, PERMISSIONS.UPDATE_PATIENT)) {
+    if (!checkPermission(user.role, PERMISSIONS.MANAGE_PATIENTS)) {
       return NextResponse.json(
         { error: 'Sem permissão para editar pacientes' },
         { status: 403 }
@@ -113,9 +102,9 @@ export async function PUT(
       return NextResponse.json(
         {
           error: 'Dados inválidos',
-          details: validation.error.errors.map(err => ({
-            field: err.path.join('.'),
-            message: err.message,
+          details: validation.error.issues.map((issue) => ({
+            field: issue.path.join('.'),
+            message: issue.message,
           })),
         },
         { status: 400 }

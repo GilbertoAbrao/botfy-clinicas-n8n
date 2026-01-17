@@ -99,7 +99,7 @@ export async function fetchConversations(filters?: ConversationFilters): Promise
 
     for (const history of chatHistories) {
       const existing = sessionMap.get(history.sessionId)
-      const message = history.message as ChatMessage
+      const message = history.message as unknown as ChatMessage
 
       if (!existing) {
         sessionMap.set(history.sessionId, {
@@ -197,7 +197,7 @@ export async function getConversationBySessionId(sessionId: string): Promise<Con
       return null
     }
 
-    const messages = chatHistories.map(h => h.message as ChatMessage)
+    const messages = chatHistories.map(h => h.message as unknown as ChatMessage)
     const phoneNumber = extractPhoneNumber(sessionId)
     const normalizedPhone = normalizePhone(phoneNumber)
 

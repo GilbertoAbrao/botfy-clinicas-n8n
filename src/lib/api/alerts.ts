@@ -4,13 +4,22 @@ import { prisma } from '@/lib/prisma'
 import { getCurrentUserWithRole } from '@/lib/auth/session'
 import { logAudit, AuditAction } from '@/lib/audit/logger'
 import { AppError, handleApiError, getUserFriendlyMessage } from '@/lib/utils/error-handler'
-import type { Alert, Patient, Appointment, Conversation, AlertType, AlertStatus, AlertPriority, Prisma } from '@prisma/client'
+import type { Alert, Patient, Appointment, AlertType, AlertStatus, AlertPriority, Prisma } from '@prisma/client'
+
+// Conversation data for alert context (fetched separately from n8n_chat_histories)
+export interface AlertConversation {
+  id: string
+  status: 'IA' | 'HUMANO' | 'FINALIZADO'
+  messages: Array<{ id: string; content: string; sender: 'patient' | 'ai' | 'system'; sentAt: Date | string }>
+  lastMessageAt: Date
+}
 
 // Types for API responses
 export type AlertWithRelations = Alert & {
   patient: Patient | null
   appointment: Appointment | null
-  conversation: Conversation | null
+  // Conversation is optional and fetched separately from n8n_chat_histories
+  conversation?: AlertConversation | null
   resolver?: { email: string } | null
 }
 
@@ -92,7 +101,6 @@ export async function fetchAlerts(filters?: AlertFilters): Promise<AlertWithRela
       include: {
         patient: true,
         appointment: true,
-        conversation: true,
       },
     })
 
@@ -129,7 +137,6 @@ export async function getAlertById(id: string): Promise<AlertWithRelations | nul
       include: {
         patient: true,
         appointment: true,
-        conversation: true,
         resolver: {
           select: {
             email: true,

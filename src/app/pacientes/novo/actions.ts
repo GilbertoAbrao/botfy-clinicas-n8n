@@ -25,7 +25,7 @@ export async function createPatient(data: PatientFormData) {
   if (!validation.success) {
     return {
       success: false,
-      error: 'Dados inválidos: ' + validation.error.errors[0].message,
+      error: 'Dados inválidos: ' + validation.error.issues[0].message,
     };
   }
 
