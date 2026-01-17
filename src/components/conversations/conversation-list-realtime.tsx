@@ -95,7 +95,10 @@ export function ConversationListRealtime({ initialConversations }: ConversationL
       </div>
 
       {/* Conversation list */}
-      <ConversationList conversations={conversations} />
+      <ConversationList
+        conversations={conversations}
+        onMemoryCleared={() => router.refresh()}
+      />
     </div>
   )
 }
