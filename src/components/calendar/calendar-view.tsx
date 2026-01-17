@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import { createCalendar } from '@schedule-x/calendar'
 import { createEventsServicePlugin } from "@schedule-x/events-service"
 import '@schedule-x/theme-default/dist/index.css'
 import { useCalendarEvents } from '@/hooks/use-calendar-events'
 import { startOfMonth, endOfMonth } from 'date-fns'
 import { AppointmentModal } from './appointment-modal'
+import { ResourceSelector } from './resource-selector'
 
 type CalendarView = 'day' | 'week' | 'month'
 
@@ -17,11 +18,22 @@ export function CalendarView() {
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedAppointment, setSelectedAppointment] = useState<string | undefined>()
   const [initialModalData, setInitialModalData] = useState<any>()
+  const [selectedProvider, setSelectedProvider] = useState<string | null>(null)
+  const [selectedService, setSelectedService] = useState<string | null>(null)
 
   // Fetch events for current month (expand range as needed)
   const startDate = startOfMonth(currentDate)
   const endDate = endOfMonth(currentDate)
   const { events, loading, refetch } = useCalendarEvents(startDate, endDate)
+
+  // Filter events based on selected provider and service
+  const filteredEvents = useMemo(() => {
+    return events.filter(event => {
+      if (selectedProvider && event.providerId !== selectedProvider) return false
+      if (selectedService && event.serviceId !== selectedService) return false
+      return true
+    })
+  }, [events, selectedProvider, selectedService])
 
   useEffect(() => {
     if (!calendarRef.current) return
@@ -37,7 +49,7 @@ export function CalendarView() {
         { name: 'month', label: 'Mês' }
       ],
       defaultView: view,
-      events: events.map(e => ({
+      events: filteredEvents.map(e => ({
         id: e.id,
         title: `[${e.providerName}] ${e.title}`,
         start: e.start.toISOString(),
@@ -45,8 +57,8 @@ export function CalendarView() {
         calendarId: e.providerId, // Use provider as calendar category for coloring
       })),
       calendars: {
-        // Create a calendar category for each unique provider
-        ...events.reduce((acc, e) => {
+        // Create a calendar category for each unique provider in filtered events
+        ...filteredEvents.reduce((acc, e) => {
           if (!acc[e.providerId]) {
             acc[e.providerId] = {
               colorName: e.providerId,
@@ -103,7 +115,7 @@ export function CalendarView() {
         calendarRef.current.innerHTML = ''
       }
     }
-  }, [currentDate, view, events])
+  }, [currentDate, view, filteredEvents])
 
   if (loading) {
     return <div className="flex items-center justify-center h-96">Carregando agenda...</div>
@@ -111,6 +123,14 @@ export function CalendarView() {
 
   return (
     <div className="space-y-4">
+      {/* Filters */}
+      <ResourceSelector
+        selectedProvider={selectedProvider}
+        selectedService={selectedService}
+        onProviderChange={setSelectedProvider}
+        onServiceChange={setSelectedService}
+      />
+
       {/* View switcher */}
       <div className="flex gap-2">
         <button
