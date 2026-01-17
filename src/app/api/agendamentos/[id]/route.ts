@@ -5,6 +5,10 @@ import { updateAppointmentSchema } from '@/lib/validations/appointment'
 import { logAudit, AuditAction } from '@/lib/audit/logger'
 import { findConflicts, addBufferTime, TimeSlot } from '@/lib/calendar/conflict-detection'
 import { notifyWaitlist } from '@/lib/waitlist/auto-fill'
+import {
+  notifyN8NAppointmentUpdated,
+  notifyN8NAppointmentCancelled,
+} from '@/lib/calendar/n8n-sync'
 
 export async function PUT(
   req: NextRequest,
@@ -130,6 +134,20 @@ export async function PUT(
       details: validatedData,
     })
 
+    // Trigger N8N webhook if significant changes (time, status, provider, service)
+    const changes: Record<string, string> = {}
+    if (validatedData.dataHora) changes.dataHora = validatedData.dataHora
+    if (validatedData.status) changes.status = validatedData.status
+    if (validatedData.providerId) changes.providerId = validatedData.providerId
+    if (validatedData.servicoId) changes.serviceId = validatedData.servicoId
+
+    if (Object.keys(changes).length > 0) {
+      notifyN8NAppointmentUpdated({
+        appointmentId: id,
+        changes,
+      }).catch(err => console.error('N8N sync failed:', err))
+    }
+
     return NextResponse.json(data)
   } catch (error) {
     console.error('Error updating appointment:', error)
@@ -153,10 +171,15 @@ export async function DELETE(
     const { id } = await params
     const supabase = await createServerClient()
 
-    // Fetch appointment details before deleting
+    // Fetch appointment details before deleting (include patient/service for N8N)
     const { data: appointment } = await supabase
       .from('agendamentos')
-      .select('tipo_consulta, profissional, data_hora')
+      .select(`
+        *,
+        paciente:pacientes(nome, telefone),
+        servico:servicos(nome),
+        provider:providers(nome)
+      `)
       .eq('id', id)
       .single()
 
@@ -176,11 +199,25 @@ export async function DELETE(
       resourceId: id,
     })
 
-    // Trigger waitlist notification (async, don't wait)
+    // Trigger N8N webhook for cancellation (handles reminder cleanup)
     if (appointment) {
+      notifyN8NAppointmentCancelled({
+        appointmentId: id,
+        patientId: appointment.paciente_id,
+        serviceId: appointment.servico_id,
+        providerId: appointment.provider_id,
+        dataHora: appointment.data_hora,
+        status: appointment.status,
+        patientName: appointment.paciente?.nome,
+        patientPhone: appointment.paciente?.telefone,
+        serviceName: appointment.servico?.nome,
+        providerName: appointment.provider?.nome,
+      }).catch(err => console.error('N8N cancellation sync failed:', err))
+
+      // Trigger waitlist notification (async, don't wait)
       notifyWaitlist({
         servicoTipo: appointment.tipo_consulta,
-        providerId: null,  // profissional is a string in current schema
+        providerId: appointment.provider_id,
         dataHora: new Date(appointment.data_hora),
       }).catch(err => console.error('Waitlist notification failed:', err))
     }

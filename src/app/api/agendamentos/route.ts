@@ -4,6 +4,7 @@ import { createServerClient } from '@/lib/supabase/server'
 import { createAppointmentSchema } from '@/lib/validations/appointment'
 import { logAudit, AuditAction } from '@/lib/audit/logger'
 import { findConflicts, addBufferTime, TimeSlot } from '@/lib/calendar/conflict-detection'
+import { notifyN8NAppointmentCreated } from '@/lib/calendar/n8n-sync'
 
 export async function POST(req: NextRequest) {
   try {
@@ -99,7 +100,12 @@ export async function POST(req: NextRequest) {
         status: validatedData.status,
         criado_por: user.id,
       })
-      .select()
+      .select(`
+        *,
+        paciente:pacientes(nome, telefone),
+        servico:servicos(nome),
+        provider:providers(nome)
+      `)
       .single()
 
     if (error) throw error
@@ -116,6 +122,20 @@ export async function POST(req: NextRequest) {
         dataHora: validatedData.dataHora,
       },
     })
+
+    // Trigger N8N webhook for reminder scheduling (async, don't block response)
+    notifyN8NAppointmentCreated({
+      appointmentId: data.id,
+      patientId: data.paciente_id,
+      serviceId: data.servico_id,
+      providerId: data.provider_id,
+      dataHora: data.data_hora,
+      status: data.status,
+      patientName: data.paciente?.nome,
+      patientPhone: data.paciente?.telefone,
+      serviceName: data.servico?.nome,
+      providerName: data.provider?.nome,
+    }).catch(err => console.error('N8N sync failed:', err))
 
     return NextResponse.json(data, { status: 201 })
   } catch (error) {
