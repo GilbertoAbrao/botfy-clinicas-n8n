@@ -115,11 +115,22 @@
 - 2 commits created
 - Requirements: CONF-09, CONF-10, CONF-11, CONF-12, CONF-13
 
-**2026-01-17 - Plans 07-02 and 07-04 Complete**
+**2026-01-17 - Plan 07-04 Complete**
+- Settings API (GET/PUT /api/configuracoes) with RBAC
+- UPDATE_SETTINGS audit action for HIPAA compliance
+- Zod validation schemas for clinic settings
+- /admin/configuracoes page with 4 sections
+- BusinessHoursForm: 7 days with open/close times
+- LunchBreakForm: start/end with "no lunch" option
+- BookingSettingsForm: antecedencia minima with presets
+- NotificationPreferencesForm: toggle switches
+- Configuracoes navigation link enabled
+- 5 commits created
+- Requirements: CONF-01, CONF-02, CONF-08, CONF-14
+
+**2026-01-17 - Plan 07-02 Complete**
 - Services CRUD API and UI
-- Settings API (GET/PUT /api/configuracoes)
-- UPDATE_SETTINGS audit action
-- Validation schemas for services and settings
+- Validation schemas for services
 
 **2026-01-17 - Plan 07-01 Complete**
 - Service model with nome, duracao (minutes), preco (Decimal), ativo
@@ -143,4 +154,4 @@
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-17 after Plan 07-03 execution (User Management Complete)*
+*Last updated: 2026-01-17 after Plan 07-04 execution (Business Hours & Notifications Complete)*
