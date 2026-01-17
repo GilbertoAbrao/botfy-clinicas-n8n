@@ -22,6 +22,10 @@ export enum AuditAction {
   VIEW_ALERT = 'VIEW_ALERT',
   UPDATE_ALERT_STATUS = 'UPDATE_ALERT_STATUS',
 
+  // Waitlist management
+  ADD_WAITLIST = 'ADD_WAITLIST',
+  REMOVE_WAITLIST = 'REMOVE_WAITLIST',
+
   // System admin actions
   VIEW_AUDIT_LOGS = 'VIEW_AUDIT_LOGS',
   CREATE_USER = 'CREATE_USER',
