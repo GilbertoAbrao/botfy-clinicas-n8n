@@ -6,6 +6,7 @@ import { createEventsServicePlugin } from "@schedule-x/events-service"
 import '@schedule-x/theme-default/dist/index.css'
 import { useCalendarEvents } from '@/hooks/use-calendar-events'
 import { startOfMonth, endOfMonth } from 'date-fns'
+import { AppointmentModal } from './appointment-modal'
 
 type CalendarView = 'day' | 'week' | 'month'
 
@@ -13,11 +14,14 @@ export function CalendarView() {
   const calendarRef = useRef<HTMLDivElement>(null)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [view, setView] = useState<CalendarView>('week')
+  const [modalOpen, setModalOpen] = useState(false)
+  const [selectedAppointment, setSelectedAppointment] = useState<string | undefined>()
+  const [initialModalData, setInitialModalData] = useState<any>()
 
   // Fetch events for current month (expand range as needed)
   const startDate = startOfMonth(currentDate)
   const endDate = endOfMonth(currentDate)
-  const { events, loading } = useCalendarEvents(startDate, endDate)
+  const { events, loading, refetch } = useCalendarEvents(startDate, endDate)
 
   useEffect(() => {
     if (!calendarRef.current) return
@@ -41,6 +45,32 @@ export function CalendarView() {
       })),
       plugins: [eventsService],
       locale: 'pt-BR',
+      callbacks: {
+        onEventClick(calendarEvent) {
+          // Open modal in edit mode
+          const event = events.find(e => e.id === calendarEvent.id)
+          if (event) {
+            setSelectedAppointment(calendarEvent.id)
+            setInitialModalData({
+              pacienteId: event.patientId,
+              servicoId: event.serviceId,
+              dataHora: calendarEvent.start,
+              status: event.status,
+            })
+            setModalOpen(true)
+          }
+        },
+        onClickDateTime(dateTime) {
+          // Open modal in create mode
+          setSelectedAppointment(undefined)
+          setInitialModalData({
+            pacienteId: '',
+            servicoId: '',
+            dataHora: dateTime,
+          })
+          setModalOpen(true)
+        },
+      },
     })
 
     calendar.render(calendarRef.current)
@@ -83,6 +113,18 @@ export function CalendarView() {
 
       {/* Calendar container */}
       <div ref={calendarRef} className="min-h-[600px] bg-white rounded-lg shadow" />
+
+      {/* Appointment modal */}
+      <AppointmentModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSave={() => {
+          setModalOpen(false)
+          refetch()
+        }}
+        appointmentId={selectedAppointment}
+        initialData={initialModalData}
+      />
     </div>
   )
 }
