@@ -51,6 +51,9 @@ export enum AuditAction {
 
   // System configuration
   UPDATE_SETTINGS = 'UPDATE_SETTINGS',
+
+  // Data export (HIPAA compliance)
+  EXPORT_DATA = 'EXPORT_DATA',
 }
 
 interface LogAuditParams {
