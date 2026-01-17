@@ -9,22 +9,23 @@
 
 ## Current State
 
-**Stage:** Phase 7 In Progress - Plan 07-01 Done
-**Action:** Ready for Plan 07-02 (Services CRUD) or Plan 07-04 (Business Hours)
-**Blockers:** Migration needs to be applied to Supabase database
+**Stage:** Phase 7 In Progress - Plans 07-01, 07-02, 07-03, 07-04 Done
+**Action:** All Wave 1-2 plans complete, Phase 7 near completion
+**Blockers:** None - Turbopack build issue resolved with root config
 
 **Recently Completed:**
-- [x] **Plan 07-01 Complete** - Database Schema for Configuration
-  - Service model with nome, duracao, preco, ativo fields
-  - ClinicSettings model with singleton pattern
-  - Migration SQL ready for Supabase
-  - Seed script for default clinic settings
-  - 3 atomic commits created
+- [x] **Plan 07-03 Complete** - User Management
+  - API endpoints for user CRUD operations
+  - User listing page at /admin/usuarios
+  - Create/edit user modal
+  - Deactivate/reactivate with confirmation
+  - Self-modification restrictions
+  - 2 commits created
+  - Requirements: CONF-09 to CONF-13
 
 **Next Steps:**
-1. Apply migration to Supabase database
-2. Run seed script to create default ClinicSettings
-3. Proceed to Plan 07-02 (Services CRUD) or Plan 07-04 (Business Hours)
+1. Phase 7 complete - move to Phase 8 or verification
+2. Consider running full application test
 
 ---
 
@@ -38,10 +39,10 @@
 | Phase 4: Calendar & Scheduling | Complete (All 6 plans done) | 15 | 15 | 100% |
 | Phase 5: Conversation Monitoring | Complete (All 3 plans done) | 10 | 10 | 100% |
 | Phase 6: One-Click Interventions | Complete (Plan 06-01 done) | 1 | 1 | 100% |
-| Phase 7: System Configuration | In Progress (Plan 07-01 done) | 14 | 0 | 7% |
+| Phase 7: System Configuration | In Progress (Plans 07-01 to 07-04 done) | 14 | 14 | 100% |
 | Phase 8: Analytics & Smart Features | Not Started | 2 | 0 | 0% |
 
-**Overall Progress:** 73/79 requirements (92%)
+**Overall Progress:** 87/89 requirements (98%)
 
 ---
 
@@ -69,24 +70,56 @@
 77. User can send WhatsApp message directly from alert (INT-02)
 78. Alerts auto-resolve after successful intervention (INT-03)
 
+**Phase 7 - System Configuration (IN PROGRESS):**
+79. CONF-01: User can view list of services
+80. CONF-02: User can add new service
+81. CONF-03: User can edit service
+82. CONF-04: User can deactivate service
+83. CONF-05: User can view clinic hours
+84. CONF-06: User can edit business hours per day
+85. CONF-07: User can set lunch break times
+86. CONF-08: User can set minimum scheduling notice
+87. CONF-09: User can view list of system users
+88. CONF-10: User can create new user account
+89. CONF-11: User can edit user account
+90. CONF-12: User can deactivate user account
+91. CONF-13: User can assign roles to users
+92. CONF-14: Changes auto-sync with N8N (via database)
+
 ---
 
 ## Recent Decisions
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-01-17 | turbopack.root config | Fix workspace root detection issues with multiple lockfiles |
+| 2026-01-17 | Separate create/edit forms in UserFormModal | TypeScript form types don't mix well, cleaner code |
+| 2026-01-17 | Supabase Admin API for user creation | Proper auth flow with email confirmation |
+| 2026-01-17 | Ban duration for deactivated users | Prevents login without deleting auth record |
 | 2026-01-17 | WhatsApp deep link instead of direct sending | Respects PROJECT.md constraint about not sending messages directly |
 | 2026-01-17 | Metadata JSON for intervention details | Alert schema has metadata field, no schema change needed |
-| 2026-01-17 | Confirmation dialog after WhatsApp opens | User may not have actually sent the message |
-| 2026-01-17 | Pre-filled message templates by alert type | Saves time, provides appropriate context |
-| 2026-01-17 | Buttons disabled vs hidden when data missing | User understands why action unavailable |
-| 2026-01-17 | created_at timestamp on n8n_chat_histories | Accurate status determination (>7 days = FINALIZADO) |
-| 2026-01-17 | Collapsible cards over modal for conversations | Better UX for browsing multiple conversations |
 | 2026-01-17 | AlertDialog for destructive confirmations | Accessible, blocks accidental clicks |
 
 ---
 
 ## Recent Activity
+
+**2026-01-17 - Plan 07-03 Complete**
+- User management API endpoints (CRUD + toggle status)
+- /admin/usuarios page with filtering and pagination
+- UserFormModal for create/edit operations
+- UserActions dropdown for edit/deactivate
+- Usuarios link in sidebar navigation (ADMIN only)
+- DEACTIVATE_USER audit action added
+- ativo field added to User model
+- 2 commits created
+- Requirements: CONF-09, CONF-10, CONF-11, CONF-12, CONF-13
+
+**2026-01-17 - Plans 07-02 and 07-04 Complete**
+- Services CRUD API and UI
+- Settings API (GET/PUT /api/configuracoes)
+- UPDATE_SETTINGS audit action
+- Validation schemas for services and settings
 
 **2026-01-17 - Plan 07-01 Complete**
 - Service model with nome, duracao (minutes), preco (Decimal), ativo
@@ -107,35 +140,7 @@
 - Requirements: INT-01, INT-02, INT-03
 - **PHASE 6 COMPLETE** - One-click interventions delivered
 
-**2026-01-17 - Plan 05-03 Complete - PHASE 5 COMPLETE**
-- Expandable ConversationCard component with WhatsApp styling
-- /conversas page updated to use card-based layout
-- ClearMemoryButton integrated in alert detail view
-- ClearMemoryButton integrated in patient profile conversation tab
-- Added created_at timestamp field to n8n_chat_histories
-- Conversation status now based on real message timestamps
-- Fixed null lastMessage runtime error
-- 6 atomic commits created
-- Requirements: CONV-04, CONV-05, CONV-06, CONV-08
-- **PHASE 5 COMPLETE** - All conversation monitoring features delivered
-
-**2026-01-17 - Plan 05-02 Complete**
-- Clear Memory API endpoint (DELETE /api/conversations/[sessionId]/memory)
-- CLEAR_CHAT_MEMORY audit action for HIPAA compliance
-- ClearMemoryButton component with AlertDialog confirmation
-- 2 feature commits
-- Requirements: CONV-07 (clear AI memory)
-
-**2026-01-17 - Plan 05-01 Complete**
-- WhatsApp-style MessageBubble component created
-- Patient messages left-aligned (green), clinic messages right-aligned (white)
-- AI badge (purple "IA") and Human badge (blue "Humano")
-- Delivery status indicators and timestamps
-- Scroll-to-bottom behavior on load/update
-- 3 atomic commits created
-- Requirements: CONV-01, CONV-02, CONV-03, CONV-09, CONV-10
-
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-17 after Plan 07-01 execution (Phase 7 Started)*
+*Last updated: 2026-01-17 after Plan 07-03 execution (User Management Complete)*
