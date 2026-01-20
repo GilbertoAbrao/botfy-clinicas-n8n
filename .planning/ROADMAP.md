@@ -60,7 +60,7 @@ v1.1 extends the console with no-show risk visibility. The N8N Anti No-Show work
 
 - [x] **Phase 9: N8N Anti No-Show Fix** - Fix workflow to save risk score and message
 - [x] **Phase 10: Config Lembretes** - CRUD for reminder configurations
-- [ ] **Phase 11: Lembretes Enviados** - History panel with filtering
+- [x] **Phase 11: Lembretes Enviados** - History panel with filtering
 - [ ] **Phase 12: Analytics Risco** - Risk analytics dashboard
 
 ## Phase Details
@@ -141,9 +141,9 @@ Plans:
 | 1-8 | v1.0 | 32/32 | Complete | 2026-01-17 |
 | 9. N8N Anti No-Show Fix | v1.1 | 1/1 | Complete | 2026-01-20 |
 | 10. Config Lembretes | v1.1 | 3/3 | Complete | 2026-01-20 |
-| 11. Lembretes Enviados | v1.1 | 0/3 | Planned | - |
+| 11. Lembretes Enviados | v1.1 | 3/3 | Complete | 2026-01-20 |
 | 12. Analytics Risco | v1.1 | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-20*
-*Last updated: 2026-01-20 — Phase 11 planned*
+*Last updated: 2026-01-20 — Phase 11 complete*
