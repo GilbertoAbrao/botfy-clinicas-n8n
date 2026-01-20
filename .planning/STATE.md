@@ -19,10 +19,10 @@ See: `.planning/PROJECT.md` (updated 2026-01-20)
 
 **Milestone:** v1.1 Anti No-Show Intelligence
 **Phase:** 11 of 12 (Lembretes Enviados)
-**Plan:** Not started
-**Status:** Ready to plan
+**Plan:** 3 plans defined (11-01, 11-02, 11-03)
+**Status:** Ready to execute
 
-**Last activity:** 2026-01-20 — Phase 10 complete (Config Lembretes CRUD)
+**Last activity:** 2026-01-20 — Phase 11 planning complete
 
 **Progress:** ██████████░░░░░░░░░░ 50%
 
@@ -62,8 +62,8 @@ See: `.planning/PROJECT.md` (updated 2026-01-20)
 
 ## Next Steps
 
-1. **Plan Phase 11** — `/gsd:plan-phase 11` to plan Lembretes Enviados
-2. **Execute Phase 11** — `/gsd:execute-plan` after planning
+1. **Execute Phase 11** — `/gsd:execute-plan` to build Lembretes Enviados
+2. **Plan Phase 12** — `/gsd:plan-phase 12` for Analytics Risco after Phase 11
 
 ---
 
@@ -82,4 +82,4 @@ None — v1.0 complete
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-20 after Phase 10 completion*
+*Last updated: 2026-01-20 after Phase 11 planning*
