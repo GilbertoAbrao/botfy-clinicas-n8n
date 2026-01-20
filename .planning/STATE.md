@@ -19,12 +19,12 @@ See: `.planning/PROJECT.md` (updated 2026-01-20)
 
 **Milestone:** v1.1 Anti No-Show Intelligence
 **Phase:** 12 of 12 (Analytics Risco)
-**Plan:** 2 plans defined (12-01, 12-02)
-**Status:** Ready to execute
+**Plan:** 1 of 2 in current phase
+**Status:** In progress
 
-**Last activity:** 2026-01-20 — Phase 12 planning complete
+**Last activity:** 2026-01-20 — Completed 12-01-PLAN.md (Backend Risk Analytics)
 
-**Progress:** ██████████████████░░ 90%
+**Progress:** ███████████████████░ 95%
 
 ---
 
@@ -62,7 +62,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-20)
 
 ## Next Steps
 
-1. **Execute Phase 12** — `/gsd:execute-phase 12` to build Analytics Risco
+1. **Execute Plan 12-02** — Build Risk Analytics Dashboard UI (charts)
 2. **Complete v1.1** — After Phase 12, run `/gsd:verify-work` to validate milestone
 
 ---
@@ -82,4 +82,4 @@ None — v1.0 complete
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-20 after Phase 12 planning*
+*Last updated: 2026-01-20 after 12-01 Backend Risk Analytics complete*

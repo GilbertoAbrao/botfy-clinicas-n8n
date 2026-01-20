@@ -129,8 +129,8 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 12-01: Risk score distribution and correlation charts
-- [ ] 12-02: No-show pattern analysis by day/time/service
+- [x] 12-01: Backend risk analytics infrastructure (API + calculator)
+- [ ] 12-02: Risk analytics dashboard UI (charts)
 
 ## Progress
 
@@ -142,8 +142,8 @@ Plans:
 | 9. N8N Anti No-Show Fix | v1.1 | 1/1 | Complete | 2026-01-20 |
 | 10. Config Lembretes | v1.1 | 3/3 | Complete | 2026-01-20 |
 | 11. Lembretes Enviados | v1.1 | 3/3 | Complete | 2026-01-20 |
-| 12. Analytics Risco | v1.1 | 0/2 | Not started | - |
+| 12. Analytics Risco | v1.1 | 1/2 | In progress | - |
 
 ---
 *Roadmap created: 2026-01-20*
-*Last updated: 2026-01-20 — Phase 11 complete*
+*Last updated: 2026-01-20 — Plan 12-01 complete*
