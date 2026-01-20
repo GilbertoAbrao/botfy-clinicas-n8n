@@ -14,6 +14,7 @@ import {
   Package,
   BarChart3,
   Workflow,
+  Bell,
 } from 'lucide-react';
 
 const navigation = [
@@ -79,6 +80,13 @@ const navigation = [
     name: 'Workflows',
     href: '/admin/workflows',
     icon: Workflow,
+    enabled: true,
+    adminOnly: true,
+  },
+  {
+    name: 'Lembretes',
+    href: '/admin/lembretes',
+    icon: Bell,
     enabled: true,
     adminOnly: true,
   },
