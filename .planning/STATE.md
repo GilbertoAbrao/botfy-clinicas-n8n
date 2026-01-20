@@ -1,7 +1,7 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-20
-**Status:** v1.1 In Progress
+**Status:** v1.1 Complete — Ready for milestone audit
 **Current Milestone:** v1.1 Anti No-Show Intelligence
 
 ---
@@ -62,8 +62,8 @@ See: `.planning/PROJECT.md` (updated 2026-01-20)
 
 ## Next Steps
 
-1. **Complete v1.1** — Run `/gsd:verify-work` to validate milestone
-2. **Archive v1.1** — Run `/gsd:complete-milestone` to archive and prepare for next
+1. **Audit v1.1** — Run `/gsd:audit-milestone` to verify requirements and cross-phase integration
+2. **Archive v1.1** — Run `/gsd:complete-milestone` to archive and prepare for v2.0
 
 ---
 
@@ -82,4 +82,4 @@ None — v1.0 complete
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-20 after 12-02 Risk Analytics Dashboard UI complete*
+*Last updated: 2026-01-20 — Phase 12 complete, v1.1 milestone ready for audit*

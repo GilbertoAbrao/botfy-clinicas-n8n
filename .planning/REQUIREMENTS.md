@@ -32,11 +32,11 @@ Requirements for v1.1 release. Each maps to roadmap phases.
 
 ### Analytics Risco No-Show
 
-- [ ] **ANLT-01**: Dashboard displays risk score distribution chart (how patients are scored)
-- [ ] **ANLT-02**: Dashboard displays predicted vs actual correlation chart
-- [ ] **ANLT-03**: Dashboard identifies no-show patterns by day of week
-- [ ] **ANLT-04**: Dashboard identifies no-show patterns by time of day
-- [ ] **ANLT-05**: Dashboard identifies no-show patterns by service type
+- [x] **ANLT-01**: Dashboard displays risk score distribution chart (how patients are scored)
+- [x] **ANLT-02**: Dashboard displays predicted vs actual correlation chart
+- [x] **ANLT-03**: Dashboard identifies no-show patterns by day of week
+- [x] **ANLT-04**: Dashboard identifies no-show patterns by time of day
+- [x] **ANLT-05**: Dashboard identifies no-show patterns by service type
 
 ## v2 Requirements
 
@@ -84,11 +84,11 @@ Which phases cover which requirements. Updated by create-roadmap.
 | HIST-04 | Phase 11 | Complete |
 | HIST-05 | Phase 11 | Complete |
 | HIST-06 | Phase 11 | Complete |
-| ANLT-01 | Phase 12 | Pending |
-| ANLT-02 | Phase 12 | Pending |
-| ANLT-03 | Phase 12 | Pending |
-| ANLT-04 | Phase 12 | Pending |
-| ANLT-05 | Phase 12 | Pending |
+| ANLT-01 | Phase 12 | ✓ Complete |
+| ANLT-02 | Phase 12 | ✓ Complete |
+| ANLT-03 | Phase 12 | ✓ Complete |
+| ANLT-04 | Phase 12 | ✓ Complete |
+| ANLT-05 | Phase 12 | ✓ Complete |
 
 **Coverage:**
 - v1.1 requirements: 18 total
@@ -97,4 +97,4 @@ Which phases cover which requirements. Updated by create-roadmap.
 
 ---
 *Requirements defined: 2026-01-20*
-*Last updated: 2026-01-20 after Phase 11 verification*
+*Last updated: 2026-01-20 after Phase 12 verification — v1.1 complete*
