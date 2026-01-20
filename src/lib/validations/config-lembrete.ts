@@ -1,6 +1,31 @@
 import { z } from 'zod';
 
 /**
+ * Template types for reminder configurations
+ */
+export const TEMPLATE_TIPOS = ['lembrete', 'confirmacao', 'reagendamento'] as const;
+export type TemplateTipo = (typeof TEMPLATE_TIPOS)[number];
+
+/**
+ * Display labels for template types (Portuguese)
+ */
+export const TEMPLATE_TIPO_LABELS: Record<TemplateTipo, string> = {
+  lembrete: 'Lembrete',
+  confirmacao: 'Confirmacao',
+  reagendamento: 'Reagendamento',
+};
+
+/**
+ * Common preset values for hours before
+ */
+export const HORAS_ANTES_PRESETS = [
+  { value: 2, label: '2 horas antes' },
+  { value: 24, label: '24 horas (1 dia) antes' },
+  { value: 48, label: '48 horas (2 dias) antes' },
+  { value: 72, label: '72 horas (3 dias) antes' },
+];
+
+/**
  * Config Lembrete validation schema
  * Validates reminder configuration data for the config_lembretes table
  */
@@ -32,6 +57,20 @@ export const configLembreteSchema = z.object({
  * Use this for type-safe form handling
  */
 export type ConfigLembreteInput = z.infer<typeof configLembreteSchema>;
+
+/**
+ * Full ConfigLembrete type (includes database fields)
+ */
+export interface ConfigLembrete {
+  id: string;
+  nome: string;
+  horas_antes: number;
+  template_tipo: string;
+  prioridade: number;
+  ativo: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 /**
  * Format hours to a readable string (e.g., "48h", "2 dias")
