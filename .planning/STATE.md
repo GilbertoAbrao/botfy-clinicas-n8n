@@ -19,10 +19,10 @@ See: `.planning/PROJECT.md` (updated 2026-01-20)
 
 **Milestone:** v1.1 Anti No-Show Intelligence
 **Phase:** 9 of 12 (N8N Anti No-Show Fix)
-**Plan:** Not started
-**Status:** Ready to plan
+**Plan:** 09-01 (Fix N8N INSERT)
+**Status:** Ready to execute
 
-**Last activity:** 2026-01-20 — Roadmap created (4 phases, 18 requirements)
+**Last activity:** 2026-01-20 — Plan 09-01 created
 
 **Progress:** ░░░░░░░░░░░░░░░░░░░░ 0%
 
