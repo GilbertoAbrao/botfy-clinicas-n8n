@@ -10,8 +10,8 @@ Requirements for v1.1 release. Each maps to roadmap phases.
 
 ### N8N Workflow
 
-- [ ] **N8N-01**: N8N Anti No-Show workflow saves `risco_noshow` score to `lembretes_enviados` table
-- [ ] **N8N-02**: N8N Anti No-Show workflow saves `mensagem_enviada` content to `lembretes_enviados` table
+- [x] **N8N-01**: N8N Anti No-Show workflow saves `risco_noshow` score to `lembretes_enviados` table
+- [x] **N8N-02**: N8N Anti No-Show workflow saves `mensagem_enviada` content to `lembretes_enviados` table
 
 ### Config Lembretes
 
@@ -71,8 +71,8 @@ Which phases cover which requirements. Updated by create-roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| N8N-01 | Phase 9 | Pending |
-| N8N-02 | Phase 9 | Pending |
+| N8N-01 | Phase 9 | ✓ Complete |
+| N8N-02 | Phase 9 | ✓ Complete |
 | CONF-01 | Phase 10 | Pending |
 | CONF-02 | Phase 10 | Pending |
 | CONF-03 | Phase 10 | Pending |

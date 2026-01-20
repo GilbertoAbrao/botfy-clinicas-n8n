@@ -58,7 +58,7 @@ v1.1 extends the console with no-show risk visibility. The N8N Anti No-Show work
 
 **Milestone Goal:** Complete no-show risk management with N8N fix + full console UI
 
-- [ ] **Phase 9: N8N Anti No-Show Fix** - Fix workflow to save risk score and message
+- [x] **Phase 9: N8N Anti No-Show Fix** - Fix workflow to save risk score and message
 - [ ] **Phase 10: Config Lembretes** - CRUD for reminder configurations
 - [ ] **Phase 11: Lembretes Enviados** - History panel with filtering
 - [ ] **Phase 12: Analytics Risco** - Risk analytics dashboard
@@ -76,7 +76,7 @@ v1.1 extends the console with no-show risk visibility. The N8N Anti No-Show work
 **Plans**: TBD
 
 Plans:
-- [ ] 09-01: Fix N8N INSERT to include risco_noshow and mensagem_enviada
+- [x] 09-01: Fix N8N INSERT to include risco_noshow and mensagem_enviada
 
 ### Phase 10: Config Lembretes
 **Goal**: Full CRUD interface for reminder configurations
@@ -139,11 +139,11 @@ Plans:
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-8 | v1.0 | 32/32 | Complete | 2026-01-17 |
-| 9. N8N Anti No-Show Fix | v1.1 | 0/1 | Not started | - |
+| 9. N8N Anti No-Show Fix | v1.1 | 1/1 | Complete | 2026-01-20 |
 | 10. Config Lembretes | v1.1 | 0/3 | Not started | - |
 | 11. Lembretes Enviados | v1.1 | 0/3 | Not started | - |
 | 12. Analytics Risco | v1.1 | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-20*
-*Last updated: 2026-01-20*
+*Last updated: 2026-01-20 — Phase 9 complete*
