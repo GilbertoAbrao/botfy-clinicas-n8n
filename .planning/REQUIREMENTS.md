@@ -23,12 +23,12 @@ Requirements for v1.1 release. Each maps to roadmap phases.
 
 ### Lembretes Enviados
 
-- [ ] **HIST-01**: User can view paginated list of sent reminders with status
-- [ ] **HIST-02**: User can filter reminders by date range
-- [ ] **HIST-03**: User can filter reminders by patient
-- [ ] **HIST-04**: User can filter reminders by status (enviado/pendente/falhou)
-- [ ] **HIST-05**: Reminder list displays `risco_noshow` score column
-- [ ] **HIST-06**: User can click reminder to view full details
+- [x] **HIST-01**: User can view paginated list of sent reminders with status
+- [x] **HIST-02**: User can filter reminders by date range
+- [x] **HIST-03**: User can filter reminders by patient
+- [x] **HIST-04**: User can filter reminders by status (enviado/pendente/falhou)
+- [x] **HIST-05**: Reminder list displays `risco_noshow` score column
+- [x] **HIST-06**: User can click reminder to view full details
 
 ### Analytics Risco No-Show
 
@@ -78,12 +78,12 @@ Which phases cover which requirements. Updated by create-roadmap.
 | CONF-03 | Phase 10 | ✓ Complete |
 | CONF-04 | Phase 10 | ✓ Complete |
 | CONF-05 | Phase 10 | ✓ Complete |
-| HIST-01 | Phase 11 | Pending |
-| HIST-02 | Phase 11 | Pending |
-| HIST-03 | Phase 11 | Pending |
-| HIST-04 | Phase 11 | Pending |
-| HIST-05 | Phase 11 | Pending |
-| HIST-06 | Phase 11 | Pending |
+| HIST-01 | Phase 11 | Complete |
+| HIST-02 | Phase 11 | Complete |
+| HIST-03 | Phase 11 | Complete |
+| HIST-04 | Phase 11 | Complete |
+| HIST-05 | Phase 11 | Complete |
+| HIST-06 | Phase 11 | Complete |
 | ANLT-01 | Phase 12 | Pending |
 | ANLT-02 | Phase 12 | Pending |
 | ANLT-03 | Phase 12 | Pending |
@@ -97,4 +97,4 @@ Which phases cover which requirements. Updated by create-roadmap.
 
 ---
 *Requirements defined: 2026-01-20*
-*Last updated: 2026-01-20 after Phase 10 completion*
+*Last updated: 2026-01-20 after Phase 11 verification*
