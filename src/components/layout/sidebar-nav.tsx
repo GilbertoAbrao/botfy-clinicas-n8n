@@ -16,6 +16,7 @@ import {
   Workflow,
   Bell,
   Send,
+  TrendingDown,
 } from 'lucide-react';
 
 const navigation = [
@@ -74,6 +75,13 @@ const navigation = [
     name: 'Analytics',
     href: '/admin/analytics',
     icon: BarChart3,
+    enabled: true,
+    adminOnly: true,
+  },
+  {
+    name: 'Risco No-Show',
+    href: '/admin/analytics/risco',
+    icon: TrendingDown,
     enabled: true,
     adminOnly: true,
   },
