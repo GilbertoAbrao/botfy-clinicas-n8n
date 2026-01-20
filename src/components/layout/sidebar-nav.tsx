@@ -15,6 +15,7 @@ import {
   BarChart3,
   Workflow,
   Bell,
+  Send,
 } from 'lucide-react';
 
 const navigation = [
@@ -87,6 +88,13 @@ const navigation = [
     name: 'Lembretes',
     href: '/admin/lembretes',
     icon: Bell,
+    enabled: true,
+    adminOnly: true,
+  },
+  {
+    name: 'Lembretes Enviados',
+    href: '/admin/lembretes-enviados',
+    icon: Send,
     enabled: true,
     adminOnly: true,
   },
