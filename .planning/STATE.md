@@ -18,11 +18,11 @@ See: `.planning/PROJECT.md` (updated 2026-01-20)
 ## Current Position
 
 **Milestone:** v1.1 Anti No-Show Intelligence
-**Phase:** Not started (run /gsd:define-requirements)
-**Plan:** —
-**Status:** Defining requirements
+**Phase:** 9 of 12 (N8N Anti No-Show Fix)
+**Plan:** Not started
+**Status:** Ready to plan
 
-**Last activity:** 2026-01-20 — Milestone v1.1 started
+**Last activity:** 2026-01-20 — Roadmap created (4 phases, 18 requirements)
 
 **Progress:** ░░░░░░░░░░░░░░░░░░░░ 0%
 
@@ -62,8 +62,8 @@ See: `.planning/PROJECT.md` (updated 2026-01-20)
 
 ## Next Steps
 
-1. **Define requirements** — `/gsd:define-requirements` to create REQUIREMENTS.md
-2. **Create roadmap** — `/gsd:create-roadmap` to define phases
+1. **Plan Phase 9** — `/gsd:plan-phase 9` to create execution plan
+2. **Execute Phase 9** — `/gsd:execute-plan` after planning
 
 ---
 

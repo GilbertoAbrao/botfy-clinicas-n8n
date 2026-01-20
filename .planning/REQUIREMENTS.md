@@ -71,30 +71,30 @@ Which phases cover which requirements. Updated by create-roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| N8N-01 | TBD | Pending |
-| N8N-02 | TBD | Pending |
-| CONF-01 | TBD | Pending |
-| CONF-02 | TBD | Pending |
-| CONF-03 | TBD | Pending |
-| CONF-04 | TBD | Pending |
-| CONF-05 | TBD | Pending |
-| HIST-01 | TBD | Pending |
-| HIST-02 | TBD | Pending |
-| HIST-03 | TBD | Pending |
-| HIST-04 | TBD | Pending |
-| HIST-05 | TBD | Pending |
-| HIST-06 | TBD | Pending |
-| ANLT-01 | TBD | Pending |
-| ANLT-02 | TBD | Pending |
-| ANLT-03 | TBD | Pending |
-| ANLT-04 | TBD | Pending |
-| ANLT-05 | TBD | Pending |
+| N8N-01 | Phase 9 | Pending |
+| N8N-02 | Phase 9 | Pending |
+| CONF-01 | Phase 10 | Pending |
+| CONF-02 | Phase 10 | Pending |
+| CONF-03 | Phase 10 | Pending |
+| CONF-04 | Phase 10 | Pending |
+| CONF-05 | Phase 10 | Pending |
+| HIST-01 | Phase 11 | Pending |
+| HIST-02 | Phase 11 | Pending |
+| HIST-03 | Phase 11 | Pending |
+| HIST-04 | Phase 11 | Pending |
+| HIST-05 | Phase 11 | Pending |
+| HIST-06 | Phase 11 | Pending |
+| ANLT-01 | Phase 12 | Pending |
+| ANLT-02 | Phase 12 | Pending |
+| ANLT-03 | Phase 12 | Pending |
+| ANLT-04 | Phase 12 | Pending |
+| ANLT-05 | Phase 12 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 18 total
-- Mapped to phases: 0 (pending create-roadmap)
-- Unmapped: 18 ⚠️
+- Mapped to phases: 18 ✓
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-01-20*
-*Last updated: 2026-01-20 after initial definition*
+*Last updated: 2026-01-20 after roadmap creation*
