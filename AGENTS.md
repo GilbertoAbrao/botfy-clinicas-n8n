@@ -75,23 +75,29 @@ Sistema de automação de atendimento para clínicas via WhatsApp usando N8N, Ev
 
 | ID | Nome | Nodes | Trigger | Função |
 |----|------|-------|---------|--------|
-| `bPJamJhBcrVCKgBg` | Botfy - Agendamento | 82 | Webhook `/webhook/marilia` | **PRINCIPAL** - AI Agent de atendimento |
-| `HTR3ITfFDrK6eP2R` | Botfy - Anti No-Show | 52 | Schedule (15min) | Lembretes automáticos 48h/24h/2h |
-| `BWDsb4A0GVs2NQnM` | Botfy - Pre Check-In | 9 | Schedule (1h) | Envia pré check-in 24h antes |
-| `3ryiGnLNLuPWEfmL` | Botfy - Pre Check-In Lembrete | 6 | Schedule (2h) | Lembrete de pré check-in |
-| `SMjeAMnZ6XkFPptn` | Botfy - Verificar Pendências | 9 | Schedule (2h) | Notifica clínica sobre pendências |
+| `bPJamJhBcrVCKgBg` | Botfy - Agendamento | 83 | Webhook `/webhook/marilia` | **PRINCIPAL** - AI Agent de atendimento |
+| `HTR3ITfFDrK6eP2R` | Botfy - Anti No-Show | 61 | Schedule (15min) | Lembretes automáticos 48h/24h/2h |
+| `BWDsb4A0GVs2NQnM` | Botfy - Pre Check-In | 15 | Schedule (1h) | Envia pré check-in 24h antes |
+| `3ryiGnLNLuPWEfmL` | Botfy - Pre Check-In Lembrete | 10 | Schedule (2h) | Lembrete de pré check-in |
+| `SMjeAMnZ6XkFPptn` | Botfy - Verificar Pendências | 10 | Schedule (2h) | Notifica clínica sobre pendências |
+| `WCCLua7qhvRUlNSr` | Botfy - Waitlist Notify | 9 | Webhook `/webhook/calendar/waitlist-notify` | Notifica paciente de horário disponível |
+| `El3mdyoWtotOGkvZ` | Botfy WX - ChatAgent v2 | 5 | HTTP Request | Gateway HTTP para AI Agent |
+| `gzVC2BUZ376to3yz` | Botfy WX - Message Processor | 6 | Workflow Execute | Processador de mensagens do Chat Agent |
 
 ### Tools (Sub-workflows)
 
-| ID | Nome | Função |
-|----|------|--------|
-| `8Bke6sYr7r51aeEq` | Tool: Buscar Slots Disponíveis | Busca horários livres por data/período |
-| `eEx2enJk3YpreNUm` | Tool: Criar Agendamento | Cria paciente (se novo) + agendamento |
-| `21EHe24mkMmfBhK6` | Tool: Reagendar Agendamento | Atualiza data_hora do agendamento |
-| `gE2rpbLVUlnA5yMk` | Tool: Cancelar Agendamento | Marca status = 'cancelada' |
-| `8Ug0F3KuLov6EeCQ` | Tool: Buscar Agendamentos | Lista agendamentos por período |
-| `igG6sZsStxiDzNRY` | Tool: Buscar Paciente | Busca paciente + agendamentos |
-| `4DNyXp5fPPfsFOnR` | Tool: Atualizar Dados Paciente | Atualiza campos do paciente |
+| ID | Nome | Nodes | Função |
+|----|------|-------|--------|
+| `8Bke6sYr7r51aeEq` | Tool: Buscar Slots Disponíveis | 9 | Busca horários livres por data/período |
+| `eEx2enJk3YpreNUm` | Tool: Criar Agendamento | 15 | Cria paciente (se novo) + agendamento |
+| `21EHe24mkMmfBhK6` | Tool: Reagendar Agendamento | 4 | Atualiza data_hora do agendamento |
+| `gE2rpbLVUlnA5yMk` | Tool: Cancelar Agendamento | 4 | Marca status = 'cancelada' |
+| `8Ug0F3KuLov6EeCQ` | Tool: Buscar Agendamentos | 4 | Lista agendamentos por período |
+| `igG6sZsStxiDzNRY` | Tool: Buscar Paciente | 5 | Busca paciente + agendamentos |
+| `4DNyXp5fPPfsFOnR` | Tool: Atualizar Dados Paciente | 9 | Atualiza campos do paciente |
+| `NUZv1Gt15LKyiiKz` | Tool: Buscar Instruções | 6 | Busca instruções por embedding |
+| `Pc0PyATrZaGefiSJ` | Tool: Processar Documento | 13 | Processa e armazena documentos |
+| `holwGQuksZPsSb19` | Tool: Consultar Status Pre Check-In | 8 | Verifica status do pré check-in |
 
 ---
 
@@ -152,12 +158,69 @@ Envia lembrete para pacientes com pré check-in pendente:
 ---
 
 #### 5. Botfy - Verificar Pendências Pre Check-In (SMjeAMnZ6XkFPptn)
-**Status**: Ativo | **Nodes**: 9 | **Trigger**: Schedule
+**Status**: Ativo | **Nodes**: 10 | **Trigger**: Schedule
 
 Monitora pré check-ins pendentes e notifica a clínica:
 - Classifica urgência das pendências
 - Agrega relatório
 - Envia notificação para clínica
+
+---
+
+#### 6. Botfy - Waitlist Notify (Console) (WCCLua7qhvRUlNSr)
+**Status**: Ativo | **Nodes**: 9 | **Trigger**: Webhook `/webhook/calendar/waitlist-notify`
+
+Notifica pacientes da lista de espera quando um horário fica disponível:
+- Recebe webhook do Console Administrativo quando há cancelamento
+- Busca pacientes na waitlist com prioridade (URGENT primeiro)
+- Envia mensagem WhatsApp via Evolution API
+- Registra na memória do AI Agent para continuidade da conversa
+
+**Fluxo**:
+```
+[Webhook] → [Parse Payload] → [Envia WhatsApp] → [Registra Memória] → [Atualiza Waitlist]
+```
+
+**Payload esperado**:
+```json
+{
+  "patientPhone": "5511999999999",
+  "patientName": "Maria Silva",
+  "availableSlot": "2026-01-20T10:00:00-03:00",
+  "serviceName": "Consulta Geral",
+  "waitlistId": "uuid"
+}
+```
+
+---
+
+#### 7. Botfy WX - ChatAgent v2 (HTTP Direct) (El3mdyoWtotOGkvZ)
+**Status**: Ativo | **Nodes**: 5 | **Trigger**: HTTP Request
+
+Gateway HTTP para integração direta com o AI Agent:
+- Recebe requisições HTTP de sistemas externos
+- Encaminha para o Message Processor
+- Retorna resposta do AI Agent
+
+**Uso**: Integração com outros sistemas que precisam consultar o AI Agent diretamente via HTTP.
+
+**Endpoint**: HTTP Request (não webhook, para chamadas diretas)
+
+---
+
+#### 8. Botfy WX - ChatAgent - Message Processor (gzVC2BUZ376to3yz)
+**Status**: Ativo | **Nodes**: 6 | **Trigger**: Execute Workflow
+
+Processador de mensagens para o AI Agent:
+- Chamado pelo ChatAgent v2 via Execute Workflow
+- Processa mensagem e contexto do paciente
+- Chama tools conforme necessário
+- Retorna resposta formatada
+
+**Fluxo**:
+```
+[Execute Trigger] → [Processa Contexto] → [AI Agent] → [Formata Resposta] → [Retorna]
+```
 
 ---
 
@@ -649,6 +712,42 @@ curl -X POST "$N8N_URL/webhook/calendar/waitlist-notify" \
   WHERE session_id = 'TELEFONE@s.whatsapp.net-calendar';
   ```
 
+### Erro "Got unexpected type: undefined" no Postgres Chat Memory
+- **CAUSA 1**: Sub-nodes (como memory nodes) não têm acesso ao `$json` do fluxo principal
+- **SOLUÇÃO 1**: Usar referência explícita de node
+  ```javascript
+  // ERRADO - $json não funciona em sub-nodes
+  {{ $json.telefone }}-calendar
+
+  // CORRETO - Referência explícita ao node
+  {{ $('Propaga Telefone').item.json.telefone }}-calendar
+  ```
+
+- **CAUSA 2**: Dados corrompidos na tabela `n8n_chat_histories` (double-encoded JSON)
+- **SOLUÇÃO 2**: Converter string JSON para JSONB
+  ```sql
+  -- Verificar dados corrompidos
+  SELECT id, message FROM n8n_chat_histories
+  WHERE message::text LIKE '"{%';
+
+  -- Corrigir dados corrompidos
+  UPDATE n8n_chat_histories
+  SET message = (message #>> '{}')::jsonb
+  WHERE message::text LIKE '"{%';
+  ```
+
+### JSONB Double-Encoding ao inserir na tabela
+- **CAUSA**: Usar `JSON.stringify()` ao inserir em coluna JSONB
+- **SOLUÇÃO**: Passar objeto diretamente, não string
+  ```javascript
+  // ERRADO - causa double-encoding
+  ={{ JSON.stringify({ type: 'ai', content: $json.message }) }}
+
+  // CORRETO - passa objeto diretamente
+  ={{ ({ type: 'ai', content: $json.message }) }}
+  ```
+- **Afetado**: Workflows que inserem na tabela `n8n_chat_histories`
+
 ### CRÍTICO: $fromAI() em Tools - Parâmetros undefined
 
 **Sintoma**: Tool é chamada mas parâmetros chegam como `undefined` no sub-workflow.
@@ -853,20 +952,32 @@ workflows-backup/
 
 ---
 
-### Status Atual (2026-01-17)
+### Status Atual (2026-01-19)
 
-**Todos os workflows funcionando**:
-- ✅ Botfy - Agendamento (bPJamJhBcrVCKgBg)
-- ✅ Botfy - Anti No-Show (HTR3ITfFDrK6eP2R)
-- ✅ Botfy - Pre Check-In (BWDsb4A0GVs2NQnM)
-- ✅ Botfy - Pre Check-In Lembrete (3ryiGnLNLuPWEfmL)
-- ✅ Botfy - Verificar Pendências (SMjeAMnZ6XkFPptn)
+**Workflows de Produção (8 ativos)**:
+- ✅ Botfy - Agendamento (bPJamJhBcrVCKgBg) - AI Agent principal
+- ✅ Botfy - Anti No-Show (HTR3ITfFDrK6eP2R) - Lembretes automáticos
+- ✅ Botfy - Pre Check-In (BWDsb4A0GVs2NQnM) - Pré check-in 24h
+- ✅ Botfy - Pre Check-In Lembrete (3ryiGnLNLuPWEfmL) - Lembrete pré check-in
+- ✅ Botfy - Verificar Pendências (SMjeAMnZ6XkFPptn) - Monitora pendências
+- ✅ Botfy - Waitlist Notify (WCCLua7qhvRUlNSr) - Notifica lista de espera
+- ✅ Botfy WX - ChatAgent v2 (El3mdyoWtotOGkvZ) - Gateway HTTP
+- ✅ Botfy WX - Message Processor (gzVC2BUZ376to3yz) - Processador de mensagens
+
+**Tools (10 sub-workflows)**:
+- Buscar Slots Disponíveis, Criar Agendamento, Reagendar, Cancelar
+- Buscar Agendamentos, Buscar Paciente, Atualizar Dados Paciente
+- Buscar Instruções, Processar Documento, Consultar Status Pre Check-In
 
 **Todos os testes passando** (4/4):
 - `/test/anti-no-show` → HTTP 200
 - `/test/pre-checkin` → HTTP 200
 - `/test/pre-checkin-lembrete` → HTTP 200
 - `/test/verificar-pendencias` → HTTP 200
+
+**Correções recentes (2026-01-19)**:
+- Corrigido sessionKey no Postgres Chat Memory (usar `$('NodeName').item.json.field` em sub-nodes)
+- Corrigido double-encoding de JSONB no Waitlist Notify (não usar JSON.stringify em campos JSONB)
 
 **Próximos passos recomendados**:
 1. Converter Anti No-Show para Postgres (quando possível)

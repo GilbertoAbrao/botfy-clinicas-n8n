@@ -35,7 +35,7 @@ export interface ConversationFilters {
   status?: ChatStatus
   dateFrom?: Date
   dateTo?: Date
-  patientId?: string
+  patientId?: number
 }
 
 /**

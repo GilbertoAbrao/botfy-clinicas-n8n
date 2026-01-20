@@ -48,7 +48,7 @@ export async function getAgendamentosHoje(): Promise<number> {
 
     const count = await prisma.appointment.count({
       where: {
-        scheduledAt: {
+        dataHora: {
           gte: startOfToday,
           lte: endOfToday,
         },
@@ -76,17 +76,17 @@ export async function getTaxaConfirmacao(): Promise<number | null> {
       throw new AppError('Unauthorized', 'UNAUTHORIZED', 401)
     }
 
-    // Count confirmed appointments
+    // Count confirmed appointments (Portuguese: confirmada)
     const confirmedCount = await prisma.appointment.count({
       where: {
-        status: 'confirmed',
+        status: 'confirmada',
       },
     })
 
-    // Count tentative appointments
+    // Count tentative/scheduled appointments (Portuguese: agendada)
     const tentativeCount = await prisma.appointment.count({
       where: {
-        status: 'tentative',
+        status: 'agendada',
       },
     })
 

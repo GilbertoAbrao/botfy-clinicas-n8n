@@ -13,10 +13,11 @@ interface EditPatientPageProps {
 
 export async function generateMetadata(props: EditPatientPageProps): Promise<Metadata> {
   const params = await props.params;
-  const patient = await prisma.patient.findUnique({
-    where: { id: params.id },
+  const patientId = parseInt(params.id, 10);
+  const patient = patientId ? await prisma.patient.findUnique({
+    where: { id: patientId },
     select: { nome: true },
-  });
+  }) : null;
 
   return {
     title: `Editar Paciente - ${patient?.nome || 'Não encontrado'} | Botfy ClinicOps`,
@@ -38,9 +39,15 @@ export default async function EditPatientPage(props: EditPatientPageProps) {
     redirect('/403');
   }
 
+  // Parse patient ID
+  const patientId = parseInt(params.id, 10);
+  if (isNaN(patientId)) {
+    notFound();
+  }
+
   // Fetch patient data
   const patient = await prisma.patient.findUnique({
-    where: { id: params.id },
+    where: { id: patientId },
   });
 
   if (!patient) {

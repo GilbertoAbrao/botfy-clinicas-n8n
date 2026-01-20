@@ -9,14 +9,14 @@ datasource db {
   provider = "postgresql"
 }
 
-// Supabase Auth users table (managed by Supabase Auth, reference only)
+// Console users table (separate from Supabase Auth)
 model User {
-  id             String     @id @default(uuid()) @db.Uuid
+  id             String     @id
   email          String     @unique
   role           Role       @default(ATENDENTE)
   ativo          Boolean    @default(true)
-  createdAt      DateTime   @default(now()) @map("created_at")
-  updatedAt      DateTime   @updatedAt @map("updated_at")
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
   auditLogs         AuditLog[]
   resolvedAlerts    Alert[]
   uploadedDocuments PatientDocument[]
@@ -52,15 +52,6 @@ enum AlertStatus {
   dismissed
 }
 
-enum AppointmentStatus {
-  confirmed
-  tentative
-  no_show
-  cancelled
-  completed
-}
-
-
 // HIPAA-compliant audit logging (6-year retention required)
 model AuditLog {
   id         String   @id @default(uuid()) @db.Uuid
@@ -82,28 +73,25 @@ model AuditLog {
 }
 
 // Patient information (PHI - Protected Health Information)
+// Maps to the 'pacientes' table used by N8N
 model Patient {
-  id                String         @id @default(uuid()) @db.Uuid
+  id                Int            @id @default(autoincrement())
   nome              String
-  telefone          String
+  telefone          String         @unique
   email             String?
-  cpf               String?        @unique
-  dataNascimento    DateTime?      @map("data_nascimento")
-  endereco          String?
+  cpf               String?
+  dataNascimento    DateTime?      @map("data_nascimento") @db.Date
   convenio          String?
-  numeroCarteirinha String?        @map("numero_carteirinha")
-  createdAt         DateTime       @default(now()) @map("created_at")
-  updatedAt         DateTime       @updatedAt @map("updated_at")
+  observacoes       String?
+  createdAt         DateTime?      @default(now()) @map("created_at")
+  updatedAt         DateTime?      @updatedAt @map("updated_at")
 
-  appointments      Appointment[]
-  alerts            Alert[]
-  documents         PatientDocument[]
-  waitlistEntries   Waitlist[] @relation("WaitlistPatient")
+  agendamentos      Appointment[]
 
   @@index([telefone])
   @@index([cpf])
   @@index([nome])
-  @@map("patients")
+  @@map("pacientes")
 }
 
 // Provider/Professional information
@@ -116,35 +104,35 @@ model Provider {
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
-  appointments Appointment[] @relation("ProviderAppointments")
+  // Note: agendamentos uses 'profissional' as string name, not provider_id
   waitlistEntries Waitlist[] @relation("WaitlistProvider")
 
   @@map("providers")
 }
 
-// Appointment scheduling
+// Appointment scheduling - maps to 'agendamentos' table used by N8N
 model Appointment {
-  id          String            @id @default(uuid()) @db.Uuid
-  patientId   String            @map("patient_id") @db.Uuid
-  providerId  String?           @map("provider_id") @db.Uuid
-  serviceType String            @map("service_type")
-  scheduledAt DateTime          @map("scheduled_at")
-  duration    Int               // minutes
-  status      AppointmentStatus @default(tentative)
-  confirmedAt DateTime?         @map("confirmed_at")
-  notes       String?
-  createdAt   DateTime          @default(now()) @map("created_at")
-  updatedAt   DateTime          @updatedAt @map("updated_at")
+  id              Int       @id @default(autoincrement())
+  pacienteId      Int       @map("paciente_id")
+  tipoConsulta    String    @map("tipo_consulta")
+  profissional    String?
+  dataHora        DateTime  @map("data_hora") @db.Timestamptz
+  duracaoMinutos  Int?      @default(30) @map("duracao_minutos")
+  status          String?   @default("agendada")
+  valor           Decimal?  @db.Decimal
+  convenioUsado   String?   @map("convenio_usado")
+  observacoes     String?
+  googleEventId   String?   @map("google_event_id")
+  createdAt       DateTime? @default(now()) @map("created_at")
+  updatedAt       DateTime? @updatedAt @map("updated_at")
+  servicoId       Int?      @map("servico_id")
 
-  patient     Patient           @relation(fields: [patientId], references: [id])
-  provider    Provider?         @relation("ProviderAppointments", fields: [providerId], references: [id])
-  alerts      Alert[]
+  paciente        Patient   @relation(fields: [pacienteId], references: [id])
 
-  @@index([patientId])
-  @@index([providerId])
-  @@index([scheduledAt])
+  @@index([pacienteId])
+  @@index([dataHora])
   @@index([status])
-  @@map("appointments")
+  @@map("agendamentos")
 }
 
 // N8N Chat History - WhatsApp conversation messages
@@ -173,12 +161,13 @@ model Alert {
   chatSessionId  String?       @map("chat_session_id") // n8n chat session_id
   metadata       Json?         // Additional context like error messages
   resolvedAt     DateTime?     @map("resolved_at")
-  resolvedBy     String?       @map("resolved_by") @db.Uuid
+  resolvedBy     String?       @map("resolved_by")
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
 
-  patient        Patient?      @relation(fields: [patientId], references: [id])
-  appointment    Appointment?  @relation(fields: [appointmentId], references: [id])
+  // Relations temporarily disabled - alerts table uses UUID FKs pointing to legacy tables
+  // patient        Patient?      @relation(fields: [patientId], references: [id])
+  // appointment    Appointment?  @relation(fields: [appointmentId], references: [id])
   resolver       User?         @relation(fields: [resolvedBy], references: [id])
 
   @@index([status])
@@ -189,6 +178,7 @@ model Alert {
 }
 
 // Patient document storage (links to Supabase Storage)
+// Note: This table uses UUID patient_id referencing the legacy 'patients' table
 model PatientDocument {
   id          String   @id @default(uuid()) @db.Uuid
   patientId   String   @map("patient_id") @db.Uuid
@@ -199,7 +189,6 @@ model PatientDocument {
   uploadedBy  String   @map("uploaded_by")
   uploadedAt  DateTime @default(now()) @map("uploaded_at")
 
-  patient     Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
   uploader    User     @relation(fields: [uploadedBy], references: [id])
 
   @@index([patientId])
@@ -235,20 +224,21 @@ model Service {
 }
 
 // Waitlist for appointment slots
+// Note: This table uses UUID paciente_id - needs migration to use pacientes.id (Int)
 model Waitlist {
-  id            String   @id @default(uuid()) @db.Uuid
-  paciente_id   String   @map("paciente_id") @db.Uuid
-  servico_tipo  String   @map("servico_tipo")  // Service type (e.g., "Consulta", "Retorno")
-  provider_id   String?  @map("provider_id") @db.Uuid  // Specific provider preference (optional)
-  priority      String   @default("CONVENIENCE")  // URGENT or CONVENIENCE
-  preferred_date DateTime? @map("preferred_date")  // Preferred date/time (optional)
+  id            String    @id @default(uuid()) @db.Uuid
+  paciente_id   String    @db.Uuid
+  servico_tipo  String    // Service type (e.g., "Consulta", "Retorno")
+  provider_id   String?   @db.Uuid  // Specific provider preference (optional)
+  priority      String    @default("CONVENIENCE")  // URGENT or CONVENIENCE
+  preferred_date DateTime? // Preferred date/time (optional)
   notes         String?
-  status        String   @default("ACTIVE")  // ACTIVE, NOTIFIED, FILLED, EXPIRED
-  created_at    DateTime @default(now()) @map("created_at")
-  expires_at    DateTime  @map("expires_at")  // Auto-set to 7 days from creation
-  created_by    String   @map("created_by")
+  status        String    @default("ACTIVE")  // ACTIVE, NOTIFIED, FILLED, EXPIRED
+  created_at    DateTime  @default(now())
+  expires_at    DateTime  // Auto-set to 7 days from creation
+  created_by    String
+  notificado_em DateTime? @db.Timestamptz
 
-  paciente Patient   @relation("WaitlistPatient", fields: [paciente_id], references: [id], onDelete: Cascade)
   provider Provider? @relation("WaitlistProvider", fields: [provider_id], references: [id])
   criador  User      @relation("WaitlistCreator", fields: [created_by], references: [id])
 

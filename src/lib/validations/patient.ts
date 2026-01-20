@@ -83,21 +83,15 @@ export const patientSchema = z.object({
     .optional()
     .or(z.literal('')),
 
-  endereco: z
-    .string()
-    .max(500, 'Endereço não pode ter mais de 500 caracteres')
-    .optional()
-    .or(z.literal('')),
-
   convenio: z
     .string()
-    .max(100, 'Convênio não pode ter mais de 100 caracteres')
+    .max(100, 'Convenio nao pode ter mais de 100 caracteres')
     .optional()
     .or(z.literal('')),
 
-  numeroCarteirinha: z
+  observacoes: z
     .string()
-    .max(50, 'Número da carteirinha não pode ter mais de 50 caracteres')
+    .max(1000, 'Observacoes nao pode ter mais de 1000 caracteres')
     .optional()
     .or(z.literal('')),
 });

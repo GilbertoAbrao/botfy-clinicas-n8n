@@ -161,27 +161,55 @@ Acesse: http://localhost:3051
 
 ## Integração N8N
 
-O console se integra com os workflows N8N via webhooks:
+O console se integra com os workflows N8N via webhooks. O N8N é responsável por toda a automação de atendimento via WhatsApp.
+
+### Workflows Ativos
+
+| Workflow | Função | Trigger |
+|----------|--------|---------|
+| **Botfy - Agendamento** | AI Agent principal (Marília) - agenda, remarca, cancela | Webhook WhatsApp |
+| **Botfy - Anti No-Show** | Lembretes automáticos 48h/24h/2h antes da consulta | Schedule (15min) |
+| **Botfy - Pre Check-In** | Envia formulário de pré check-in 24h antes | Schedule (1h) |
+| **Botfy - Pre Check-In Lembrete** | Reenvia pré check-in pendente 12h antes | Schedule (2h) |
+| **Botfy - Verificar Pendências** | Notifica clínica sobre pré check-ins pendentes | Schedule (2h) |
+| **Botfy - Waitlist Notify** | Notifica paciente quando horário fica disponível | Webhook do Console |
+| **Botfy WX - ChatAgent v2** | Gateway HTTP para integração direta com AI | HTTP Request |
+| **Botfy WX - Message Processor** | Processador de mensagens do Chat Agent | Execute Workflow |
+
+### Tools do AI Agent
+
+O AI Agent utiliza sub-workflows (tools) para executar ações:
+
+- `buscar_slots_disponiveis` - Busca horários livres por data/período
+- `criar_agendamento` - Cria paciente (se necessário) e agendamento
+- `reagendar_agendamento` - Remarca consulta para nova data/hora
+- `cancelar_agendamento` - Cancela consulta
+- `buscar_agendamentos` - Lista agendamentos do paciente
+- `buscar_paciente` - Busca dados e histórico do paciente
+- `atualizar_dados_paciente` - Atualiza cadastro do paciente
+- `buscar_instrucoes` - Busca instruções por embedding (RAG)
+- `processar_documento` - Processa documentos enviados
+- `consultar_status_pre_checkin` - Verifica status do pré check-in
 
 ### Webhooks do Calendário
 
 | Evento | Webhook | Payload |
 |--------|---------|---------|
-| Appointment Created | `/webhook/calendar/created` | `{appointmentId, patientId, serviceId, providerId, dataHora, status}` |
-| Appointment Updated | `/webhook/calendar/updated` | `{appointmentId, changes: {dataHora?, status?}}` |
-| Appointment Cancelled | `/webhook/calendar/cancelled` | `{appointmentId, patientId, serviceId, dataHora}` |
-| Waitlist Notification | `/webhook/waitlist/notify` | `{patientPhone, patientName, availableSlot, serviceName, waitlistId}` |
+| Appointment Created | `/webhook/calendar/appointment-created` | `{appointmentId, patientId, serviceId, providerId, dataHora, status}` |
+| Appointment Updated | `/webhook/calendar/appointment-updated` | `{appointmentId, changes: {dataHora?, status?}}` |
+| Appointment Cancelled | `/webhook/calendar/appointment-cancelled` | `{appointmentId, patientId, serviceId, dataHora}` |
+| Waitlist Notification | `/webhook/calendar/waitlist-notify` | `{patientPhone, patientName, availableSlot, serviceName, waitlistId}` |
 
 **Configuração**: Defina URLs dos webhooks em `.env.local`:
 
 ```bash
-N8N_WEBHOOK_APPOINTMENT_CREATED=https://seu-n8n.com/webhook/calendar/created
-N8N_WEBHOOK_APPOINTMENT_UPDATED=https://seu-n8n.com/webhook/calendar/updated
-N8N_WEBHOOK_APPOINTMENT_CANCELLED=https://seu-n8n.com/webhook/calendar/cancelled
-N8N_WEBHOOK_WAITLIST_NOTIFY=https://seu-n8n.com/webhook/waitlist/notify
+N8N_WEBHOOK_APPOINTMENT_CREATED=https://seu-n8n.com/webhook/calendar/appointment-created
+N8N_WEBHOOK_APPOINTMENT_UPDATED=https://seu-n8n.com/webhook/calendar/appointment-updated
+N8N_WEBHOOK_APPOINTMENT_CANCELLED=https://seu-n8n.com/webhook/calendar/appointment-cancelled
+N8N_WEBHOOK_WAITLIST_NOTIFY=https://seu-n8n.com/webhook/calendar/waitlist-notify
 ```
 
-Consulte `AGENTS.md` para detalhes completos dos workflows N8N.
+Consulte `AGENTS.md` para detalhes completos dos workflows N8N, troubleshooting e histórico de correções.
 
 ## Banco de Dados
 

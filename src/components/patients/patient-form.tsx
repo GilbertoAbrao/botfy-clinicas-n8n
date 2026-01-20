@@ -75,13 +75,10 @@ export function PatientForm({
       dataNascimento: initialData?.dataNascimento
         ? format(new Date(initialData.dataNascimento), 'yyyy-MM-dd')
         : '',
-      endereco: initialData?.endereco || '',
       convenio: initialData?.convenio || '',
-      numeroCarteirinha: initialData?.numeroCarteirinha || '',
+      observacoes: initialData?.observacoes || '',
     },
   });
-
-  const convenioValue = form.watch('convenio');
 
   const handleSubmit = async (data: PatientFormData) => {
     try {
@@ -253,13 +250,13 @@ export function PatientForm({
 
             <FormField
               control={form.control}
-              name="endereco"
+              name="observacoes"
               render={({ field }) => (
                 <FormItem className="md:col-span-2">
-                  <FormLabel>Endereço</FormLabel>
+                  <FormLabel>Observações</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Rua, número, complemento, bairro, cidade - UF"
+                      placeholder="Observações sobre o paciente (alergias, condições especiais, etc.)"
                       className="resize-none"
                       rows={3}
                       {...field}
@@ -311,23 +308,6 @@ export function PatientForm({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="numeroCarteirinha"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Número da Carteirinha</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Número da carteirinha"
-                      disabled={!convenioValue || convenioValue === 'Sem Convênio'}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
           </div>
         </div>
 

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { SidebarNav } from './sidebar-nav';
 import { UserNav } from './user-nav';
 
@@ -10,10 +11,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar - Always visible on desktop */}
       <aside className="hidden md:flex md:flex-col md:w-64 md:border-r md:bg-white md:shadow-sm">
-        <div className="flex h-16 items-center border-b px-6 bg-blue-600">
-          <h1 className="text-xl font-bold text-white">
-            Botfy ClinicOps
-          </h1>
+        <div className="flex h-16 items-center justify-center border-b px-4 bg-white">
+          <Image
+            src="/logo-dark.png"
+            alt="Botfy ClinicOps"
+            width={126}
+            height={28}
+            className="object-contain"
+            priority
+          />
         </div>
         <div className="flex-1 overflow-y-auto p-4">
           <SidebarNav />

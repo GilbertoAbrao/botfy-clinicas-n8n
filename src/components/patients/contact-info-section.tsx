@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Phone, Mail, IdCard, Calendar, MapPin, CreditCard } from 'lucide-react'
+import { Phone, Mail, IdCard, Calendar, CreditCard, FileText } from 'lucide-react'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -9,9 +9,8 @@ interface ContactInfoSectionProps {
     email: string | null
     cpf: string | null
     dataNascimento: Date | null
-    endereco: string | null
     convenio: string | null
-    numeroCarteirinha: string | null
+    observacoes: string | null
   }
 }
 
@@ -104,17 +103,6 @@ export function ContactInfoSection({ patient }: ContactInfoSectionProps) {
             </div>
           </div>
 
-          <div className="flex items-start gap-3">
-            <MapPin className="h-5 w-5 text-gray-500" />
-            <div>
-              <p className="text-sm font-medium text-gray-700">Endereço</p>
-              <p className="text-sm text-gray-900">
-                {patient.endereco || (
-                  <span className="text-gray-500">Não informado</span>
-                )}
-              </p>
-            </div>
-          </div>
         </CardContent>
       </Card>
 
@@ -135,22 +123,25 @@ export function ContactInfoSection({ patient }: ContactInfoSectionProps) {
               </p>
             </div>
           </div>
-
-          <div className="flex items-start gap-3">
-            <IdCard className="h-5 w-5 text-gray-500" />
-            <div>
-              <p className="text-sm font-medium text-gray-700">
-                Número da Carteirinha
-              </p>
-              <p className="text-sm text-gray-900">
-                {patient.numeroCarteirinha || (
-                  <span className="text-gray-500">Não informado</span>
-                )}
-              </p>
-            </div>
-          </div>
         </CardContent>
       </Card>
+
+      {/* Observações */}
+      {patient.observacoes && (
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-lg">Observações</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-start gap-3">
+              <FileText className="h-5 w-5 text-gray-500" />
+              <p className="text-sm text-gray-900 whitespace-pre-wrap">
+                {patient.observacoes}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }

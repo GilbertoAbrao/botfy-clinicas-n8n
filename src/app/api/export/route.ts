@@ -117,25 +117,20 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 async function exportAppointments(startDate: Date, endDate: Date): Promise<string> {
   const appointments = await prisma.appointment.findMany({
     where: {
-      scheduledAt: {
+      dataHora: {
         gte: startDate,
         lte: endDate,
       },
     },
     include: {
-      patient: {
+      paciente: {
         select: {
           nome: true,
           telefone: true,
         },
       },
-      provider: {
-        select: {
-          nome: true,
-        },
-      },
     },
-    orderBy: { scheduledAt: 'asc' },
+    orderBy: { dataHora: 'asc' },
   })
 
   // CSV header
@@ -145,13 +140,13 @@ async function exportAppointments(startDate: Date, endDate: Date): Promise<strin
   const rows = appointments.map((apt) => {
     return [
       escapeCSV(apt.id),
-      escapeCSV(apt.patient?.nome || ''),
-      escapeCSV(apt.patient?.telefone || ''),
-      escapeCSV(apt.serviceType),
-      escapeCSV(apt.scheduledAt.toISOString()),
-      escapeCSV(apt.status),
-      escapeCSV(apt.provider?.nome || ''),
-      escapeCSV(apt.createdAt.toISOString()),
+      escapeCSV(apt.paciente?.nome || ''),
+      escapeCSV(apt.paciente?.telefone || ''),
+      escapeCSV(apt.tipoConsulta),
+      escapeCSV(apt.dataHora.toISOString()),
+      escapeCSV(apt.status || ''),
+      escapeCSV(apt.profissional || ''),
+      escapeCSV(apt.createdAt?.toISOString() || ''),
     ].join(',')
   })
 
@@ -170,11 +165,6 @@ async function exportAlerts(startDate: Date, endDate: Date): Promise<string> {
       },
     },
     include: {
-      patient: {
-        select: {
-          nome: true,
-        },
-      },
       resolver: {
         select: {
           email: true,
@@ -185,7 +175,7 @@ async function exportAlerts(startDate: Date, endDate: Date): Promise<string> {
   })
 
   // CSV header
-  const header = 'id,type,priority,status,patient_name,description,created_at,resolved_at,resolved_by'
+  const header = 'id,type,priority,status,patient_id,description,created_at,resolved_at,resolved_by'
 
   // CSV rows
   const rows = alerts.map((alert) => {
@@ -194,7 +184,7 @@ async function exportAlerts(startDate: Date, endDate: Date): Promise<string> {
       escapeCSV(alert.type),
       escapeCSV(alert.priority),
       escapeCSV(alert.status),
-      escapeCSV(alert.patient?.nome || ''),
+      escapeCSV(alert.patientId || ''),
       escapeCSV(alert.description || ''),
       escapeCSV(alert.createdAt.toISOString()),
       escapeCSV(alert.resolvedAt?.toISOString() || ''),
@@ -213,12 +203,12 @@ async function exportKPIs(startDate: Date, endDate: Date): Promise<string> {
   const appointmentStats = await prisma.appointment.groupBy({
     by: ['status'],
     where: {
-      scheduledAt: {
+      dataHora: {
         gte: startDate,
         lte: endDate,
       },
     },
-    _count: { status: true },
+    _count: { id: true },
   })
 
   // Get alert statistics
@@ -236,7 +226,9 @@ async function exportKPIs(startDate: Date, endDate: Date): Promise<string> {
   // Build appointment counts
   const appointmentCounts: Record<string, number> = {}
   appointmentStats.forEach((stat) => {
-    appointmentCounts[stat.status] = stat._count.status
+    if (stat.status) {
+      appointmentCounts[stat.status] = stat._count.id
+    }
   })
 
   const totalAppointments = Object.values(appointmentCounts).reduce((sum, count) => sum + count, 0)

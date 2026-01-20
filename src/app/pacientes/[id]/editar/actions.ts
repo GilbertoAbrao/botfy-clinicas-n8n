@@ -30,11 +30,16 @@ export async function updatePatient(id: string, data: PatientFormData) {
   }
 
   const validatedData = validation.data;
+  const patientId = parseInt(id, 10);
+
+  if (isNaN(patientId)) {
+    return { success: false, error: 'ID de paciente inválido' };
+  }
 
   try {
     // Check if patient exists
     const existingPatient = await prisma.patient.findUnique({
-      where: { id },
+      where: { id: patientId },
     });
 
     if (!existingPatient) {
@@ -46,7 +51,7 @@ export async function updatePatient(id: string, data: PatientFormData) {
       const cpfConflict = await prisma.patient.findFirst({
         where: {
           cpf: validatedData.cpf,
-          id: { not: id },
+          id: { not: patientId },
         },
       });
 
@@ -73,7 +78,7 @@ export async function updatePatient(id: string, data: PatientFormData) {
 
     // Update patient
     const updatedPatient = await prisma.patient.update({
-      where: { id },
+      where: { id: patientId },
       data: {
         nome: validatedData.nome,
         telefone: validatedData.telefone,
@@ -82,9 +87,8 @@ export async function updatePatient(id: string, data: PatientFormData) {
         dataNascimento: validatedData.dataNascimento
           ? new Date(validatedData.dataNascimento)
           : null,
-        endereco: validatedData.endereco || null,
         convenio: validatedData.convenio || null,
-        numeroCarteirinha: validatedData.numeroCarteirinha || null,
+        observacoes: validatedData.observacoes || null,
       },
     });
 
@@ -97,8 +101,8 @@ export async function updatePatient(id: string, data: PatientFormData) {
     await logAudit({
       userId: user.id,
       action: AuditAction.UPDATE_PATIENT,
-      resource: 'patients',
-      resourceId: updatedPatient.id,
+      resource: 'pacientes',
+      resourceId: String(updatedPatient.id),
       details: {
         patientName: updatedPatient.nome,
         changes,

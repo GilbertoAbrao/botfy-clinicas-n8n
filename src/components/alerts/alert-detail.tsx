@@ -283,7 +283,7 @@ export function AlertDetail({ alert, onStatusChange, onStatusChangeStart }: Aler
           <CardContent className="space-y-3">
             <div>
               <p className="text-lg font-semibold">
-                {alert.appointment.serviceType}
+                {alert.appointment.tipoConsulta}
               </p>
             </div>
 
@@ -291,7 +291,7 @@ export function AlertDetail({ alert, onStatusChange, onStatusChangeStart }: Aler
               <p className="font-medium text-muted-foreground">Data e Horário</p>
               <p>
                 {format(
-                  new Date(alert.appointment.scheduledAt),
+                  new Date(alert.appointment.dataHora),
                   "d 'de' MMMM 'de' yyyy, HH:mm",
                   { locale: ptBR }
                 )}
@@ -300,20 +300,20 @@ export function AlertDetail({ alert, onStatusChange, onStatusChangeStart }: Aler
 
             <div className="flex items-center gap-4">
               <Badge variant="outline">
-                {appointmentStatusLabels[alert.appointment.status] ||
-                  alert.appointment.status}
+                {(alert.appointment.status && appointmentStatusLabels[alert.appointment.status]) ||
+                  alert.appointment.status || 'Pendente'}
               </Badge>
-              {alert.appointment.duration && (
+              {alert.appointment.duracaoMinutos && (
                 <span className="text-sm text-muted-foreground">
-                  {alert.appointment.duration} minutos
+                  {alert.appointment.duracaoMinutos} minutos
                 </span>
               )}
             </div>
 
-            {alert.appointment.notes && (
+            {alert.appointment.observacoes && (
               <div className="text-sm">
                 <p className="font-medium text-muted-foreground">Observações</p>
-                <p className="whitespace-pre-wrap">{alert.appointment.notes}</p>
+                <p className="whitespace-pre-wrap">{alert.appointment.observacoes}</p>
               </div>
             )}
 
@@ -433,13 +433,13 @@ export function AlertDetail({ alert, onStatusChange, onStatusChangeStart }: Aler
         <RescheduleModal
           isOpen={rescheduleOpen}
           onClose={() => setRescheduleOpen(false)}
-          appointmentId={alert.appointment.id}
+          appointmentId={String(alert.appointment.id)}
           patientName={alert.patient?.nome || 'Paciente'}
-          serviceName={alert.appointment.serviceType || 'Consulta'}
+          serviceName={alert.appointment.tipoConsulta || 'Consulta'}
           currentDateTime={
-            typeof alert.appointment.scheduledAt === 'string'
-              ? alert.appointment.scheduledAt
-              : alert.appointment.scheduledAt.toISOString()
+            typeof alert.appointment.dataHora === 'string'
+              ? alert.appointment.dataHora
+              : alert.appointment.dataHora.toISOString()
           }
           onSuccess={handleRescheduleSuccess}
         />
@@ -456,11 +456,11 @@ export function AlertDetail({ alert, onStatusChange, onStatusChangeStart }: Aler
           appointmentInfo={
             alert.appointment
               ? {
-                  serviceName: alert.appointment.serviceType || 'Consulta',
+                  serviceName: alert.appointment.tipoConsulta || 'Consulta',
                   dateTime:
-                    typeof alert.appointment.scheduledAt === 'string'
-                      ? alert.appointment.scheduledAt
-                      : alert.appointment.scheduledAt.toISOString(),
+                    typeof alert.appointment.dataHora === 'string'
+                      ? alert.appointment.dataHora
+                      : alert.appointment.dataHora.toISOString(),
                 }
               : undefined
           }

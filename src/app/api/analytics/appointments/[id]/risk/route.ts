@@ -39,7 +39,11 @@ export async function GET(
   }
 
   try {
-    const prediction = await predictNoShowRisk(id)
+    const appointmentId = parseInt(id, 10)
+    if (isNaN(appointmentId)) {
+      return NextResponse.json({ error: 'Invalid appointment ID' }, { status: 400 })
+    }
+    const prediction = await predictNoShowRisk(appointmentId)
     return NextResponse.json(prediction)
   } catch (error) {
     console.error('[Appointment Risk API] Error:', error)

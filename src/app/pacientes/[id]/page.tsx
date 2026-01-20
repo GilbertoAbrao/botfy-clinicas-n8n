@@ -46,12 +46,18 @@ export default async function PatientProfilePage({ params }: PageProps) {
     )
   }
 
+  // Parse patient ID as integer
+  const patientId = parseInt(id, 10)
+  if (isNaN(patientId)) {
+    notFound()
+  }
+
   // Fetch patient with relations
   const patient = await prisma.patient.findUnique({
-    where: { id },
+    where: { id: patientId },
     include: {
-      appointments: {
-        orderBy: { scheduledAt: 'desc' },
+      agendamentos: {
+        orderBy: { dataHora: 'desc' },
       },
     },
   })
@@ -92,8 +98,8 @@ export default async function PatientProfilePage({ params }: PageProps) {
   logAudit({
     userId: user.id,
     action: AuditAction.VIEW_PATIENT,
-    resource: 'patients',
-    resourceId: patient.id,
+    resource: 'pacientes',
+    resourceId: String(patient.id),
   })
 
   return (
@@ -123,13 +129,13 @@ export default async function PatientProfilePage({ params }: PageProps) {
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          <PatientStats appointments={patient.appointments} />
+          <PatientStats appointments={patient.agendamentos} />
           <ContactInfoSection patient={patient} />
         </TabsContent>
 
         {/* Appointments Tab */}
         <TabsContent value="appointments">
-          <AppointmentHistory appointments={patient.appointments} />
+          <AppointmentHistory appointments={patient.agendamentos} />
         </TabsContent>
 
         {/* Conversations Tab */}
@@ -139,7 +145,7 @@ export default async function PatientProfilePage({ params }: PageProps) {
 
         {/* Documents Tab */}
         <TabsContent value="documents">
-          <DocumentSection patientId={patient.id} />
+          <DocumentSection patientId={String(patient.id)} />
         </TabsContent>
       </Tabs>
       </div>

@@ -16,8 +16,8 @@ export interface AlertConversation {
 
 // Types for API responses
 export type AlertWithRelations = Alert & {
-  patient: Patient | null
-  appointment: Appointment | null
+  patient?: Patient | null
+  appointment?: Appointment | null
   // Conversation is optional and fetched separately from n8n_chat_histories
   conversation?: AlertConversation | null
   resolver?: { email: string } | null
@@ -81,7 +81,8 @@ export async function fetchAlerts(filters?: AlertFilters): Promise<AlertWithRela
           orderBy.push({ createdAt: filters.sortOrder || 'desc' })
           break
         case 'patient':
-          orderBy.push({ patient: { nome: filters.sortOrder || 'asc' } })
+          // Sort by patientId since patient relation was removed
+          orderBy.push({ patientId: filters.sortOrder || 'asc' })
           break
         case 'status':
           orderBy.push({ status: filters.sortOrder || 'asc' })
@@ -93,15 +94,11 @@ export async function fetchAlerts(filters?: AlertFilters): Promise<AlertWithRela
       orderBy.push({ createdAt: 'desc' })
     }
 
-    // Fetch alerts with relations
+    // Fetch alerts (without relations to avoid FK issues with legacy tables)
     const alerts = await prisma.alert.findMany({
       where,
       orderBy,
       take: 100, // Limit to 100 alerts (pagination in future)
-      include: {
-        patient: true,
-        appointment: true,
-      },
     })
 
     // Log audit trail (fire-and-forget)
@@ -135,8 +132,6 @@ export async function getAlertById(id: string): Promise<AlertWithRelations | nul
     const alert = await prisma.alert.findUnique({
       where: { id },
       include: {
-        patient: true,
-        appointment: true,
         resolver: {
           select: {
             email: true,

@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
 
     // Check CPF uniqueness if provided
     if (validatedData.cpf && validatedData.cpf !== '') {
-      const existing = await prisma.patient.findUnique({
+      const existing = await prisma.patient.findFirst({
         where: { cpf: validatedData.cpf },
       });
 
@@ -165,9 +165,8 @@ export async function POST(request: NextRequest) {
         dataNascimento: validatedData.dataNascimento
           ? new Date(validatedData.dataNascimento)
           : null,
-        endereco: validatedData.endereco || null,
         convenio: validatedData.convenio || null,
-        numeroCarteirinha: validatedData.numeroCarteirinha || null,
+        observacoes: validatedData.observacoes || null,
       },
     });
 
@@ -179,8 +178,8 @@ export async function POST(request: NextRequest) {
     await logAudit({
       userId: user.id,
       action: AuditAction.CREATE_PATIENT,
-      resource: 'patients',
-      resourceId: patient.id,
+      resource: 'pacientes',
+      resourceId: String(patient.id),
       details: {
         patientName: patient.nome,
         telefone: patient.telefone,

@@ -61,7 +61,7 @@ async function fetchPatients(params: PatientTableProps) {
   await logAudit({
     userId: user.id,
     action: AuditAction.VIEW_PATIENT,
-    resource: 'patients',
+    resource: 'pacientes',
     resourceId: undefined,
     details: {
       searchParams: { q: params.q, telefone: params.telefone, cpf: params.cpf },

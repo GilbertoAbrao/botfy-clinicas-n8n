@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { createCalendar, createViewDay, createViewWeek, createViewMonthGrid } from '@schedule-x/calendar'
 import { createEventsServicePlugin } from '@schedule-x/events-service'
+import { createCalendarControlsPlugin } from '@schedule-x/calendar-controls'
 import '@schedule-x/theme-default/dist/index.css'
 import { useCalendarEvents } from '@/hooks/use-calendar-events'
 import { startOfMonth, endOfMonth } from 'date-fns'
@@ -32,6 +33,7 @@ export function CalendarView() {
   const calendarRef = useRef<HTMLDivElement>(null)
   const calendarInstance = useRef<any>(null)
   const eventsServiceRef = useRef<any>(null)
+  const calendarControlsRef = useRef<any>(null)
   const [currentDate] = useState(new Date())
   const [view, setView] = useState<CalendarViewType>('month-grid')
   const [modalOpen, setModalOpen] = useState(false)
@@ -92,9 +94,11 @@ export function CalendarView() {
   eventsRef.current = events
 
   const handleEventClick = useCallback((calendarEvent: any) => {
-    const event = eventsRef.current.find(e => e.id === calendarEvent.id)
+    // Schedule-X may convert IDs - ensure string comparison
+    const clickedId = String(calendarEvent.id)
+    const event = eventsRef.current.find(e => String(e.id) === clickedId)
     if (event) {
-      setSelectedAppointment(calendarEvent.id)
+      setSelectedAppointment(event.id) // Use the original event ID
       setInitialModalData({
         pacienteId: event.patientId,
         servicoId: event.serviceId,
@@ -116,7 +120,7 @@ export function CalendarView() {
     setModalOpen(true)
   }, [])
 
-  // Create/recreate calendar when view or data changes
+  // Create calendar on mount and when events/calendars change
   useEffect(() => {
     if (!calendarRef.current || loading) return
 
@@ -129,13 +133,16 @@ export function CalendarView() {
     const eventsService = createEventsServicePlugin()
     eventsServiceRef.current = eventsService
 
+    const calendarControls = createCalendarControlsPlugin()
+    calendarControlsRef.current = calendarControls
+
     const calendar = createCalendar({
       selectedDate: formatDateOnly(currentDate),
       views: [createViewDay(), createViewWeek(), createViewMonthGrid()],
       defaultView: view,
       events: schedulexEvents,
       calendars: calendars,
-      plugins: [eventsService],
+      plugins: [eventsService, calendarControls],
       locale: 'pt-BR',
       callbacks: {
         onEventClick: handleEventClick,
@@ -152,9 +159,18 @@ export function CalendarView() {
         calendarInstance.current = null
       }
     }
-  }, [loading, view, schedulexEvents, calendars, currentDate, handleEventClick, handleDateTimeClick])
+  // Note: view is NOT in dependencies - we handle view changes separately
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, schedulexEvents, calendars, currentDate, handleEventClick, handleDateTimeClick])
 
-  // Change view - simply update state, useEffect will handle recreation
+  // Handle view changes using Calendar Controls plugin
+  useEffect(() => {
+    if (calendarControlsRef.current) {
+      calendarControlsRef.current.setView(view)
+    }
+  }, [view])
+
+  // Change view
   const handleViewChange = useCallback((newView: CalendarViewType) => {
     setView(newView)
   }, [])

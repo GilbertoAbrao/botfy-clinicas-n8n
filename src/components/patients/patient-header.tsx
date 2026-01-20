@@ -5,7 +5,7 @@ import { Pencil, Phone, Mail } from 'lucide-react'
 
 interface PatientHeaderProps {
   patient: {
-    id: string
+    id: number
     nome: string
     telefone: string
     email: string | null

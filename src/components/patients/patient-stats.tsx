@@ -3,7 +3,7 @@ import { Calendar, CheckCircle, XCircle, TrendingDown } from 'lucide-react'
 
 interface PatientStatsProps {
   appointments: {
-    status: string
+    status: string | null
   }[]
 }
 
@@ -11,9 +11,11 @@ export function PatientStats({ appointments }: PatientStatsProps) {
   // Calculate metrics
   const totalAppointments = appointments.length
   const confirmedCount = appointments.filter(
-    (a) => a.status === 'confirmed'
+    (a) => a.status === 'confirmada' || a.status === 'confirmed'
   ).length
-  const noShowCount = appointments.filter((a) => a.status === 'no_show').length
+  const noShowCount = appointments.filter(
+    (a) => a.status === 'nao_compareceu' || a.status === 'no_show'
+  ).length
   const noShowRate =
     totalAppointments > 0
       ? ((noShowCount / totalAppointments) * 100).toFixed(1)

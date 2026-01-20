@@ -11,14 +11,12 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
-import { DashboardLayout } from '@/components/layout/dashboard-layout'
 
 export default async function AuditLogsPage() {
   const { logs, total } = await getAuditLogs()
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Back Button */}
         <div>
           <Link href="/dashboard">
@@ -79,6 +77,5 @@ export default async function AuditLogsPage() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
   )
 }

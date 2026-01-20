@@ -8,7 +8,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { BusinessHoursForm } from '@/components/settings/business-hours-form';
 import { LunchBreakForm } from '@/components/settings/lunch-break-form';
 import { BookingSettingsForm } from '@/components/settings/booking-settings-form';
@@ -52,8 +51,7 @@ export default async function ConfiguracoesPage() {
   const settings = await getSettings();
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold">Configuracoes</h1>
           <p className="text-muted-foreground">
@@ -116,6 +114,5 @@ export default async function ConfiguracoesPage() {
           </CardContent>
         </Card>
       </div>
-    </DashboardLayout>
   );
 }

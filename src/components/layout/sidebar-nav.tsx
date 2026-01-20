@@ -13,6 +13,7 @@ import {
   FileText,
   Package,
   BarChart3,
+  Workflow,
 } from 'lucide-react';
 
 const navigation = [
@@ -71,6 +72,13 @@ const navigation = [
     name: 'Analytics',
     href: '/admin/analytics',
     icon: BarChart3,
+    enabled: true,
+    adminOnly: true,
+  },
+  {
+    name: 'Workflows',
+    href: '/admin/workflows',
+    icon: Workflow,
     enabled: true,
     adminOnly: true,
   },

@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { ServicesPageClient } from '@/components/services/services-page-client';
 
 interface PageProps {
@@ -36,8 +35,7 @@ export default async function ServicosPage({ searchParams }: PageProps) {
   const params = await searchParams;
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Back Button */}
         <div>
           <Link href="/dashboard">
@@ -64,6 +62,5 @@ export default async function ServicosPage({ searchParams }: PageProps) {
           />
         </Suspense>
       </div>
-    </DashboardLayout>
   );
 }

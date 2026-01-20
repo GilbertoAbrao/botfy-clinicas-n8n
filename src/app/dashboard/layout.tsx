@@ -1,10 +1,8 @@
 import { redirect } from 'next/navigation'
 import { getCurrentUserWithRole } from '@/lib/auth/session'
-import { requireRole } from '@/lib/rbac/middleware'
-import { Role } from '@prisma/client'
 import { DashboardLayout } from '@/components/layout/dashboard-layout'
 
-export default async function AdminLayout({
+export default async function DashboardRouteLayout({
   children,
 }: {
   children: React.ReactNode
@@ -14,9 +12,6 @@ export default async function AdminLayout({
   if (!user) {
     redirect('/login')
   }
-
-  // RBAC: Only Admins can access /admin routes
-  requireRole(user.role, [Role.ADMIN])
 
   return <DashboardLayout>{children}</DashboardLayout>
 }

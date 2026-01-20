@@ -24,13 +24,18 @@ export async function GET(
 
     // Await params (Next.js 15+ async params)
     const { id } = await params
+    const patientId = parseInt(id, 10)
+
+    if (isNaN(patientId)) {
+      return NextResponse.json({ error: 'Invalid patient ID' }, { status: 400 })
+    }
 
     // Fetch patient with relations
     const patient = await prisma.patient.findUnique({
-      where: { id },
+      where: { id: patientId },
       include: {
-        appointments: {
-          orderBy: { scheduledAt: 'desc' },
+        agendamentos: {
+          orderBy: { dataHora: 'desc' },
         },
       },
     })
@@ -45,18 +50,18 @@ export async function GET(
     logAudit({
       userId: user.id,
       action: AuditAction.VIEW_PATIENT,
-      resource: 'patients',
-      resourceId: patient.id,
+      resource: 'pacientes',
+      resourceId: String(patient.id),
     })
 
-    if (patient.appointments.length > 0) {
+    if (patient.agendamentos.length > 0) {
       logAudit({
         userId: user.id,
         action: AuditAction.VIEW_APPOINTMENT,
-        resource: 'appointments',
-        resourceId: patient.id,
+        resource: 'agendamentos',
+        resourceId: String(patient.id),
         details: {
-          appointmentCount: patient.appointments.length,
+          appointmentCount: patient.agendamentos.length,
         },
       })
     }
@@ -93,6 +98,11 @@ export async function PUT(
 
     // Await params
     const { id } = await params
+    const patientId = parseInt(id, 10)
+
+    if (isNaN(patientId)) {
+      return NextResponse.json({ error: 'ID de paciente inválido' }, { status: 400 })
+    }
 
     // Parse and validate request body
     const body = await request.json()
@@ -115,7 +125,7 @@ export async function PUT(
 
     // Check if patient exists
     const existingPatient = await prisma.patient.findUnique({
-      where: { id },
+      where: { id: patientId },
     })
 
     if (!existingPatient) {
@@ -130,7 +140,7 @@ export async function PUT(
       const cpfConflict = await prisma.patient.findFirst({
         where: {
           cpf: validatedData.cpf,
-          id: { not: id },
+          id: { not: patientId },
         },
       })
 
@@ -166,7 +176,7 @@ export async function PUT(
 
     // Update patient
     const updatedPatient = await prisma.patient.update({
-      where: { id },
+      where: { id: patientId },
       data: {
         nome: validatedData.nome,
         telefone: validatedData.telefone,
@@ -175,9 +185,8 @@ export async function PUT(
         dataNascimento: validatedData.dataNascimento
           ? new Date(validatedData.dataNascimento)
           : null,
-        endereco: validatedData.endereco || null,
         convenio: validatedData.convenio || null,
-        numeroCarteirinha: validatedData.numeroCarteirinha || null,
+        observacoes: validatedData.observacoes || null,
       },
     })
 
@@ -189,8 +198,8 @@ export async function PUT(
     await logAudit({
       userId: user.id,
       action: AuditAction.UPDATE_PATIENT,
-      resource: 'patients',
-      resourceId: updatedPatient.id,
+      resource: 'pacientes',
+      resourceId: String(updatedPatient.id),
       details: {
         patientName: updatedPatient.nome,
         changes,

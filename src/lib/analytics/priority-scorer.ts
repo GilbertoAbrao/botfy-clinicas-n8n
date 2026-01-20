@@ -9,8 +9,11 @@
  */
 
 import { prisma } from '@/lib/prisma'
-import { AlertPriority, AlertType, AppointmentStatus } from '@prisma/client'
+import { AlertPriority, AlertType } from '@prisma/client'
 import { differenceInHours, differenceInMinutes } from 'date-fns'
+
+// Appointment status type (Portuguese names from database)
+type AppointmentStatus = 'agendada' | 'confirmada' | 'concluida' | 'cancelada' | 'nao_compareceu'
 
 /**
  * Individual priority factors with their calculated weights
@@ -76,13 +79,20 @@ function calculateAgeWeight(createdAt: Date): number {
 
 /**
  * Calculate patient history weight based on no-show and cancellation rates
- * @param patientId - Patient ID (may be null)
+ * @param patientIdStr - Patient ID string (may be null, may be UUID or numeric)
  * @returns Weight (0-25 max)
  */
 async function calculatePatientHistoryWeight(
-  patientId: string | null
+  patientIdStr: string | null
 ): Promise<{ weight: number; noShowRate: number; cancellationCount: number }> {
-  if (!patientId) {
+  if (!patientIdStr) {
+    return { weight: 0, noShowRate: 0, cancellationCount: 0 }
+  }
+
+  // Try to parse as integer (new schema uses Int IDs)
+  // If it's a UUID from old alerts, this will fail and we return 0
+  const pacienteId = parseInt(patientIdStr, 10)
+  if (isNaN(pacienteId)) {
     return { weight: 0, noShowRate: 0, cancellationCount: 0 }
   }
 
@@ -90,31 +100,33 @@ async function calculatePatientHistoryWeight(
     // Get appointment statistics for this patient
     const appointments = await prisma.appointment.groupBy({
       by: ['status'],
-      where: { patientId },
-      _count: { status: true },
+      where: { pacienteId },
+      _count: { id: true },
     })
 
     const statusCounts = appointments.reduce(
       (acc, curr) => {
-        acc[curr.status] = curr._count.status
+        if (curr.status) {
+          acc[curr.status as AppointmentStatus] = curr._count.id
+        }
         return acc
       },
       {} as Record<AppointmentStatus, number>
     )
 
     const totalAppointments =
-      (statusCounts.completed || 0) +
-      (statusCounts.confirmed || 0) +
-      (statusCounts.no_show || 0) +
-      (statusCounts.cancelled || 0) +
-      (statusCounts.tentative || 0)
+      (statusCounts.concluida || 0) +
+      (statusCounts.confirmada || 0) +
+      (statusCounts.nao_compareceu || 0) +
+      (statusCounts.cancelada || 0) +
+      (statusCounts.agendada || 0)
 
     if (totalAppointments === 0) {
       return { weight: 0, noShowRate: 0, cancellationCount: 0 }
     }
 
-    const noShowCount = statusCounts.no_show || 0
-    const cancellationCount = statusCounts.cancelled || 0
+    const noShowCount = statusCounts.nao_compareceu || 0
+    const cancellationCount = statusCounts.cancelada || 0
     const noShowRate = (noShowCount / totalAppointments) * 100
 
     let weight = 0
@@ -142,28 +154,35 @@ async function calculatePatientHistoryWeight(
 
 /**
  * Calculate appointment proximity weight
- * @param appointmentId - Appointment ID (may be null)
+ * @param appointmentIdStr - Appointment ID string (may be null, may be UUID or numeric)
  * @returns Weight (0-25 max)
  */
 async function calculateAppointmentProximityWeight(
-  appointmentId: string | null
+  appointmentIdStr: string | null
 ): Promise<{ weight: number; hoursUntil: number | null }> {
-  if (!appointmentId) {
+  if (!appointmentIdStr) {
+    return { weight: 0, hoursUntil: null }
+  }
+
+  // Try to parse as integer (new schema uses Int IDs)
+  // If it's a UUID from old alerts, this will fail and we return 0
+  const appointmentId = parseInt(appointmentIdStr, 10)
+  if (isNaN(appointmentId)) {
     return { weight: 0, hoursUntil: null }
   }
 
   try {
     const appointment = await prisma.appointment.findUnique({
       where: { id: appointmentId },
-      select: { scheduledAt: true, status: true },
+      select: { dataHora: true, status: true },
     })
 
-    if (!appointment || appointment.status === 'cancelled' || appointment.status === 'completed') {
+    if (!appointment || appointment.status === 'cancelada' || appointment.status === 'concluida') {
       return { weight: 0, hoursUntil: null }
     }
 
     const now = new Date()
-    const scheduledAt = new Date(appointment.scheduledAt)
+    const scheduledAt = new Date(appointment.dataHora)
 
     // If appointment is in the past, no proximity weight
     if (scheduledAt < now) {

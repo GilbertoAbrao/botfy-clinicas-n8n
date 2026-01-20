@@ -27,7 +27,7 @@ export interface RiskFactors {
 }
 
 export interface NoShowPrediction {
-  appointmentId: string
+  appointmentId: number
   riskLevel: NoShowRiskLevel
   riskScore: number // 0-100
   factors: RiskFactors
@@ -59,14 +59,14 @@ interface CachedPrediction {
   cachedAt: number
 }
 
-const predictionCache = new Map<string, CachedPrediction>()
+const predictionCache = new Map<number, CachedPrediction>()
 const CACHE_TTL = 60 * 60 * 1000 // 1 hour in milliseconds
 const MAX_CACHE_SIZE = 1000
 
 /**
  * Get cached prediction if valid (not expired)
  */
-function getCachedPrediction(appointmentId: string): NoShowPrediction | null {
+function getCachedPrediction(appointmentId: number): NoShowPrediction | null {
   const cached = predictionCache.get(appointmentId)
 
   if (!cached) {
@@ -85,7 +85,7 @@ function getCachedPrediction(appointmentId: string): NoShowPrediction | null {
 /**
  * Cache a prediction with LRU eviction
  */
-function cachePrediction(appointmentId: string, prediction: NoShowPrediction): void {
+function cachePrediction(appointmentId: number, prediction: NoShowPrediction): void {
   // LRU eviction: remove oldest entries if cache is full
   if (predictionCache.size >= MAX_CACHE_SIZE) {
     // Get the first (oldest) entry and delete it
@@ -105,7 +105,7 @@ function cachePrediction(appointmentId: string, prediction: NoShowPrediction): v
  * Invalidate cache for a specific appointment or all appointments
  * Call this when appointment status changes (e.g., confirmed, cancelled)
  */
-export function invalidatePredictionCache(appointmentId?: string): void {
+export function invalidatePredictionCache(appointmentId?: number): void {
   if (appointmentId) {
     predictionCache.delete(appointmentId)
   } else {
@@ -146,13 +146,12 @@ function getLeadTimeRisk(leadTimeDays: number): number {
 
 // Confirmation status risk
 function getConfirmationRisk(
-  status: string,
-  confirmedAt: Date | null,
+  status: string | null,
   scheduledAt: Date,
   now: Date
 ): number {
   // Already confirmed - low risk
-  if (status === 'confirmed' && confirmedAt) {
+  if (status === 'confirmada') {
     return 10
   }
 
@@ -164,12 +163,12 @@ function getConfirmationRisk(
     return 0
   }
 
-  if (hoursUntilAppointment <= 24 && status !== 'confirmed') {
+  if (hoursUntilAppointment <= 24 && status !== 'confirmada') {
     // Unconfirmed within 24 hours - high risk
     return 90
   }
 
-  if (hoursUntilAppointment <= 48 && status !== 'confirmed') {
+  if (hoursUntilAppointment <= 48 && status !== 'confirmada') {
     // Unconfirmed within 48 hours - medium-high risk
     return 60
   }
@@ -179,12 +178,12 @@ function getConfirmationRisk(
 }
 
 // Calculate historical no-show rate for a patient
-async function getPatientNoShowRate(patientId: string): Promise<number> {
+async function getPatientNoShowRate(pacienteId: number): Promise<number> {
   const appointments = await prisma.appointment.findMany({
     where: {
-      patientId,
-      scheduledAt: { lt: new Date() }, // Only past appointments
-      status: { in: ['completed', 'no_show'] },
+      pacienteId,
+      dataHora: { lt: new Date() }, // Only past appointments
+      status: { in: ['concluida', 'nao_compareceu'] },
     },
     select: { status: true },
   })
@@ -194,7 +193,7 @@ async function getPatientNoShowRate(patientId: string): Promise<number> {
     return 25
   }
 
-  const noShowCount = appointments.filter(a => a.status === 'no_show').length
+  const noShowCount = appointments.filter(a => a.status === 'nao_compareceu').length
   const noShowRate = (noShowCount / appointments.length) * 100
 
   // Convert rate to risk score (0% = 10, 50%+ = 100)
@@ -252,7 +251,7 @@ function getRiskLevel(score: number): NoShowRiskLevel {
  * Results are cached for 1 hour to avoid redundant calculations
  */
 export async function predictNoShowRisk(
-  appointmentId: string
+  appointmentId: number
 ): Promise<NoShowPrediction> {
   // Check cache first
   const cached = getCachedPrediction(appointmentId)
@@ -262,7 +261,6 @@ export async function predictNoShowRisk(
 
   const appointment = await prisma.appointment.findUnique({
     where: { id: appointmentId },
-    include: { patient: true },
   })
 
   if (!appointment) {
@@ -270,20 +268,23 @@ export async function predictNoShowRisk(
   }
 
   const now = new Date()
-  const scheduledAt = new Date(appointment.scheduledAt)
+  const scheduledAt = new Date(appointment.dataHora)
 
   // Calculate each risk factor
-  const historicalNoShowRate = await getPatientNoShowRate(appointment.patientId)
+  const historicalNoShowRate = appointment.pacienteId
+    ? await getPatientNoShowRate(appointment.pacienteId)
+    : 25 // Neutral risk if no patient linked
   const timeOfDayRisk = getTimeOfDayRisk(getHours(scheduledAt))
   const dayOfWeekRisk = getDayOfWeekRisk(getDay(scheduledAt))
 
   // Calculate lead time (days from creation to scheduled date)
-  const leadTimeDays = differenceInDays(scheduledAt, new Date(appointment.createdAt))
+  const leadTimeDays = appointment.createdAt
+    ? differenceInDays(scheduledAt, new Date(appointment.createdAt))
+    : 7 // Default to 1 week if no createdAt
   const leadTimeRisk = getLeadTimeRisk(leadTimeDays)
 
   const confirmationRisk = getConfirmationRisk(
     appointment.status,
-    appointment.confirmedAt,
     scheduledAt,
     now
   )
@@ -327,7 +328,7 @@ export async function predictNoShowRisk(
  * Uses cache for already calculated predictions, only fetches uncached ones
  */
 export async function predictNoShowRiskBatch(
-  appointmentIds: string[]
+  appointmentIds: number[]
 ): Promise<NoShowPrediction[]> {
   if (appointmentIds.length === 0) {
     return []
@@ -335,7 +336,7 @@ export async function predictNoShowRiskBatch(
 
   // Check cache first - separate cached from uncached
   const cachedPredictions: NoShowPrediction[] = []
-  const uncachedIds: string[] = []
+  const uncachedIds: number[] = []
 
   for (const id of appointmentIds) {
     const cached = getCachedPrediction(id)
@@ -354,40 +355,39 @@ export async function predictNoShowRiskBatch(
   // Fetch only uncached appointments in a single query
   const appointments = await prisma.appointment.findMany({
     where: { id: { in: uncachedIds } },
-    include: { patient: true },
   })
 
   if (appointments.length === 0) {
     return cachedPredictions
   }
 
-  // Get unique patient IDs for batch history lookup
-  const patientIds = [...new Set(appointments.map(a => a.patientId))]
+  // Get unique patient IDs for batch history lookup (filter out nulls)
+  const pacienteIds = [...new Set(appointments.map(a => a.pacienteId).filter((id): id is number => id !== null))]
 
   // Batch fetch patient history
   const patientHistory = await prisma.appointment.groupBy({
-    by: ['patientId', 'status'],
+    by: ['pacienteId', 'status'],
     where: {
-      patientId: { in: patientIds },
-      scheduledAt: { lt: new Date() },
-      status: { in: ['completed', 'no_show'] },
+      pacienteId: { in: pacienteIds },
+      dataHora: { lt: new Date() },
+      status: { in: ['concluida', 'nao_compareceu'] },
     },
-    _count: true,
+    _count: { id: true },
   })
 
   // Build patient no-show rate map
-  const patientNoShowRates = new Map<string, number>()
+  const patientNoShowRates = new Map<number, number>()
 
-  for (const patientId of patientIds) {
-    const patientStats = patientHistory.filter(h => h.patientId === patientId)
-    const totalCount = patientStats.reduce((sum, s) => sum + s._count, 0)
-    const noShowCount = patientStats.find(s => s.status === 'no_show')?._count || 0
+  for (const pacienteId of pacienteIds) {
+    const patientStats = patientHistory.filter(h => h.pacienteId === pacienteId)
+    const totalCount = patientStats.reduce((sum, s) => sum + s._count.id, 0)
+    const noShowCount = patientStats.find(s => s.status === 'nao_compareceu')?._count.id || 0
 
     if (totalCount === 0) {
-      patientNoShowRates.set(patientId, 25) // Neutral for new patients
+      patientNoShowRates.set(pacienteId, 25) // Neutral for new patients
     } else {
       const rate = (noShowCount / totalCount) * 100
-      patientNoShowRates.set(patientId, Math.min(10 + rate * 1.8, 100))
+      patientNoShowRates.set(pacienteId, Math.min(10 + rate * 1.8, 100))
     }
   }
 
@@ -395,16 +395,19 @@ export async function predictNoShowRiskBatch(
 
   // Calculate predictions for each appointment
   const newPredictions: NoShowPrediction[] = appointments.map(appointment => {
-    const scheduledAt = new Date(appointment.scheduledAt)
+    const scheduledAt = new Date(appointment.dataHora)
 
-    const historicalNoShowRate = patientNoShowRates.get(appointment.patientId) || 25
+    const historicalNoShowRate = appointment.pacienteId
+      ? patientNoShowRates.get(appointment.pacienteId) || 25
+      : 25 // Neutral for appointments without patient
     const timeOfDayRisk = getTimeOfDayRisk(getHours(scheduledAt))
     const dayOfWeekRisk = getDayOfWeekRisk(getDay(scheduledAt))
-    const leadTimeDays = differenceInDays(scheduledAt, new Date(appointment.createdAt))
+    const leadTimeDays = appointment.createdAt
+      ? differenceInDays(scheduledAt, new Date(appointment.createdAt))
+      : 7 // Default to 1 week if no createdAt
     const leadTimeRisk = getLeadTimeRisk(leadTimeDays)
     const confirmationRisk = getConfirmationRisk(
       appointment.status,
-      appointment.confirmedAt,
       scheduledAt,
       now
     )

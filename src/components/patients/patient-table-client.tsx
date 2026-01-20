@@ -15,7 +15,7 @@ import { Eye, UserPlus } from 'lucide-react';
 import { PaginationControls } from './pagination-controls';
 
 interface Patient {
-  id: string;
+  id: number;
   nome: string;
   telefone: string;
   email: string | null;

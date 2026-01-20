@@ -9,7 +9,7 @@
  */
 
 import { prisma } from '@/lib/prisma'
-import { AlertType, AppointmentStatus } from '@prisma/client'
+import { AlertType } from '@prisma/client'
 import {
   subDays,
   format,
@@ -99,11 +99,11 @@ async function detectTimeSlotPatterns(
     // Get all no-show appointments with their scheduled times
     const noShows = await prisma.appointment.findMany({
       where: {
-        status: 'no_show',
-        scheduledAt: { gte: startDate },
+        status: 'nao_compareceu',
+        dataHora: { gte: startDate },
       },
       select: {
-        scheduledAt: true,
+        dataHora: true,
       },
     })
 
@@ -111,7 +111,7 @@ async function detectTimeSlotPatterns(
     const timeSlotCounts = new Map<string, { count: number; dayName: string; hour: number }>()
 
     noShows.forEach((appointment) => {
-      const date = new Date(appointment.scheduledAt)
+      const date = new Date(appointment.dataHora)
       const dayOfWeek = getDay(date)
       const hour = getHours(date)
       const key = `${dayOfWeek}-${hour}`
@@ -162,48 +162,31 @@ async function detectProviderPatterns(
   const patterns: Pattern[] = []
 
   try {
-    // Get failure counts by provider
+    // Get failure counts by provider (profissional field is a string with provider name)
     const providerFailures = await prisma.appointment.groupBy({
-      by: ['providerId'],
+      by: ['profissional'],
       where: {
-        scheduledAt: { gte: startDate },
-        providerId: { not: null },
-        status: { in: ['no_show', 'cancelled'] },
+        dataHora: { gte: startDate },
+        profissional: { not: null },
+        status: { in: ['nao_compareceu', 'cancelada'] },
       },
       _count: { id: true },
     })
 
-    // Get provider names for those with significant failures
-    const significantProviderIds = providerFailures
-      .filter((p) => p._count.id >= minOccurrences)
-      .map((p) => p.providerId!)
-
-    if (significantProviderIds.length > 0) {
-      const providers = await prisma.provider.findMany({
-        where: { id: { in: significantProviderIds } },
-        select: { id: true, nome: true },
-      })
-
-      const providerMap = new Map(providers.map((p) => [p.id, p.nome]))
-
-      providerFailures.forEach((failure) => {
-        if (failure._count.id >= minOccurrences && failure.providerId) {
-          const providerName = providerMap.get(failure.providerId) || 'Desconhecido'
-
-          patterns.push({
-            type: 'provider_failure',
-            description: `${failure._count.id} faltas/cancelamentos com ${providerName}`,
-            count: failure._count.id,
-            severity: getSeverity(failure._count.id, { warning: 5, critical: 15 }),
-            metadata: {
-              providerId: failure.providerId,
-              providerName,
-            },
-            detectedAt: new Date(),
-          })
-        }
-      })
-    }
+    providerFailures.forEach((failure) => {
+      if (failure._count.id >= minOccurrences && failure.profissional) {
+        patterns.push({
+          type: 'provider_failure',
+          description: `${failure._count.id} faltas/cancelamentos com ${failure.profissional}`,
+          count: failure._count.id,
+          severity: getSeverity(failure._count.id, { warning: 5, critical: 15 }),
+          metadata: {
+            providerName: failure.profissional,
+          },
+          detectedAt: new Date(),
+        })
+      }
+    })
   } catch (error) {
     console.error('[detectProviderPatterns] Error:', error)
   }
@@ -282,11 +265,11 @@ async function detectDayOfWeekPatterns(
     // Get all failed appointments
     const failedAppointments = await prisma.appointment.findMany({
       where: {
-        scheduledAt: { gte: startDate },
-        status: { in: ['no_show', 'cancelled'] },
+        dataHora: { gte: startDate },
+        status: { in: ['nao_compareceu', 'cancelada'] },
       },
       select: {
-        scheduledAt: true,
+        dataHora: true,
         status: true,
       },
     })
@@ -294,10 +277,10 @@ async function detectDayOfWeekPatterns(
     // Get total appointments per day of week for comparison
     const allAppointments = await prisma.appointment.findMany({
       where: {
-        scheduledAt: { gte: startDate },
+        dataHora: { gte: startDate },
       },
       select: {
-        scheduledAt: true,
+        dataHora: true,
       },
     })
 
@@ -306,12 +289,12 @@ async function detectDayOfWeekPatterns(
     const totalByDay = new Map<number, number>()
 
     failedAppointments.forEach((apt) => {
-      const dayOfWeek = getDay(new Date(apt.scheduledAt))
+      const dayOfWeek = getDay(new Date(apt.dataHora))
       failuresByDay.set(dayOfWeek, (failuresByDay.get(dayOfWeek) || 0) + 1)
     })
 
     allAppointments.forEach((apt) => {
-      const dayOfWeek = getDay(new Date(apt.scheduledAt))
+      const dayOfWeek = getDay(new Date(apt.dataHora))
       totalByDay.set(dayOfWeek, (totalByDay.get(dayOfWeek) || 0) + 1)
     })
 

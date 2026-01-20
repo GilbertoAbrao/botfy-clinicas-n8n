@@ -16,7 +16,7 @@ export function EditPatientClient({ patient }: EditPatientClientProps) {
   const router = useRouter();
 
   async function handleSubmit(data: PatientFormData) {
-    const result = await updatePatient(patient.id, data);
+    const result = await updatePatient(String(patient.id), data);
 
     if (result.success) {
       toast.success('Paciente atualizado com sucesso');

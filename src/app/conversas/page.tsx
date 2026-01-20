@@ -41,7 +41,10 @@ export default async function ConversationsPage({ searchParams }: PageProps) {
   }
 
   if (params.patientId) {
-    filters.patientId = params.patientId
+    const patientIdNum = parseInt(params.patientId, 10)
+    if (!isNaN(patientIdNum)) {
+      filters.patientId = patientIdNum
+    }
   }
 
   if (params.dateFrom) {

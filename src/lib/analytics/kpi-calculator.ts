@@ -11,7 +11,10 @@
  */
 
 import { prisma } from '@/lib/prisma'
-import { AlertType, AppointmentStatus } from '@prisma/client'
+import { AlertType } from '@prisma/client'
+
+// Appointment status type (string-based, using Portuguese names from database)
+type AppointmentStatus = 'agendada' | 'confirmada' | 'concluida' | 'cancelada' | 'nao_compareceu'
 import {
   subDays,
   startOfDay,
@@ -77,26 +80,28 @@ async function getAppointmentStatusCounts(
   const statusCounts = await prisma.appointment.groupBy({
     by: ['status'],
     where: {
-      scheduledAt: {
+      dataHora: {
         gte: startDate,
         lte: endDate,
       },
     },
-    _count: { status: true },
+    _count: { id: true },
   })
 
-  // Initialize all statuses to 0
+  // Initialize all statuses to 0 (using Portuguese names)
   const counts: Record<AppointmentStatus, number> = {
-    confirmed: 0,
-    tentative: 0,
-    no_show: 0,
-    cancelled: 0,
-    completed: 0,
+    agendada: 0,
+    confirmada: 0,
+    concluida: 0,
+    cancelada: 0,
+    nao_compareceu: 0,
   }
 
   // Fill in actual counts
   statusCounts.forEach((item) => {
-    counts[item.status] = item._count.status
+    if (item.status && item.status in counts) {
+      counts[item.status as AppointmentStatus] = item._count.id
+    }
   })
 
   return counts
@@ -104,10 +109,10 @@ async function getAppointmentStatusCounts(
 
 /**
  * Calculate booking success rate
- * Success = completed + confirmed
+ * Success = completed (concluida) + confirmed (confirmada)
  */
 function calculateBookingSuccessRate(counts: Record<AppointmentStatus, number>): number {
-  const successful = counts.completed + counts.confirmed
+  const successful = counts.concluida + counts.confirmada
   const total = Object.values(counts).reduce((sum, count) => sum + count, 0)
 
   if (total === 0) return 0
@@ -121,7 +126,7 @@ function calculateNoShowRate(counts: Record<AppointmentStatus, number>): number 
   const total = Object.values(counts).reduce((sum, count) => sum + count, 0)
 
   if (total === 0) return 0
-  return Math.round((counts.no_show / total) * 1000) / 10
+  return Math.round((counts.nao_compareceu / total) * 1000) / 10
 }
 
 /**
@@ -131,7 +136,7 @@ function calculateCancellationRate(counts: Record<AppointmentStatus, number>): n
   const total = Object.values(counts).reduce((sum, count) => sum + count, 0)
 
   if (total === 0) return 0
-  return Math.round((counts.cancelled / total) * 1000) / 10
+  return Math.round((counts.cancelada / total) * 1000) / 10
 }
 
 /**
@@ -211,13 +216,13 @@ async function getAlertVolumeByType(
 
 /**
  * Calculate confirmation rate for trend comparison
- * Confirmation rate = confirmed / (confirmed + tentative)
+ * Confirmation rate = confirmada / (confirmada + agendada)
  */
 function calculateConfirmationRate(counts: Record<AppointmentStatus, number>): number {
-  const total = counts.confirmed + counts.tentative
+  const total = counts.confirmada + counts.agendada
 
   if (total === 0) return 0
-  return (counts.confirmed / total) * 100
+  return (counts.confirmada / total) * 100
 }
 
 /**

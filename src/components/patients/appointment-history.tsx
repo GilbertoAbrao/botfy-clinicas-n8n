@@ -5,11 +5,11 @@ import { ptBR } from 'date-fns/locale'
 import { Calendar, Clock } from 'lucide-react'
 
 interface Appointment {
-  id: string
-  serviceType: string
-  scheduledAt: Date
-  duration: number
-  status: string
+  id: number
+  tipoConsulta: string
+  dataHora: Date
+  duracaoMinutos: number | null
+  status: string | null
 }
 
 interface AppointmentHistoryProps {
@@ -17,17 +17,22 @@ interface AppointmentHistoryProps {
 }
 
 function getStatusBadgeVariant(
-  status: string
+  status: string | null
 ): 'default' | 'secondary' | 'destructive' | 'outline' {
   switch (status) {
+    case 'confirmada':
     case 'confirmed':
       return 'default' // green
+    case 'agendada':
     case 'tentative':
       return 'secondary' // yellow
+    case 'nao_compareceu':
     case 'no_show':
       return 'destructive' // red
+    case 'cancelada':
     case 'cancelled':
       return 'outline' // gray
+    case 'concluida':
     case 'completed':
       return 'default' // blue
     default:
@@ -35,31 +40,36 @@ function getStatusBadgeVariant(
   }
 }
 
-function getStatusLabel(status: string): string {
+function getStatusLabel(status: string | null): string {
   const labels: Record<string, string> = {
+    agendada: 'Agendado',
+    confirmada: 'Confirmado',
+    concluida: 'Concluído',
+    cancelada: 'Cancelado',
+    nao_compareceu: 'Não Compareceu',
     confirmed: 'Confirmado',
     tentative: 'Tentativo',
     no_show: 'Não Compareceu',
     cancelled: 'Cancelado',
     completed: 'Concluído',
   }
-  return labels[status] || status
+  return status ? (labels[status] || status) : 'Pendente'
 }
 
 export function AppointmentHistory({ appointments }: AppointmentHistoryProps) {
-  // Sort by scheduledAt descending (most recent first)
+  // Sort by dataHora descending (most recent first)
   const sortedAppointments = [...appointments].sort(
     (a, b) =>
-      new Date(b.scheduledAt).getTime() - new Date(a.scheduledAt).getTime()
+      new Date(b.dataHora).getTime() - new Date(a.dataHora).getTime()
   )
 
   // Separate past and upcoming appointments
   const now = new Date()
   const upcomingAppointments = sortedAppointments.filter(
-    (a) => !isBefore(new Date(a.scheduledAt), now)
+    (a) => !isBefore(new Date(a.dataHora), now)
   )
   const pastAppointments = sortedAppointments.filter((a) =>
-    isBefore(new Date(a.scheduledAt), now)
+    isBefore(new Date(a.dataHora), now)
   )
 
   if (appointments.length === 0) {
@@ -90,7 +100,7 @@ export function AppointmentHistory({ appointments }: AppointmentHistoryProps) {
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center gap-2">
                         <h4 className="font-semibold text-gray-900">
-                          {appointment.serviceType}
+                          {appointment.tipoConsulta}
                         </h4>
                         <Badge variant={getStatusBadgeVariant(appointment.status)}>
                           {getStatusLabel(appointment.status)}
@@ -102,7 +112,7 @@ export function AppointmentHistory({ appointments }: AppointmentHistoryProps) {
                           <Calendar className="h-4 w-4" />
                           <span>
                             {format(
-                              new Date(appointment.scheduledAt),
+                              new Date(appointment.dataHora),
                               "dd/MM/yyyy 'às' HH:mm",
                               { locale: ptBR }
                             )}
@@ -110,7 +120,7 @@ export function AppointmentHistory({ appointments }: AppointmentHistoryProps) {
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock className="h-4 w-4" />
-                          <span>{appointment.duration} minutos</span>
+                          <span>{appointment.duracaoMinutos || 30} minutos</span>
                         </div>
                       </div>
                     </div>
@@ -136,7 +146,7 @@ export function AppointmentHistory({ appointments }: AppointmentHistoryProps) {
                     <div className="flex-1 space-y-2">
                       <div className="flex items-center gap-2">
                         <h4 className="font-semibold text-gray-900">
-                          {appointment.serviceType}
+                          {appointment.tipoConsulta}
                         </h4>
                         <Badge variant={getStatusBadgeVariant(appointment.status)}>
                           {getStatusLabel(appointment.status)}
@@ -148,7 +158,7 @@ export function AppointmentHistory({ appointments }: AppointmentHistoryProps) {
                           <Calendar className="h-4 w-4" />
                           <span>
                             {format(
-                              new Date(appointment.scheduledAt),
+                              new Date(appointment.dataHora),
                               "dd/MM/yyyy 'às' HH:mm",
                               { locale: ptBR }
                             )}
@@ -156,7 +166,7 @@ export function AppointmentHistory({ appointments }: AppointmentHistoryProps) {
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock className="h-4 w-4" />
-                          <span>{appointment.duration} minutos</span>
+                          <span>{appointment.duracaoMinutos || 30} minutos</span>
                         </div>
                       </div>
                     </div>

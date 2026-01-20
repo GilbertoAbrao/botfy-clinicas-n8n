@@ -74,8 +74,6 @@ export async function POST(
         metadata: updatedMetadata,
       },
       include: {
-        patient: true,
-        appointment: true,
         resolver: {
           select: { email: true },
         },

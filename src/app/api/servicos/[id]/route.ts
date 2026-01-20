@@ -229,11 +229,11 @@ export async function DELETE(
     }
 
     // Check if service has any appointments using this service type name
-    // Note: Appointments use serviceType (string), not service ID
+    // Note: Appointments use tipoConsulta (string), not service ID
     // For now, we allow deletion but log a warning
     const appointmentsWithService = await prisma.appointment.count({
       where: {
-        serviceType: {
+        tipoConsulta: {
           equals: existingService.nome,
           mode: 'insensitive',
         },
