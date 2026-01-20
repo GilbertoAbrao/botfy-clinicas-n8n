@@ -15,11 +15,11 @@ Requirements for v1.1 release. Each maps to roadmap phases.
 
 ### Config Lembretes
 
-- [ ] **CONF-01**: User can view list of all reminder configurations
-- [ ] **CONF-02**: User can create new reminder configuration with type (48h/24h/2h), message template
-- [ ] **CONF-03**: User can edit existing reminder configuration
-- [ ] **CONF-04**: User can delete reminder configuration
-- [ ] **CONF-05**: User can activate/deactivate reminder configuration without deleting
+- [x] **CONF-01**: User can view list of all reminder configurations
+- [x] **CONF-02**: User can create new reminder configuration with type (48h/24h/2h), message template
+- [x] **CONF-03**: User can edit existing reminder configuration
+- [x] **CONF-04**: User can delete reminder configuration
+- [x] **CONF-05**: User can activate/deactivate reminder configuration without deleting
 
 ### Lembretes Enviados
 
@@ -73,11 +73,11 @@ Which phases cover which requirements. Updated by create-roadmap.
 |-------------|-------|--------|
 | N8N-01 | Phase 9 | ✓ Complete |
 | N8N-02 | Phase 9 | ✓ Complete |
-| CONF-01 | Phase 10 | Pending |
-| CONF-02 | Phase 10 | Pending |
-| CONF-03 | Phase 10 | Pending |
-| CONF-04 | Phase 10 | Pending |
-| CONF-05 | Phase 10 | Pending |
+| CONF-01 | Phase 10 | ✓ Complete |
+| CONF-02 | Phase 10 | ✓ Complete |
+| CONF-03 | Phase 10 | ✓ Complete |
+| CONF-04 | Phase 10 | ✓ Complete |
+| CONF-05 | Phase 10 | ✓ Complete |
 | HIST-01 | Phase 11 | Pending |
 | HIST-02 | Phase 11 | Pending |
 | HIST-03 | Phase 11 | Pending |
@@ -97,4 +97,4 @@ Which phases cover which requirements. Updated by create-roadmap.
 
 ---
 *Requirements defined: 2026-01-20*
-*Last updated: 2026-01-20 after roadmap creation*
+*Last updated: 2026-01-20 after Phase 10 completion*
