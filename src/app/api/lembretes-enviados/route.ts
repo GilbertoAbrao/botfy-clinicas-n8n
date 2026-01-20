@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const searchParams = Object.fromEntries(request.nextUrl.searchParams);
     const params = lembreteEnviadoQuerySchema.parse(searchParams);
 
-    const { page, limit, status, tipo, paciente_id, data_inicio, data_fim } = params;
+    const { page, limit, status, tipo, paciente_id, data_inicio, data_fim, risco_min } = params;
     const offset = (page - 1) * limit;
 
     const supabase = await createServerSupabaseClient();
@@ -57,6 +57,9 @@ export async function GET(request: NextRequest) {
     }
     if (data_fim) {
       query = query.lte('enviado_em', data_fim);
+    }
+    if (risco_min !== undefined) {
+      query = query.gte('risco_noshow', risco_min);
     }
 
     // Order by send date descending, paginate

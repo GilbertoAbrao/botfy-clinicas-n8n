@@ -48,6 +48,7 @@ export const lembreteEnviadoQuerySchema = z.object({
   paciente_id: z.coerce.number().int().positive().optional(),
   data_inicio: z.string().datetime().optional(),
   data_fim: z.string().datetime().optional(),
+  risco_min: z.coerce.number().int().min(0).max(100).optional(),
 });
 
 export type LembreteEnviadoQuery = z.infer<typeof lembreteEnviadoQuerySchema>;
