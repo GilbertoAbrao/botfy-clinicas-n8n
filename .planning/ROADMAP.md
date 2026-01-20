@@ -92,9 +92,9 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 10-01: Config lembretes list page and table
-- [ ] 10-02: Create/edit reminder config form
-- [ ] 10-03: Delete and toggle active/inactive actions
+- [ ] 10-01: Config lembretes API routes (validation, CRUD endpoints)
+- [ ] 10-02: Config lembretes UI components (table, form, actions)
+- [ ] 10-03: Config lembretes page and navigation
 
 ### Phase 11: Lembretes Enviados
 **Goal**: Read-only history panel showing sent reminders with filtering
