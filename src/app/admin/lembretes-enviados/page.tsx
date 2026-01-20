@@ -9,6 +9,10 @@ interface PageProps {
   searchParams: Promise<{
     status?: string;
     tipo?: string;
+    paciente_id?: string;
+    data_inicio?: string;
+    data_fim?: string;
+    risco_min?: string;
     page?: string;
     limit?: string;
   }>;
@@ -17,12 +21,26 @@ interface PageProps {
 function TableSkeleton() {
   return (
     <div className="space-y-4">
-      {/* Search skeleton */}
-      <div className="bg-white rounded-lg border p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Skeleton className="h-10 w-full sm:w-48" />
-          <Skeleton className="h-10 w-full sm:w-48" />
+      {/* Quick filters skeleton */}
+      <div className="flex flex-wrap gap-2">
+        <Skeleton className="h-8 w-20" />
+        <Skeleton className="h-8 w-28" />
+        <Skeleton className="h-8 w-24" />
+        <Skeleton className="h-8 w-24" />
+      </div>
+      {/* Filters skeleton */}
+      <div className="bg-white rounded-lg border p-4 space-y-4">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-5 w-5" />
+          <Skeleton className="h-5 w-16" />
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-10 w-full" />
+        </div>
+        <Skeleton className="h-10 w-full" />
       </div>
       {/* Table skeleton */}
       <div className="rounded-md border">
@@ -69,6 +87,10 @@ export default async function LembretesEnviadosPage({ searchParams }: PageProps)
         <LembretesEnviadosPageClient
           status={params.status}
           tipo={params.tipo}
+          paciente_id={params.paciente_id}
+          data_inicio={params.data_inicio}
+          data_fim={params.data_fim}
+          risco_min={params.risco_min}
           page={params.page ? parseInt(params.page) : 1}
           limit={params.limit ? parseInt(params.limit) : 20}
         />

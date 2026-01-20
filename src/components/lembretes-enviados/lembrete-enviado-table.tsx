@@ -35,6 +35,10 @@ interface Pagination {
 interface SearchParams {
   status?: string;
   tipo?: string;
+  paciente_id?: string;
+  data_inicio?: string;
+  data_fim?: string;
+  risco_min?: string;
 }
 
 interface LembreteEnviadoTableProps {
@@ -125,7 +129,8 @@ export function LembreteEnviadoTable({
               Nenhum lembrete encontrado
             </h3>
             <p className="text-gray-600 mb-6">
-              {searchParams.status || searchParams.tipo
+              {searchParams.status || searchParams.tipo || searchParams.paciente_id ||
+               searchParams.data_inicio || searchParams.data_fim || searchParams.risco_min
                 ? 'Tente ajustar os filtros de busca ou limpe a pesquisa.'
                 : 'Ainda nao ha lembretes enviados registrados no sistema.'}
             </p>

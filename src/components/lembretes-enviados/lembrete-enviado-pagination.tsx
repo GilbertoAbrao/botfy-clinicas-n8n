@@ -18,6 +18,10 @@ interface LembreteEnviadoPaginationProps {
   searchParams: {
     status?: string;
     tipo?: string;
+    paciente_id?: string;
+    data_inicio?: string;
+    data_fim?: string;
+    risco_min?: string;
   };
 }
 
@@ -34,6 +38,10 @@ export function LembreteEnviadoPagination({
 
     if (searchParams.status) params.set('status', searchParams.status);
     if (searchParams.tipo) params.set('tipo', searchParams.tipo);
+    if (searchParams.paciente_id) params.set('paciente_id', searchParams.paciente_id);
+    if (searchParams.data_inicio) params.set('data_inicio', searchParams.data_inicio);
+    if (searchParams.data_fim) params.set('data_fim', searchParams.data_fim);
+    if (searchParams.risco_min) params.set('risco_min', searchParams.risco_min);
 
     params.set('page', page.toString());
     params.set('limit', (limit || currentLimit).toString());

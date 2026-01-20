@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { LembreteEnviadoSearch } from './lembrete-enviado-search';
+import { LembreteEnviadoFilters } from './lembrete-enviado-filters';
 import { LembreteEnviadoTable } from './lembrete-enviado-table';
 import { LembreteEnviadoDetailModal } from './lembrete-enviado-detail-modal';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -17,6 +17,10 @@ interface Pagination {
 interface LembretesEnviadosPageClientProps {
   status?: string;
   tipo?: string;
+  paciente_id?: string;
+  data_inicio?: string;
+  data_fim?: string;
+  risco_min?: string;
   page: number;
   limit: number;
 }
@@ -24,6 +28,10 @@ interface LembretesEnviadosPageClientProps {
 export function LembretesEnviadosPageClient({
   status,
   tipo,
+  paciente_id,
+  data_inicio,
+  data_fim,
+  risco_min,
   page,
   limit,
 }: LembretesEnviadosPageClientProps) {
@@ -44,6 +52,10 @@ export function LembretesEnviadosPageClient({
       const params = new URLSearchParams();
       if (status) params.set('status', status);
       if (tipo) params.set('tipo', tipo);
+      if (paciente_id) params.set('paciente_id', paciente_id);
+      if (data_inicio) params.set('data_inicio', data_inicio);
+      if (data_fim) params.set('data_fim', data_fim);
+      if (risco_min) params.set('risco_min', risco_min);
       params.set('page', page.toString());
       params.set('limit', limit.toString());
 
@@ -61,7 +73,7 @@ export function LembretesEnviadosPageClient({
     } finally {
       setLoading(false);
     }
-  }, [status, tipo, page, limit]);
+  }, [status, tipo, paciente_id, data_inicio, data_fim, risco_min, page, limit]);
 
   useEffect(() => {
     fetchLembretes();
@@ -80,12 +92,26 @@ export function LembretesEnviadosPageClient({
   if (loading) {
     return (
       <div className="space-y-4">
-        {/* Search skeleton */}
-        <div className="bg-white rounded-lg border p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Skeleton className="h-10 w-full sm:w-48" />
-            <Skeleton className="h-10 w-full sm:w-48" />
+        {/* Quick filters skeleton */}
+        <div className="flex flex-wrap gap-2">
+          <Skeleton className="h-8 w-20" />
+          <Skeleton className="h-8 w-28" />
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-8 w-24" />
+        </div>
+        {/* Filters skeleton */}
+        <div className="bg-white rounded-lg border p-4 space-y-4">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-5 w-5" />
+            <Skeleton className="h-5 w-16" />
           </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <Skeleton className="h-10 w-full" />
         </div>
         {/* Table skeleton */}
         <div className="rounded-md border">
@@ -104,14 +130,14 @@ export function LembretesEnviadosPageClient({
 
   return (
     <>
-      {/* Search and filters */}
-      <LembreteEnviadoSearch status={status} tipo={tipo} />
+      {/* Filters */}
+      <LembreteEnviadoFilters />
 
       {/* Lembretes table */}
       <LembreteEnviadoTable
         lembretes={lembretes}
         pagination={pagination}
-        searchParams={{ status, tipo }}
+        searchParams={{ status, tipo, paciente_id, data_inicio, data_fim, risco_min }}
         onViewClick={handleViewClick}
       />
 
