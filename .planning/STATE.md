@@ -1,30 +1,30 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
-**Last Updated:** 2026-01-17
-**Status:** v1.0 Complete
-**Current Milestone:** v1.0 SHIPPED
+**Last Updated:** 2026-01-20
+**Status:** v1.1 In Progress
+**Current Milestone:** v1.1 Anti No-Show Intelligence
 
 ---
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-01-17)
+See: `.planning/PROJECT.md` (updated 2026-01-20)
 
 **Core value:** Dashboard de alertas que mostra "at glance" tudo que precisa de atenção
-**Current focus:** v1.0 shipped — ready for production deployment or v1.1 planning
+**Current focus:** v1.1 — Gestão de lembretes e risco no-show
 
 ---
 
 ## Current Position
 
-**Milestone:** v1.0 MVP — SHIPPED
-**Phase:** All 8 phases complete
-**Plan:** All 32 plans executed
-**Status:** Ready for next milestone
+**Milestone:** v1.1 Anti No-Show Intelligence
+**Phase:** Not started (run /gsd:define-requirements)
+**Plan:** —
+**Status:** Defining requirements
 
-**Last activity:** 2026-01-17 — v1.0 milestone complete
+**Last activity:** 2026-01-20 — Milestone v1.1 started
 
-**Progress:** ████████████████████ 100% (79/79 requirements)
+**Progress:** ░░░░░░░░░░░░░░░░░░░░ 0%
 
 ---
 
@@ -62,8 +62,8 @@ See: `.planning/PROJECT.md` (updated 2026-01-17)
 
 ## Next Steps
 
-1. **Production deployment** — Apply RLS policies, configure N8N webhooks, create users
-2. **OR** `/gsd:discuss-milestone` — Plan v1.1 with deferred features (2FA, ML predictions)
+1. **Define requirements** — `/gsd:define-requirements` to create REQUIREMENTS.md
+2. **Create roadmap** — `/gsd:create-roadmap` to define phases
 
 ---
 

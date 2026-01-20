@@ -8,6 +8,16 @@ Console administrativo web para a equipe da clínica gerenciar o sistema Botfy C
 
 Dashboard de alertas que mostra "at glance" tudo que precisa de atenção: conversas travadas, pré check-ins pendentes, agendamentos não confirmados e handoffs para humanos (normais e causados por erros). A equipe precisa saber rapidamente onde intervir.
 
+## Current Milestone: v1.1 Anti No-Show Intelligence
+
+**Goal:** Completar gestão de lembretes e risco no-show com fix no N8N + UI completa no console
+
+**Target features:**
+- Fix N8N Workflow — Corrigir workflow Anti No-Show para salvar `risco_noshow` na tabela `lembretes_enviados`
+- CRUD config_lembretes — Interface para gerenciar configurações de lembretes (48h, 24h, 2h)
+- Painel lembretes_enviados — Visualização read-only do histórico de lembretes enviados
+- Analytics de Risco — Dashboard com scores, correlação predito vs real, padrões identificados
+
 ## Current State
 
 **v1.0 MVP shipped: 2026-01-17**
@@ -35,13 +45,16 @@ Dashboard de alertas que mostra "at glance" tudo que precisa de atenção: conve
 - ✓ **Analytics & Smart Features** — Priority scoring, pattern detection, no-show risk prediction, CSV export
 - ✓ **Autenticação e Segurança** — RBAC (Admin/Atendente), 6-year audit logging, session timeout
 
-### Active
+### Active (v1.1)
 
-(Fresh requirements for v1.1+ to be defined)
+- [ ] **Fix N8N Workflow** — Corrigir INSERT no workflow Anti No-Show para salvar `risco_noshow` e `mensagem_enviada`
+- [ ] **CRUD config_lembretes** — Interface para gerenciar tipos de lembretes (criar, editar, deletar, ativar/desativar)
+- [ ] **Painel lembretes_enviados** — Histórico read-only com filtros por data, paciente, status
+- [ ] **Analytics de Risco No-Show** — Dashboard com scores de risco, correlação predito vs real, padrões
 
 ### Out of Scope
 
-- Integração direta com N8N (workflows não são editados pelo console)
+- Integração direta com N8N (workflows não são editados pelo console) — *exceção: v1.1 faz fix pontual no INSERT*
 - Envio direto de mensagens WhatsApp pelo console (usa wa.me deep links)
 - Sistema de pagamento/financeiro
 - Gestão de múltiplas clínicas (single-tenant)
@@ -95,4 +108,4 @@ Dashboard de alertas que mostra "at glance" tudo que precisa de atenção: conve
 | Defense-in-depth auth | Middleware + route checks + RLS | ✓ Good |
 
 ---
-*Last updated: 2026-01-17 after v1.0 milestone*
+*Last updated: 2026-01-20 after v1.1 milestone start*
