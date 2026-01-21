@@ -76,11 +76,13 @@ Plans:
 **Plans:** 5 plans
 
 Plans:
-- [ ] 14-01-PLAN.md — Data layer: types, hooks, API routes
-- [ ] 14-02-PLAN.md — Analytics cards component
-- [ ] 14-03-PLAN.md — Table, cards, filters, pagination components
-- [ ] 14-04-PLAN.md — Detail modal with timeline and N8N reminder integration
-- [ ] 14-05-PLAN.md — Page integration and navigation
+- [x] 14-01-PLAN.md — Data layer: types, hooks, API routes
+- [x] 14-02-PLAN.md — Analytics cards component
+- [x] 14-03-PLAN.md — Table, cards, filters, pagination components
+- [x] 14-04-PLAN.md — Detail modal with timeline and N8N reminder integration
+- [x] 14-05-PLAN.md — Page integration and navigation
+
+**Status:** Complete (2026-01-21)
 
 **Requirements covered:** PCHK-01 to PCHK-13 (13 requirements)
 
