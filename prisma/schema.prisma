@@ -246,3 +246,23 @@ model Waitlist {
   @@index([paciente_id, servico_tipo])  // Prevent duplicates
   @@map("waitlist")
 }
+
+// Procedure instructions for patient preparation (RAG-enabled)
+// Maps to existing 'instrucoes_procedimentos' table
+// Note: 'embedding' column excluded - pgvector not supported by Prisma, managed by N8N
+model ProcedureInstruction {
+  id            Int      @id @default(autoincrement())
+  servicoId     Int?     @map("servico_id")
+  tipoInstrucao String   @map("tipo_instrucao")
+  titulo        String   @db.VarChar(200)
+  conteudo      String   @db.Text
+  prioridade    Int      @default(0)
+  ativo         Boolean  @default(true)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@index([servicoId])
+  @@index([tipoInstrucao])
+  @@index([ativo])
+  @@map("instrucoes_procedimentos")
+}
