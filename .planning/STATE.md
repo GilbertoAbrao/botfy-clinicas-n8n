@@ -19,12 +19,12 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 **Milestone:** v1.2 Agenda List View + Pre-Checkin Management
 **Phase:** 14 of 16 (Pre-Checkin Dashboard)
-**Plan:** 14-05 of 5 (Page Integration)
-**Status:** In Progress
+**Plan:** Complete (5/5 plans)
+**Status:** Phase Complete
 
-**Last activity:** 2026-01-21 — Completed 14-04-PLAN.md (Detail Modal)
+**Last activity:** 2026-01-21 — Completed 14-05-PLAN.md (Page Integration)
 
-**Progress:** ████████░░░░░░░░░░░░ 40% (10/20 plans)
+**Progress:** ███████████░░░░░░░░░ 55% (11/20 plans)
 
 ---
 
@@ -33,7 +33,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 | Phase | Name | Requirements | Status |
 |-------|------|--------------|--------|
 | 13 | Agenda List View | ALIST-01 to ALIST-12 | ● Complete (5/5 plans) |
-| 14 | Pre-Checkin Dashboard | PCHK-01 to PCHK-13 | ◐ In Progress (4/5 plans) |
+| 14 | Pre-Checkin Dashboard | PCHK-01 to PCHK-13 | ● Complete (5/5 plans) |
 | 15 | Procedure Instructions | INST-01 to INST-09 | ○ Pending |
 | 16 | Document Management | DOCS-01 to DOCS-12 | ○ Pending |
 
@@ -95,7 +95,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 ## Next Steps
 
-1. **Complete Phase 14** — Pre-Checkin Dashboard (14-05: Page Integration)
+1. **Start Phase 15** — Procedure Instructions (INST-01 to INST-09)
 2. **Continue v1.2 Milestone** — Complete remaining 2 phases (15, 16)
 
 ---
@@ -146,8 +146,11 @@ None
 | 14-04 | Confirmation dialog before sending reminders | Per CONTEXT.md, always confirm before N8N webhook |
 | 14-04 | Timeline steps dynamic based on status | Shows current workflow state, not just timestamps |
 | 14-04 | N8N webhook graceful degradation | Works without webhook configured (dev-friendly) |
+| 14-05 | Dashboard wrapped in Suspense | Provides loading skeleton while client component hydrates |
+| 14-05 | Table and Cards both rendered (CSS visibility) | Simpler than conditional rendering, prevents layout shift |
+| 14-05 | No RBAC in page | Admin layout already enforces ADMIN role |
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-21 — Completed 14-04-PLAN.md (Detail Modal)*
+*Last updated: 2026-01-21 — Completed 14-05-PLAN.md (Page Integration) - Phase 14 Complete*
