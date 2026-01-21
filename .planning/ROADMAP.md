@@ -178,12 +178,12 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 16-01-PLAN.md — Data layer: types, validation schemas, audit actions, hook
-- [ ] 16-02-PLAN.md — API routes: list, approve, reject, preview, bulk actions
-- [ ] 16-03-PLAN.md — UI components: table with row selection, filters, modals, bulk actions bar
-- [ ] 16-04-PLAN.md — Page integration and navigation
+- [x] 16-01-PLAN.md — Data layer: types, validation schemas, audit actions, hook
+- [x] 16-02-PLAN.md — API routes: list, approve, reject, preview, bulk actions
+- [x] 16-03-PLAN.md — UI components: table with row selection, filters, modals, bulk actions bar
+- [x] 16-04-PLAN.md — Page integration and navigation
 
-**Status:** Planned (2026-01-21)
+**Status:** Complete (2026-01-21)
 
 **Requirements covered:** DOCS-01 to DOCS-12 (12 requirements)
 
