@@ -1,7 +1,7 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-21
-**Status:** v1.2 In Progress — Ready to plan
+**Status:** v1.2 In Progress
 **Current Milestone:** v1.2 Agenda List View + Pre-Checkin Management
 
 ---
@@ -19,12 +19,12 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 **Milestone:** v1.2 Agenda List View + Pre-Checkin Management
 **Phase:** 14 of 16 (Pre-Checkin Dashboard)
-**Plan:** 14-02 of 5 (Analytics Cards)
+**Plan:** 14-05 of 5 (Page Integration)
 **Status:** In Progress
 
-**Last activity:** 2026-01-21 — Completed 14-01-PLAN.md (Data Layer)
+**Last activity:** 2026-01-21 — Completed 14-04-PLAN.md (Detail Modal)
 
-**Progress:** ███░░░░░░░░░░░░░░░░░ 20% (7/20 plans)
+**Progress:** ████████░░░░░░░░░░░░ 40% (10/20 plans)
 
 ---
 
@@ -33,7 +33,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 | Phase | Name | Requirements | Status |
 |-------|------|--------------|--------|
 | 13 | Agenda List View | ALIST-01 to ALIST-12 | ● Complete (5/5 plans) |
-| 14 | Pre-Checkin Dashboard | PCHK-01 to PCHK-13 | ◐ In Progress (2/5 plans) |
+| 14 | Pre-Checkin Dashboard | PCHK-01 to PCHK-13 | ◐ In Progress (4/5 plans) |
 | 15 | Procedure Instructions | INST-01 to INST-09 | ○ Pending |
 | 16 | Document Management | DOCS-01 to DOCS-12 | ○ Pending |
 
@@ -95,8 +95,8 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 ## Next Steps
 
-1. **Continue Phase 14** — Pre-Checkin Dashboard (14-03: List Component)
-2. **Continue v1.2 Milestone** — Complete remaining 3 phases (14, 15, 16)
+1. **Complete Phase 14** — Pre-Checkin Dashboard (14-05: Page Integration)
+2. **Continue v1.2 Milestone** — Complete remaining 2 phases (15, 16)
 
 ---
 
@@ -138,8 +138,12 @@ None
 | 14-02 | Completion rate color: green >= 70%, yellow >= 50%, red < 50% | Aligns with existing kpi-cards.tsx pattern |
 | 14-02 | Overdue count color: green = 0, yellow <= 3, red > 3 | Escalating urgency for overdue items |
 | 14-02 | Pendentes card always yellow | Pending items inherently need attention |
+| 14-04 | Rate limit 4 hours between reminders, server-side enforcement | Returns 429 status for rate limit violations |
+| 14-04 | Confirmation dialog before sending reminders | Per CONTEXT.md, always confirm before N8N webhook |
+| 14-04 | Timeline steps dynamic based on status | Shows current workflow state, not just timestamps |
+| 14-04 | N8N webhook graceful degradation | Works without webhook configured (dev-friendly) |
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-21 — Completed 14-01-PLAN.md (Data Layer)*
+*Last updated: 2026-01-21 — Completed 14-04-PLAN.md (Detail Modal)*
