@@ -42,7 +42,12 @@ Dashboard de alertas que mostra "at glance" tudo que precisa de atenção: conve
 
 ### Active
 
-(None — planning next milestone)
+**v1.2 Agenda List View + Pre-Checkin Management**
+
+- [ ] **Agenda List View** — Toggle calendário/lista, tabela com filtros avançados e ações rápidas
+- [ ] **Pre-Checkin Dashboard** — Visualizar status dos pré-checkins por agendamento
+- [ ] **CRUD Instruções de Procedimentos** — Gerenciar instruções (preparo, jejum, medicamentos, etc.)
+- [ ] **Gestão de Documentos Paciente** — Visualizar, validar/rejeitar documentos enviados
 
 ### Out of Scope
 
@@ -103,4 +108,4 @@ Dashboard de alertas que mostra "at glance" tudo que precisa de atenção: conve
 | Risk level thresholds | baixo (<40), medio (40-69), alto (≥70) matches UI patterns | ✓ Good |
 
 ---
-*Last updated: 2026-01-21 after v1.1 milestone complete*
+*Last updated: 2026-01-21 after v1.2 milestone started*

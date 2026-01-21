@@ -1,8 +1,8 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-21
-**Status:** v1.1 Complete — Ready for next milestone
-**Current Milestone:** None — Planning next milestone
+**Status:** v1.2 In Progress — Defining requirements
+**Current Milestone:** v1.2 Agenda List View + Pre-Checkin Management
 
 ---
 
@@ -11,20 +11,20 @@
 See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 **Core value:** Dashboard de alertas que mostra "at glance" tudo que precisa de atenção
-**Current focus:** Planning next milestone (v2.0)
+**Current focus:** Agenda list view and pre-checkin management UI
 
 ---
 
 ## Current Position
 
-**Milestone:** Completed v1.1 Anti No-Show Intelligence
-**Phase:** 12 of 12 completed
-**Plan:** Not started (planning next milestone)
-**Status:** Ready for `/gsd:new-milestone`
+**Milestone:** v1.2 Agenda List View + Pre-Checkin Management
+**Phase:** Not started (defining requirements)
+**Plan:** —
+**Status:** Defining requirements
 
-**Last activity:** 2026-01-21 — Completed v1.1 milestone
+**Last activity:** 2026-01-21 — Milestone v1.2 started
 
-**Progress:** ████████████████████ 100% (v1.0 + v1.1)
+**Progress:** ░░░░░░░░░░░░░░░░░░░░ 0%
 
 ---
 
@@ -82,13 +82,15 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 ## Next Steps
 
-1. **Start next milestone** — Run `/gsd:new-milestone` to plan v2.0
+1. **Define requirements** — Scope features for agenda list view and pre-checkin management
+2. **Create roadmap** — Break down into phases (continuing from phase 12)
+3. **Start planning** — Run `/gsd:plan-phase [N]` for first phase
 
 ---
 
 ## Open Blockers
 
-None — v1.1 complete
+None
 
 ---
 
@@ -100,4 +102,4 @@ None — v1.1 complete
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-21 — v1.1 milestone complete*
+*Last updated: 2026-01-21 — v1.2 milestone started*
