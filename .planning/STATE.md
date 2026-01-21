@@ -1,34 +1,48 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
-**Last Updated:** 2026-01-20
-**Status:** v1.1 Complete — Ready for milestone audit
-**Current Milestone:** v1.1 Anti No-Show Intelligence
+**Last Updated:** 2026-01-21
+**Status:** v1.1 Complete — Ready for next milestone
+**Current Milestone:** None — Planning next milestone
 
 ---
 
 ## Project Reference
 
-See: `.planning/PROJECT.md` (updated 2026-01-20)
+See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 **Core value:** Dashboard de alertas que mostra "at glance" tudo que precisa de atenção
-**Current focus:** v1.1 — Gestão de lembretes e risco no-show
+**Current focus:** Planning next milestone (v2.0)
 
 ---
 
 ## Current Position
 
-**Milestone:** v1.1 Anti No-Show Intelligence
-**Phase:** 12 of 12 (Analytics Risco)
-**Plan:** 2 of 2 in current phase
-**Status:** Phase complete
+**Milestone:** Completed v1.1 Anti No-Show Intelligence
+**Phase:** 12 of 12 completed
+**Plan:** Not started (planning next milestone)
+**Status:** Ready for `/gsd:new-milestone`
 
-**Last activity:** 2026-01-20 — Completed 12-02-PLAN.md (Risk Analytics Dashboard UI)
+**Last activity:** 2026-01-21 — Completed v1.1 milestone
 
-**Progress:** ████████████████████ 100%
+**Progress:** ████████████████████ 100% (v1.0 + v1.1)
 
 ---
 
 ## Milestone Summary
+
+**v1.1 Anti No-Show Intelligence (Shipped 2026-01-21)**
+
+| Phase | Status | Plans |
+|-------|--------|-------|
+| 9. N8N Anti No-Show Fix | Complete | 1/1 |
+| 10. Config Lembretes | Complete | 3/3 |
+| 11. Lembretes Enviados | Complete | 3/3 |
+| 12. Analytics Risco | Complete | 2/2 |
+
+**Stats:**
+- 4 phases, 9 plans, 18 requirements
+- 56 files, 8,953 lines added (26,658 total TypeScript)
+- 1 day (2026-01-20 → 2026-01-21)
 
 **v1.0 MVP (Shipped 2026-01-17)**
 
@@ -52,6 +66,12 @@ See: `.planning/PROJECT.md` (updated 2026-01-20)
 
 ## Archives
 
+**v1.1 archives (created 2026-01-21):**
+- `.planning/milestones/v1.1-ROADMAP.md` — Full phase details
+- `.planning/milestones/v1.1-REQUIREMENTS.md` — All 18 requirements with status
+- `.planning/milestones/v1.1-MILESTONE-AUDIT.md` — Verification report
+- `.planning/MILESTONES.md` — Summary entry
+
 **v1.0 archives (created 2026-01-17):**
 - `.planning/milestones/v1.0-ROADMAP.md` — Full phase details
 - `.planning/milestones/v1.0-REQUIREMENTS.md` — All 79 requirements with status
@@ -62,24 +82,22 @@ See: `.planning/PROJECT.md` (updated 2026-01-20)
 
 ## Next Steps
 
-1. **Audit v1.1** — Run `/gsd:audit-milestone` to verify requirements and cross-phase integration
-2. **Archive v1.1** — Run `/gsd:complete-milestone` to archive and prepare for v2.0
+1. **Start next milestone** — Run `/gsd:new-milestone` to plan v2.0
 
 ---
 
 ## Open Blockers
 
-None — v1.0 complete
+None — v1.1 complete
 
 ---
 
 ## Tech Debt (Tracked)
 
-- formatPhone/formatCPF duplicated in components
-- Missing VERIFICATION.md for phases 4, 5, 6
-- REQUIREMENTS.md traceability was stale (now archived)
+- formatPhone/formatCPF utilities duplicated in components
+- Missing VERIFICATION.md for phases 4, 5, 6, 9, 10
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-20 — Phase 12 complete, v1.1 milestone ready for audit*
+*Last updated: 2026-01-21 — v1.1 milestone complete*

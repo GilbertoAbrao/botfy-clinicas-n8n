@@ -8,23 +8,14 @@ Console administrativo web para a equipe da clínica gerenciar o sistema Botfy C
 
 Dashboard de alertas que mostra "at glance" tudo que precisa de atenção: conversas travadas, pré check-ins pendentes, agendamentos não confirmados e handoffs para humanos (normais e causados por erros). A equipe precisa saber rapidamente onde intervir.
 
-## Current Milestone: v1.1 Anti No-Show Intelligence
-
-**Goal:** Completar gestão de lembretes e risco no-show com fix no N8N + UI completa no console
-
-**Target features:**
-- Fix N8N Workflow — Corrigir workflow Anti No-Show para salvar `risco_noshow` na tabela `lembretes_enviados`
-- CRUD config_lembretes — Interface para gerenciar configurações de lembretes (48h, 24h, 2h)
-- Painel lembretes_enviados — Visualização read-only do histórico de lembretes enviados
-- Analytics de Risco — Dashboard com scores, correlação predito vs real, padrões identificados
-
 ## Current State
 
-**v1.0 MVP shipped: 2026-01-17**
+**v1.1 Anti No-Show Intelligence shipped: 2026-01-21**
 
-- 8 phases, 32 plans, 79 requirements completed
-- 21,654 lines of TypeScript across 244 files
+- 12 phases, 41 plans, 97 requirements completed (v1.0 + v1.1)
+- 26,658 lines of TypeScript across 300 files
 - Production-ready with HIPAA compliance
+- Full no-show risk management system integrated
 
 **Tech Stack:**
 - Next.js 15 + TypeScript + Tailwind CSS + shadcn/ui
@@ -34,23 +25,24 @@ Dashboard de alertas que mostra "at glance" tudo que precisa de atenção: conve
 
 ## Requirements
 
-### Validated (v1.0)
+### Validated (v1.0 + v1.1)
 
-- ✓ **Dashboard de Alertas** — Real-time alert queue with filtering, sorting, priority scoring, pattern detection
-- ✓ **Gestão de Agenda** — Calendar views, appointment CRUD, waitlist auto-fill, N8N sync
-- ✓ **Gestão de Pacientes** — Search, profiles, CRUD, document upload, no-show tracking
-- ✓ **Monitoramento de Conversas** — WhatsApp thread viewer, AI/human indicators, clear memory
-- ✓ **One-Click Interventions** — Reschedule, send message from alert detail view
-- ✓ **Configurações do Sistema** — Services, users, business hours, notification preferences
-- ✓ **Analytics & Smart Features** — Priority scoring, pattern detection, no-show risk prediction, CSV export
-- ✓ **Autenticação e Segurança** — RBAC (Admin/Atendente), 6-year audit logging, session timeout
+- ✓ **Dashboard de Alertas** — Real-time alert queue with filtering, sorting, priority scoring, pattern detection — v1.0
+- ✓ **Gestão de Agenda** — Calendar views, appointment CRUD, waitlist auto-fill, N8N sync — v1.0
+- ✓ **Gestão de Pacientes** — Search, profiles, CRUD, document upload, no-show tracking — v1.0
+- ✓ **Monitoramento de Conversas** — WhatsApp thread viewer, AI/human indicators, clear memory — v1.0
+- ✓ **One-Click Interventions** — Reschedule, send message from alert detail view — v1.0
+- ✓ **Configurações do Sistema** — Services, users, business hours, notification preferences — v1.0
+- ✓ **Analytics & Smart Features** — Priority scoring, pattern detection, no-show risk prediction, CSV export — v1.0
+- ✓ **Autenticação e Segurança** — RBAC (Admin/Atendente), 6-year audit logging, session timeout — v1.0
+- ✓ **N8N Anti No-Show Fix** — Workflow saves `risco_noshow` and `mensagem_enviada` to database — v1.1
+- ✓ **CRUD config_lembretes** — Admin UI for reminder configurations (48h/24h/2h) with validation — v1.1
+- ✓ **Painel lembretes_enviados** — Read-only history with filters by date, patient, status, risk score — v1.1
+- ✓ **Analytics de Risco No-Show** — Dashboard with distribution, predicted vs actual, patterns by day/time/service — v1.1
 
-### Active (v1.1)
+### Active
 
-- [ ] **Fix N8N Workflow** — Corrigir INSERT no workflow Anti No-Show para salvar `risco_noshow` e `mensagem_enviada`
-- [ ] **CRUD config_lembretes** — Interface para gerenciar tipos de lembretes (criar, editar, deletar, ativar/desativar)
-- [ ] **Painel lembretes_enviados** — Histórico read-only com filtros por data, paciente, status
-- [ ] **Analytics de Risco No-Show** — Dashboard com scores de risco, correlação predito vs real, padrões
+(None — planning next milestone)
 
 ### Out of Scope
 
@@ -64,15 +56,15 @@ Dashboard de alertas que mostra "at glance" tudo que precisa de atenção: conve
 
 ## Context
 
-**Sistema v1.0:**
-- Complete healthcare operations console
-- Alert-first design with smart prioritization
+**Sistema v1.1:**
+- Complete healthcare operations console with alert-first design
 - Full CRUD for patients, appointments, services, users
 - WhatsApp conversation monitoring with clear memory
 - N8N webhook integration for appointment sync
-- Analytics dashboard with KPIs and pattern detection
+- No-show risk management: workflow fix + config + history + analytics
+- Risk analytics dashboard with recharts visualizations
 
-**Deferred to v1.1+:**
+**Deferred to v2.0+:**
 - Two-Factor Authentication
 - ML-based no-show predictions (currently heuristic)
 - Batch interventions (resolve multiple alerts)
@@ -81,7 +73,7 @@ Dashboard de alertas que mostra "at glance" tudo que precisa de atenção: conve
 
 **Tech Debt:**
 - formatPhone/formatCPF utilities duplicated in components
-- Missing VERIFICATION.md for phases 4, 5, 6
+- Missing VERIFICATION.md for phases 4, 5, 6, 9, 10
 
 ## Constraints
 
@@ -106,6 +98,9 @@ Dashboard de alertas que mostra "at glance" tudo que precisa de atenção: conve
 | WhatsApp deep links | Respects constraint of no direct messaging | ✓ Good |
 | Fire-and-forget audit | Logging doesn't block operations | ✓ Good |
 | Defense-in-depth auth | Middleware + route checks + RLS | ✓ Good |
+| Supabase admin client for N8N tables | Bypass RLS for tables owned by N8N workflow | ✓ Good |
+| recharts for analytics | Modern charting library with good React integration | ✓ Good |
+| Risk level thresholds | baixo (<40), medio (40-69), alto (≥70) matches UI patterns | ✓ Good |
 
 ---
-*Last updated: 2026-01-20 after v1.1 milestone start*
+*Last updated: 2026-01-21 after v1.1 milestone complete*
