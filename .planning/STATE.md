@@ -19,12 +19,12 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 **Milestone:** v1.2 Agenda List View + Pre-Checkin Management
 **Phase:** 13 of 16 (Agenda List View)
-**Plan:** 13-01 of 3 (Data Layer)
+**Plan:** 13-04 of 5 (Mobile Card Layout)
 **Status:** In Progress
 
-**Last activity:** 2026-01-21 — Completed 13-01-PLAN.md
+**Last activity:** 2026-01-21 — Completed 13-04-PLAN.md
 
-**Progress:** █░░░░░░░░░░░░░░░░░░░ 5% (1/20 plans)
+**Progress:** ██░░░░░░░░░░░░░░░░░░ 10% (2/20 plans)
 
 ---
 
@@ -32,7 +32,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 | Phase | Name | Requirements | Status |
 |-------|------|--------------|--------|
-| 13 | Agenda List View | ALIST-01 to ALIST-12 | ◐ In Progress (1/3 plans) |
+| 13 | Agenda List View | ALIST-01 to ALIST-12 | ◐ In Progress (2/5 plans) |
 | 14 | Pre-Checkin Dashboard | PCHK-01 to PCHK-13 | ○ Pending |
 | 15 | Procedure Instructions | INST-01 to INST-09 | ○ Pending |
 | 16 | Document Management | DOCS-01 to DOCS-12 | ○ Pending |
@@ -122,8 +122,11 @@ None
 | 13-01 | Provider filter as comma-separated IDs | Enables multi-select UI without complex query params |
 | 13-01 | Search filter applied client-side | Trade-off: acceptable for 50 items/page, avoids RPC complexity |
 | 13-01 | Status stored lowercase in DB | Matches existing appointments table convention |
+| 13-04 | Mobile cards use md:hidden (desktop hidden) | Complementary to desktop table view |
+| 13-04 | Risk badge conditional on future + non-terminal status | Prevents showing risk on completed/cancelled appointments |
+| 13-04 | Action buttons conditionally rendered by status | Edit always shown, Confirm/Cancel based on appointment state |
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-21 — Completed 13-01-PLAN.md*
+*Last updated: 2026-01-21 — Completed 13-04-PLAN.md*
