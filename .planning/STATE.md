@@ -138,6 +138,10 @@ None
 | 14-02 | Completion rate color: green >= 70%, yellow >= 50%, red < 50% | Aligns with existing kpi-cards.tsx pattern |
 | 14-02 | Overdue count color: green = 0, yellow <= 3, red > 3 | Escalating urgency for overdue items |
 | 14-02 | Pendentes card always yellow | Pending items inherently need attention |
+| 14-03 | StatusBadge uses className override for consistent colors | Works across theme variations |
+| 14-03 | ProgressBar normalizes values to 0-100 range | Safety against invalid input |
+| 14-03 | Filters use usePathname for route flexibility | Component reusable on different routes |
+| 14-03 | 25/50/100 pagination options for pre-checkin | More granular control for smaller lists |
 | 14-04 | Rate limit 4 hours between reminders, server-side enforcement | Returns 429 status for rate limit violations |
 | 14-04 | Confirmation dialog before sending reminders | Per CONTEXT.md, always confirm before N8N webhook |
 | 14-04 | Timeline steps dynamic based on status | Shows current workflow state, not just timestamps |
