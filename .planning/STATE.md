@@ -19,12 +19,12 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 **Milestone:** v1.2 Agenda List View + Pre-Checkin Management
 **Phase:** 15 of 16 (Procedure Instructions)
-**Plan:** 2 of 4
+**Plan:** 3 of 4
 **Status:** In Progress
 
-**Last activity:** 2026-01-21 — Completed 15-02-PLAN.md (API CRUD Endpoints)
+**Last activity:** 2026-01-21 — Completed 15-03-PLAN.md (List Page UI)
 
-**Progress:** █████████████░░░░░░░ 65% (13/20 plans)
+**Progress:** ██████████████░░░░░░ 70% (14/20 plans)
 
 ---
 
@@ -34,7 +34,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 |-------|------|--------------|--------|
 | 13 | Agenda List View | ALIST-01 to ALIST-12 | ● Complete (5/5 plans) |
 | 14 | Pre-Checkin Dashboard | PCHK-01 to PCHK-13 | ● Complete (5/5 plans) |
-| 15 | Procedure Instructions | INST-01 to INST-09 | ◐ In Progress (2/4 plans) |
+| 15 | Procedure Instructions | INST-01 to INST-09 | ◐ In Progress (3/4 plans) |
 | 16 | Document Management | DOCS-01 to DOCS-12 | ○ Pending |
 
 **Total:** 4 phases, 46 requirements
@@ -95,7 +95,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 ## Next Steps
 
-1. **Continue Phase 15** — Plan 03 (List Page UI)
+1. **Continue Phase 15** — Plan 04 (Page Integration)
 2. **Continue v1.2 Milestone** — Complete remaining plans in phases 15, 16
 
 ---
@@ -155,8 +155,11 @@ None
 | 15-02 | PATCH restricted to deactivation only | Enforces soft delete per INST-07 |
 | 15-02 | Duplicate titulo check scoped by servicoId | Same title allowed for different services |
 | 15-02 | Content diff placeholder in audit log | Avoids large audit entries |
+| 15-03 | Remove .default() from Zod instruction schema | react-hook-form zodResolver compatibility |
+| 15-03 | WhatsApp preview with Brazilian sample data | Joao Silva, 15/01 as 14h, etc. for realistic preview |
+| 15-03 | Character warnings at 1000/2000 chars | Visual feedback, not hard limits |
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-21 — Completed 15-02-PLAN.md (API CRUD Endpoints)*
+*Last updated: 2026-01-21 — Completed 15-03-PLAN.md (List Page UI)*
