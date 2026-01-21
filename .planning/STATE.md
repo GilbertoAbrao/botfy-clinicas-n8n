@@ -1,7 +1,7 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-21
-**Status:** v1.2 In Progress — Defining requirements
+**Status:** v1.2 In Progress — Ready to plan
 **Current Milestone:** v1.2 Agenda List View + Pre-Checkin Management
 
 ---
@@ -18,13 +18,26 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 ## Current Position
 
 **Milestone:** v1.2 Agenda List View + Pre-Checkin Management
-**Phase:** Not started (defining requirements)
+**Phase:** 13 (not started)
 **Plan:** —
-**Status:** Defining requirements
+**Status:** Ready to plan Phase 13
 
-**Last activity:** 2026-01-21 — Milestone v1.2 started
+**Last activity:** 2026-01-21 — Roadmap created
 
 **Progress:** ░░░░░░░░░░░░░░░░░░░░ 0%
+
+---
+
+## v1.2 Milestone Summary
+
+| Phase | Name | Requirements | Status |
+|-------|------|--------------|--------|
+| 13 | Agenda List View | ALIST-01 to ALIST-12 | ○ Pending |
+| 14 | Pre-Checkin Dashboard | PCHK-01 to PCHK-13 | ○ Pending |
+| 15 | Procedure Instructions | INST-01 to INST-09 | ○ Pending |
+| 16 | Document Management | DOCS-01 to DOCS-12 | ○ Pending |
+
+**Total:** 4 phases, 46 requirements
 
 ---
 
@@ -82,9 +95,8 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 ## Next Steps
 
-1. **Define requirements** — Scope features for agenda list view and pre-checkin management
-2. **Create roadmap** — Break down into phases (continuing from phase 12)
-3. **Start planning** — Run `/gsd:plan-phase [N]` for first phase
+1. **Plan Phase 13** — Run `/gsd:plan-phase 13` to create detailed execution plan
+2. **Execute Phase 13** — Run `/gsd:execute-phase 13` to implement Agenda List View
 
 ---
 
@@ -102,4 +114,4 @@ None
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-21 — v1.2 milestone started*
+*Last updated: 2026-01-21 — v1.2 roadmap created*
