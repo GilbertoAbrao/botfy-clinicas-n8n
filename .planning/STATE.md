@@ -18,13 +18,13 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 ## Current Position
 
 **Milestone:** v1.2 Agenda List View + Pre-Checkin Management
-**Phase:** 13 (not started)
-**Plan:** —
-**Status:** Ready to plan Phase 13
+**Phase:** 13 of 16 (Agenda List View)
+**Plan:** 13-01 of 3 (Data Layer)
+**Status:** In Progress
 
-**Last activity:** 2026-01-21 — Roadmap created
+**Last activity:** 2026-01-21 — Completed 13-01-PLAN.md
 
-**Progress:** ░░░░░░░░░░░░░░░░░░░░ 0%
+**Progress:** █░░░░░░░░░░░░░░░░░░░ 5% (1/20 plans)
 
 ---
 
@@ -32,7 +32,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 | Phase | Name | Requirements | Status |
 |-------|------|--------------|--------|
-| 13 | Agenda List View | ALIST-01 to ALIST-12 | ○ Pending |
+| 13 | Agenda List View | ALIST-01 to ALIST-12 | ◐ In Progress (1/3 plans) |
 | 14 | Pre-Checkin Dashboard | PCHK-01 to PCHK-13 | ○ Pending |
 | 15 | Procedure Instructions | INST-01 to INST-09 | ○ Pending |
 | 16 | Document Management | DOCS-01 to DOCS-12 | ○ Pending |
@@ -95,8 +95,8 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 ## Next Steps
 
-1. **Plan Phase 13** — Run `/gsd:plan-phase 13` to create detailed execution plan
-2. **Execute Phase 13** — Run `/gsd:execute-phase 13` to implement Agenda List View
+1. **Continue Phase 13** — Execute plan 13-02 (List View UI)
+2. **Complete Phase 13** — Execute plan 13-03 (Filters & Actions)
 
 ---
 
@@ -113,5 +113,17 @@ None
 
 ---
 
+## Accumulated Decisions
+
+| Phase | Decision | Impact |
+|-------|----------|--------|
+| 13-01 | Use @tanstack/react-table for headless table logic | Integrates with shadcn/ui Table components |
+| 13-01 | Default 50 appointments per page (ALIST-11) | Set in validation schema defaults |
+| 13-01 | Provider filter as comma-separated IDs | Enables multi-select UI without complex query params |
+| 13-01 | Search filter applied client-side | Trade-off: acceptable for 50 items/page, avoids RPC complexity |
+| 13-01 | Status stored lowercase in DB | Matches existing appointments table convention |
+
+---
+
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-21 — v1.2 roadmap created*
+*Last updated: 2026-01-21 — Completed 13-01-PLAN.md*
