@@ -19,12 +19,12 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 **Milestone:** v1.2 Agenda List View + Pre-Checkin Management
 **Phase:** 15 of 16 (Procedure Instructions)
-**Plan:** 1 of 4
+**Plan:** 2 of 4
 **Status:** In Progress
 
-**Last activity:** 2026-01-21 — Completed 15-01-PLAN.md (Data Layer Foundation)
+**Last activity:** 2026-01-21 — Completed 15-02-PLAN.md (API CRUD Endpoints)
 
-**Progress:** ████████████░░░░░░░░ 60% (12/20 plans)
+**Progress:** █████████████░░░░░░░ 65% (13/20 plans)
 
 ---
 
@@ -34,7 +34,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 |-------|------|--------------|--------|
 | 13 | Agenda List View | ALIST-01 to ALIST-12 | ● Complete (5/5 plans) |
 | 14 | Pre-Checkin Dashboard | PCHK-01 to PCHK-13 | ● Complete (5/5 plans) |
-| 15 | Procedure Instructions | INST-01 to INST-09 | ◐ In Progress (1/4 plans) |
+| 15 | Procedure Instructions | INST-01 to INST-09 | ◐ In Progress (2/4 plans) |
 | 16 | Document Management | DOCS-01 to DOCS-12 | ○ Pending |
 
 **Total:** 4 phases, 46 requirements
@@ -95,7 +95,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 ## Next Steps
 
-1. **Continue Phase 15** — Plan 02 (List API endpoint)
+1. **Continue Phase 15** — Plan 03 (List Page UI)
 2. **Continue v1.2 Milestone** — Complete remaining plans in phases 15, 16
 
 ---
@@ -152,8 +152,11 @@ None
 | 15-01 | Exclude embedding column from Prisma model | pgvector not supported by Prisma, managed by N8N |
 | 15-01 | Use z.enum with message param | Zod v4 API compatibility |
 | 15-01 | DEACTIVATE_INSTRUCTION instead of DELETE | Soft delete pattern per INST-07 |
+| 15-02 | PATCH restricted to deactivation only | Enforces soft delete per INST-07 |
+| 15-02 | Duplicate titulo check scoped by servicoId | Same title allowed for different services |
+| 15-02 | Content diff placeholder in audit log | Avoids large audit entries |
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-21 — Completed 15-01-PLAN.md (Data Layer Foundation)*
+*Last updated: 2026-01-21 — Completed 15-02-PLAN.md (API CRUD Endpoints)*
