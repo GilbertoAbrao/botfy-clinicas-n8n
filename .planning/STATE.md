@@ -19,12 +19,12 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 **Milestone:** v1.2 Agenda List View + Pre-Checkin Management
 **Phase:** 16 of 16 (Document Management)
-**Plan:** 2 of 4
+**Plan:** 3 of 4
 **Status:** In Progress
 
-**Last activity:** 2026-01-21 — Completed 16-02-PLAN.md (API Routes)
+**Last activity:** 2026-01-21 — Completed 16-03-PLAN.md (UI Components)
 
-**Progress:** ████████████████████ 100% (20/20 plans)
+**Progress:** ████████████████████ 100% (21/21 plans)
 
 ---
 
@@ -35,7 +35,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 | 13 | Agenda List View | ALIST-01 to ALIST-12 | ● Complete (5/5 plans) |
 | 14 | Pre-Checkin Dashboard | PCHK-01 to PCHK-13 | ● Complete (5/5 plans) |
 | 15 | Procedure Instructions | INST-01 to INST-09 | ● Complete (4/4 plans) |
-| 16 | Document Management | DOCS-01 to DOCS-12 | ◐ In Progress (2/4 plans) |
+| 16 | Document Management | DOCS-01 to DOCS-12 | ◐ In Progress (3/4 plans) |
 
 **Total:** 4 phases, 46 requirements
 
@@ -95,8 +95,8 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 ## Next Steps
 
-1. **Continue Phase 16** — Execute 16-03-PLAN.md (UI Components)
-2. **Complete v1.2 Milestone** — 2 plans remaining in phase 16
+1. **Continue Phase 16** — Execute 16-04-PLAN.md (Page Integration)
+2. **Complete v1.2 Milestone** — 1 plan remaining in phase 16
 
 ---
 
@@ -167,8 +167,13 @@ None
 | 16-02 | Client-side search on patient name | Supabase limitation on joined field filtering |
 | 16-02 | 1-hour signed URL expiry | Consistent with existing document preview pattern |
 | 16-02 | Bulk reject requires reason | Server-side validation for mandatory observacoes |
+| 16-03 | Controlled row selection state | Table passes rowSelection via props for parent control |
+| 16-03 | Route-agnostic filters with usePathname | Component reusable on different routes |
+| 16-03 | Preview modal fetches signed URL on open | Avoids stale URLs, fetches fresh on each open |
+| 16-03 | Reject modal clears form on close | Clean state for re-opens |
+| 16-03 | Fixed positioning for bulk actions bar | Visible regardless of scroll position |
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-21 — Completed 16-02-PLAN.md (API Routes)*
+*Last updated: 2026-01-21 — Completed 16-03-PLAN.md (UI Components)*
