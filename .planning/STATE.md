@@ -19,12 +19,12 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 **Milestone:** v1.2 Agenda List View + Pre-Checkin Management
 **Phase:** 13 of 16 (Agenda List View)
-**Plan:** 13-03 of 5 (Filters & Pagination)
-**Status:** In Progress
+**Plan:** 13-05 of 5 (Integration)
+**Status:** Phase Complete
 
-**Last activity:** 2026-01-21 — Completed 13-03-PLAN.md
+**Last activity:** 2026-01-21 — Completed 13-05-PLAN.md (Phase 13 complete)
 
-**Progress:** ██░░░░░░░░░░░░░░░░░░ 10% (2/20 plans)
+**Progress:** ███░░░░░░░░░░░░░░░░░ 15% (5/20 plans)
 
 ---
 
@@ -32,7 +32,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 | Phase | Name | Requirements | Status |
 |-------|------|--------------|--------|
-| 13 | Agenda List View | ALIST-01 to ALIST-12 | ◐ In Progress (2/5 plans) |
+| 13 | Agenda List View | ALIST-01 to ALIST-12 | ● Complete (5/5 plans) |
 | 14 | Pre-Checkin Dashboard | PCHK-01 to PCHK-13 | ○ Pending |
 | 15 | Procedure Instructions | INST-01 to INST-09 | ○ Pending |
 | 16 | Document Management | DOCS-01 to DOCS-12 | ○ Pending |
@@ -95,8 +95,8 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 ## Next Steps
 
-1. **Continue Phase 13** — Execute plan 13-02 (List View UI)
-2. **Complete Phase 13** — Execute remaining plans through 13-05
+1. **Start Phase 14** — Pre-Checkin Dashboard (PCHK-01 through PCHK-13)
+2. **Continue v1.2 Milestone** — Complete remaining 3 phases (14, 15, 16)
 
 ---
 
@@ -127,8 +127,13 @@ None
 | 13-03 | Quick date presets (hoje, amanha, esta semana, este mes) | Common use cases for faster filtering |
 | 13-03 | Preserve all filter params when paginating | Users expect filters to remain active when navigating pages |
 | 13-03 | Reset to page 1 when changing filters or items per page | Prevents empty pages, predictable behavior |
+| 13-05 | ViewToggle preserves all search params when switching views | Seamless experience, users don't lose their filters |
+| 13-05 | Default view is calendar when no param specified | Maintains existing behavior, list is opt-in |
+| 13-05 | WaitlistManager only shows in calendar view | Waitlist is calendar-specific feature, keeps list view focused |
+| 13-05 | Status param validated against AppointmentStatus enum | Type safety prevents runtime errors in useAgendaList |
+| 13-05 | Desktop/mobile responsive with CSS media queries | Table on desktop, cards on mobile for optimal UX |
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-21 — Completed 13-03-PLAN.md*
+*Last updated: 2026-01-21 — Completed 13-05-PLAN.md (Phase 13 complete)*
