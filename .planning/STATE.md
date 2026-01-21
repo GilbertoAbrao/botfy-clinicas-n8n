@@ -22,7 +22,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 **Plan:** 14-02 of 5 (Analytics Cards)
 **Status:** In Progress
 
-**Last activity:** 2026-01-21 — Completed 14-02-PLAN.md
+**Last activity:** 2026-01-21 — Completed 14-01-PLAN.md (Data Layer)
 
 **Progress:** ███░░░░░░░░░░░░░░░░░ 20% (7/20 plans)
 
@@ -132,6 +132,9 @@ None
 | 13-05 | WaitlistManager only shows in calendar view | Waitlist is calendar-specific feature, keeps list view focused |
 | 13-05 | Status param validated against AppointmentStatus enum | Type safety prevents runtime errors in useAgendaList |
 | 13-05 | Desktop/mobile responsive with CSS media queries | Table on desktop, cards on mobile for optimal UX |
+| 14-01 | Client-side filtering for date range and search | Supabase nested field limitation, acceptable for 50 items/page |
+| 14-01 | Overdue threshold: 12 hours before appointment | Gives staff time to intervene |
+| 14-01 | Progress calculation: 0/33/66/100 based on 3 boolean fields | Simple, clear progression indicator |
 | 14-02 | Completion rate color: green >= 70%, yellow >= 50%, red < 50% | Aligns with existing kpi-cards.tsx pattern |
 | 14-02 | Overdue count color: green = 0, yellow <= 3, red > 3 | Escalating urgency for overdue items |
 | 14-02 | Pendentes card always yellow | Pending items inherently need attention |
@@ -139,4 +142,4 @@ None
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-21 — Completed 14-02-PLAN.md*
+*Last updated: 2026-01-21 — Completed 14-01-PLAN.md (Data Layer)*
