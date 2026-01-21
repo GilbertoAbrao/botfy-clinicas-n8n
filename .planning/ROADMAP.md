@@ -29,7 +29,7 @@ Plans:
 - [x] 13-04-PLAN.md — Mobile card layout
 - [x] 13-05-PLAN.md — Wire up list view and page integration
 
-**Status:** ✓ Complete (2026-01-21)
+**Status:** Complete (2026-01-21)
 
 **Requirements covered:** ALIST-01 to ALIST-12 (12 requirements)
 
@@ -73,7 +73,14 @@ Plans:
 
 **Goal:** Dashboard para visualizar e gerenciar status de pré-checkins, com analytics e ações de intervenção.
 
-**Plans:** (created by /gsd:plan-phase)
+**Plans:** 5 plans
+
+Plans:
+- [ ] 14-01-PLAN.md — Data layer: types, hooks, API routes
+- [ ] 14-02-PLAN.md — Analytics cards component
+- [ ] 14-03-PLAN.md — Table, cards, filters, pagination components
+- [ ] 14-04-PLAN.md — Detail modal with timeline and N8N reminder integration
+- [ ] 14-05-PLAN.md — Page integration and navigation
 
 **Requirements covered:** PCHK-01 to PCHK-13 (13 requirements)
 
