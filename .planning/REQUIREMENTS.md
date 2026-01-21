@@ -9,18 +9,18 @@ Requirements for Agenda List View + Pre-Checkin Management milestone.
 
 ### Agenda List View
 
-- [ ] **ALIST-01**: User can toggle between calendar and list view via button in page header
-- [ ] **ALIST-02**: List view displays table with columns: Date/Time, Patient, Service, Provider, Status, Actions
-- [ ] **ALIST-03**: User can filter list by date range (today, tomorrow, this week, this month, custom)
-- [ ] **ALIST-04**: User can filter list by provider (multi-select dropdown)
-- [ ] **ALIST-05**: User can filter list by service type
-- [ ] **ALIST-06**: User can filter list by status (agendada, confirmado, cancelada, realizada, faltou)
-- [ ] **ALIST-07**: User can sort list by any column (date, patient, status, provider)
-- [ ] **ALIST-08**: User can search appointments by patient name or phone
-- [ ] **ALIST-09**: Each row shows quick action buttons: Edit, Confirm, Cancel
-- [ ] **ALIST-10**: Each row shows no-show risk badge for future appointments
-- [ ] **ALIST-11**: List is paginated (50 rows per page)
-- [ ] **ALIST-12**: List view is responsive and displays as cards on mobile devices
+- [x] **ALIST-01**: User can toggle between calendar and list view via button in page header
+- [x] **ALIST-02**: List view displays table with columns: Date/Time, Patient, Service, Provider, Status, Actions
+- [x] **ALIST-03**: User can filter list by date range (today, tomorrow, this week, this month, custom)
+- [x] **ALIST-04**: User can filter list by provider (multi-select dropdown)
+- [x] **ALIST-05**: User can filter list by service type
+- [x] **ALIST-06**: User can filter list by status (agendada, confirmado, cancelada, realizada, faltou)
+- [x] **ALIST-07**: User can sort list by any column (date, patient, status, provider)
+- [x] **ALIST-08**: User can search appointments by patient name or phone
+- [x] **ALIST-09**: Each row shows quick action buttons: Edit, Confirm, Cancel
+- [x] **ALIST-10**: Each row shows no-show risk badge for future appointments
+- [x] **ALIST-11**: List is paginated (50 rows per page)
+- [x] **ALIST-12**: List view is responsive and displays as cards on mobile devices
 
 ### Pre-Checkin Dashboard
 
@@ -106,18 +106,18 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ALIST-01 | Phase 13 | Pending |
-| ALIST-02 | Phase 13 | Pending |
-| ALIST-03 | Phase 13 | Pending |
-| ALIST-04 | Phase 13 | Pending |
-| ALIST-05 | Phase 13 | Pending |
-| ALIST-06 | Phase 13 | Pending |
-| ALIST-07 | Phase 13 | Pending |
-| ALIST-08 | Phase 13 | Pending |
-| ALIST-09 | Phase 13 | Pending |
-| ALIST-10 | Phase 13 | Pending |
-| ALIST-11 | Phase 13 | Pending |
-| ALIST-12 | Phase 13 | Pending |
+| ALIST-01 | Phase 13 | Complete |
+| ALIST-02 | Phase 13 | Complete |
+| ALIST-03 | Phase 13 | Complete |
+| ALIST-04 | Phase 13 | Complete |
+| ALIST-05 | Phase 13 | Complete |
+| ALIST-06 | Phase 13 | Complete |
+| ALIST-07 | Phase 13 | Complete |
+| ALIST-08 | Phase 13 | Complete |
+| ALIST-09 | Phase 13 | Complete |
+| ALIST-10 | Phase 13 | Complete |
+| ALIST-11 | Phase 13 | Complete |
+| ALIST-12 | Phase 13 | Complete |
 | PCHK-01 | Phase 14 | Pending |
 | PCHK-02 | Phase 14 | Pending |
 | PCHK-03 | Phase 14 | Pending |

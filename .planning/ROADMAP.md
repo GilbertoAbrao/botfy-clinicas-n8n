@@ -23,11 +23,13 @@
 **Plans:** 5 plans
 
 Plans:
-- [ ] 13-01-PLAN.md — Data layer: install TanStack Table, create API endpoint and hook
-- [ ] 13-02-PLAN.md — Table columns and sorting with TanStack Table
-- [ ] 13-03-PLAN.md — Filter controls and pagination
-- [ ] 13-04-PLAN.md — Mobile card layout
-- [ ] 13-05-PLAN.md — Wire up list view and page integration
+- [x] 13-01-PLAN.md — Data layer: install TanStack Table, create API endpoint and hook
+- [x] 13-02-PLAN.md — Table columns and sorting with TanStack Table
+- [x] 13-03-PLAN.md — Filter controls and pagination
+- [x] 13-04-PLAN.md — Mobile card layout
+- [x] 13-05-PLAN.md — Wire up list view and page integration
+
+**Status:** ✓ Complete (2026-01-21)
 
 **Requirements covered:** ALIST-01 to ALIST-12 (12 requirements)
 
