@@ -17,6 +17,7 @@ import {
   Bell,
   Send,
   TrendingDown,
+  ClipboardCheck,
 } from 'lucide-react';
 
 const navigation = [
@@ -103,6 +104,13 @@ const navigation = [
     name: 'Lembretes Enviados',
     href: '/admin/lembretes-enviados',
     icon: Send,
+    enabled: true,
+    adminOnly: true,
+  },
+  {
+    name: 'Pre-Checkin',
+    href: '/admin/pre-checkin',
+    icon: ClipboardCheck,
     enabled: true,
     adminOnly: true,
   },
