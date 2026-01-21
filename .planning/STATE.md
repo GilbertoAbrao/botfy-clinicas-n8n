@@ -18,13 +18,13 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 ## Current Position
 
 **Milestone:** v1.2 Agenda List View + Pre-Checkin Management
-**Phase:** 15 of 16 (Procedure Instructions)
-**Plan:** 4 of 4
-**Status:** Complete
+**Phase:** 16 of 16 (Document Management)
+**Plan:** 1 of 4
+**Status:** In Progress
 
-**Last activity:** 2026-01-21 — Completed Phase 15 (Procedure Instructions CRUD)
+**Last activity:** 2026-01-21 — Completed 16-01-PLAN.md (Document Data Layer)
 
-**Progress:** ██████████████████░░ 90% (18/20 plans)
+**Progress:** ███████████████████░ 95% (19/20 plans)
 
 ---
 
@@ -35,7 +35,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 | 13 | Agenda List View | ALIST-01 to ALIST-12 | ● Complete (5/5 plans) |
 | 14 | Pre-Checkin Dashboard | PCHK-01 to PCHK-13 | ● Complete (5/5 plans) |
 | 15 | Procedure Instructions | INST-01 to INST-09 | ● Complete (4/4 plans) |
-| 16 | Document Management | DOCS-01 to DOCS-12 | ○ Pending |
+| 16 | Document Management | DOCS-01 to DOCS-12 | ◐ In Progress (1/4 plans) |
 
 **Total:** 4 phases, 46 requirements
 
@@ -95,8 +95,8 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 ## Next Steps
 
-1. **Start Phase 16** — Document Management (DOCS-01 to DOCS-12)
-2. **Complete v1.2 Milestone** — 2 plans remaining in phase 16
+1. **Continue Phase 16** — Execute 16-02-PLAN.md (API Routes)
+2. **Complete v1.2 Milestone** — 3 plans remaining in phase 16
 
 ---
 
@@ -160,8 +160,11 @@ None
 | 15-03 | Character warnings at 1000/2000 chars | Visual feedback, not hard limits |
 | 15-04 | Status column uses Switch toggle instead of action button | Direct toggle, no confirmation dialog needed |
 | 15-04 | Instructions reference N8N servicos table (int IDs) | Separate from Prisma Service model (UUID IDs) |
+| 16-01 | Status computed from validado boolean field | null=pendente, true=aprovado, false=rejeitado |
+| 16-01 | Document types match Supabase documentos_paciente table enum | Consistent with database schema |
+| 16-01 | Hook includes counts for status filter badges | Enables pendente/aprovado/rejeitado badge counts |
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-21 — Completed Phase 15 (Procedure Instructions CRUD)*
+*Last updated: 2026-01-21 — Completed 16-01-PLAN.md (Document Data Layer)*
