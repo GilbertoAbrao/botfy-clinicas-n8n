@@ -130,12 +130,12 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 15-01-PLAN.md — Data layer: Prisma model, Zod schema, audit actions
-- [ ] 15-02-PLAN.md — API routes: list, create, update, deactivate
-- [ ] 15-03-PLAN.md — UI components: table, form modal, WhatsApp preview
-- [ ] 15-04-PLAN.md — Page integration and navigation
+- [x] 15-01-PLAN.md — Data layer: Prisma model, Zod schema, audit actions
+- [x] 15-02-PLAN.md — API routes: list, create, update, deactivate
+- [x] 15-03-PLAN.md — UI components: table, form modal, WhatsApp preview
+- [x] 15-04-PLAN.md — Page integration and navigation
 
-**Status:** Planned (2026-01-21)
+**Status:** Complete (2026-01-21)
 
 **Requirements covered:** INST-01 to INST-09 (9 requirements)
 
@@ -173,9 +173,17 @@ Plans:
 
 ## Phase 16: Document Management
 
-**Goal:** Interface para visualizar e validar documentos de pacientes enviados durante pré-checkin.
+**Goal:** Interface para visualizar e validar documentos de pacientes enviados durante pre-checkin.
 
-**Plans:** (created by /gsd:plan-phase)
+**Plans:** 4 plans
+
+Plans:
+- [ ] 16-01-PLAN.md — Data layer: types, validation schemas, audit actions, hook
+- [ ] 16-02-PLAN.md — API routes: list, approve, reject, preview, bulk actions
+- [ ] 16-03-PLAN.md — UI components: table with row selection, filters, modals, bulk actions bar
+- [ ] 16-04-PLAN.md — Page integration and navigation
+
+**Status:** Planned (2026-01-21)
 
 **Requirements covered:** DOCS-01 to DOCS-12 (12 requirements)
 
