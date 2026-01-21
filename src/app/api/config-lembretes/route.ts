@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUserWithRole } from '@/lib/auth/session';
 import { checkPermission, PERMISSIONS } from '@/lib/rbac/permissions';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { logAudit, AuditAction } from '@/lib/audit/logger';
 import { configLembreteSchema } from '@/lib/validations/config-lembrete';
 
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     // Get Supabase client
-    const supabase = await createServerSupabaseClient();
+    const supabase = createAdminClient();
 
     // Build query
     let query = supabase
@@ -137,7 +137,7 @@ export async function POST(request: NextRequest) {
     const validatedData = validation.data;
 
     // Get Supabase client
-    const supabase = await createServerSupabaseClient();
+    const supabase = createAdminClient();
 
     // Check if config name already exists
     const { data: existing } = await supabase

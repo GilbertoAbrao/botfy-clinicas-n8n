@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUserWithRole } from '@/lib/auth/session';
 import { checkPermission, PERMISSIONS } from '@/lib/rbac/permissions';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { logAudit, AuditAction } from '@/lib/audit/logger';
 import { configLembreteSchema } from '@/lib/validations/config-lembrete';
 
@@ -31,7 +31,7 @@ export async function GET(
     const { id } = await params;
 
     // Get Supabase client
-    const supabase = await createServerSupabaseClient();
+    const supabase = createAdminClient();
 
     // Fetch config
     const { data: config, error } = await supabase
@@ -110,7 +110,7 @@ export async function PUT(
     const validatedData = validation.data;
 
     // Get Supabase client
-    const supabase = await createServerSupabaseClient();
+    const supabase = createAdminClient();
 
     // Check if config exists
     const { data: existingConfig, error: fetchError } = await supabase
@@ -238,7 +238,7 @@ export async function DELETE(
     const { id } = await params;
 
     // Get Supabase client
-    const supabase = await createServerSupabaseClient();
+    const supabase = createAdminClient();
 
     // Check if config exists
     const { data: existingConfig, error: fetchError } = await supabase

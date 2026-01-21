@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUserWithRole } from '@/lib/auth/session';
 import { checkPermission, PERMISSIONS } from '@/lib/rbac/permissions';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { prisma } from '@/lib/prisma';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -30,31 +31,12 @@ export async function GET(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const supabase = await createServerSupabaseClient();
+    const supabase = createAdminClient();
 
-    // Fetch with full joins for complete details
+    // Fetch lembrete from Supabase
     const { data, error } = await supabase
       .from('lembretes_enviados')
-      .select(`
-        *,
-        agendamentos (
-          id,
-          data_hora,
-          status,
-          observacoes,
-          pacientes (
-            id,
-            nome,
-            telefone,
-            email
-          ),
-          servicos (
-            id,
-            nome,
-            duracao_minutos
-          )
-        )
-      `)
+      .select('*')
       .eq('id', lembreteId)
       .single();
 
@@ -66,10 +48,46 @@ export async function GET(request: NextRequest, context: RouteContext) {
         );
       }
       console.error('Error fetching lembrete:', error);
-      throw error;
+      return NextResponse.json(
+        { error: 'Erro ao buscar lembrete', details: error.message },
+        { status: 500 }
+      );
     }
 
-    // Transform data for frontend with all available fields
+    // Enrich with agendamento data from Prisma
+    let agendamentoInfo = null;
+    if (data.agendamento_id) {
+      const agendamento = await prisma.appointment.findUnique({
+        where: { id: data.agendamento_id },
+        select: {
+          id: true,
+          dataHora: true,
+          status: true,
+          observacoes: true,
+          tipoConsulta: true,
+          paciente: {
+            select: {
+              id: true,
+              nome: true,
+              telefone: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      if (agendamento) {
+        agendamentoInfo = {
+          data_hora: agendamento.dataHora,
+          status: agendamento.status,
+          observacoes: agendamento.observacoes,
+          servico_nome: agendamento.tipoConsulta,
+          paciente: agendamento.paciente,
+        };
+      }
+    }
+
+    // Transform data for frontend (map DB column names to frontend expected names)
     const lembrete = {
       id: data.id,
       agendamento_id: data.agendamento_id,
@@ -77,26 +95,25 @@ export async function GET(request: NextRequest, context: RouteContext) {
       tipo_lembrete: data.tipo_lembrete,
       status_resposta: data.status_resposta,
       evento_id: data.evento_id,
-      enviado_em: data.enviado_em,
-      respondido_em: data.respondido_em,
+      enviado_em: data.data_envio,       // DB: data_envio → Frontend: enviado_em
+      respondido_em: data.data_resposta, // DB: data_resposta → Frontend: respondido_em
       risco_noshow: data.risco_noshow,
       mensagem_enviada: data.mensagem_enviada,
-      paciente_nome: data.agendamentos?.pacientes?.nome,
-      servico_nome: data.agendamentos?.servicos?.nome,
-      data_agendamento: data.agendamentos?.data_hora,
+      paciente_nome: agendamentoInfo?.paciente?.nome || null,
+      servico_nome: agendamentoInfo?.servico_nome || null,
+      data_agendamento: agendamentoInfo?.data_hora || null,
       // Additional fields from full joins
-      agendamento_status: data.agendamentos?.status,
-      agendamento_observacoes: data.agendamentos?.observacoes,
-      paciente_telefone: data.agendamentos?.pacientes?.telefone,
-      paciente_email: data.agendamentos?.pacientes?.email,
-      servico_duracao: data.agendamentos?.servicos?.duracao_minutos,
+      agendamento_status: agendamentoInfo?.status || null,
+      agendamento_observacoes: agendamentoInfo?.observacoes || null,
+      paciente_telefone: agendamentoInfo?.paciente?.telefone || null,
+      paciente_email: agendamentoInfo?.paciente?.email || null,
     };
 
     return NextResponse.json({ lembrete });
   } catch (error) {
     console.error('Error fetching lembrete:', error);
     return NextResponse.json(
-      { error: 'Erro ao buscar lembrete' },
+      { error: 'Erro ao buscar lembrete', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }

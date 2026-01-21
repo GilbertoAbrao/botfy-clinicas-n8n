@@ -9,7 +9,7 @@
  */
 
 import { prisma } from '@/lib/prisma'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import {
   subDays,
   startOfDay,
@@ -123,13 +123,13 @@ export async function calculateRiskDistribution(
   const endDate = endOfDay(new Date())
   const startDate = startOfDay(subDays(endDate, periodDays))
 
-  const supabase = await createServerSupabaseClient()
+  const supabase = createAdminClient()
 
   const { data, error } = await supabase
     .from('lembretes_enviados')
     .select('risco_noshow')
-    .gte('enviado_em', startDate.toISOString())
-    .lte('enviado_em', endDate.toISOString())
+    .gte('data_envio', startDate.toISOString())
+    .lte('data_envio', endDate.toISOString())
     .not('risco_noshow', 'is', null)
 
   if (error) {
@@ -187,8 +187,7 @@ function getEmptyDistribution(): RiskDistributionItem[] {
 /**
  * Calculate predicted vs actual no-show correlation
  *
- * Join lembretes_enviados with agendamentos to see if predicted risk
- * matched actual outcome.
+ * Fetch lembretes_enviados from Supabase, then use Prisma to get agendamento status.
  *
  * @param periodDays Number of days to look back
  * @returns Array of predicted vs actual items
@@ -199,22 +198,15 @@ export async function calculatePredictedVsActual(
   const endDate = endOfDay(new Date())
   const startDate = startOfDay(subDays(endDate, periodDays))
 
-  const supabase = await createServerSupabaseClient()
+  const supabase = createAdminClient()
 
-  // Fetch lembretes with their agendamento status
+  // Fetch lembretes from Supabase (without joins)
   const { data, error } = await supabase
     .from('lembretes_enviados')
-    .select(`
-      risco_noshow,
-      agendamentos!inner (
-        status,
-        data_hora
-      )
-    `)
-    .gte('enviado_em', startDate.toISOString())
-    .lte('enviado_em', endDate.toISOString())
+    .select('risco_noshow, agendamento_id')
+    .gte('data_envio', startDate.toISOString())
+    .lte('data_envio', endDate.toISOString())
     .not('risco_noshow', 'is', null)
-    .lt('agendamentos.data_hora', new Date().toISOString()) // Only past appointments
 
   if (error) {
     console.error('Error fetching predicted vs actual:', error)
@@ -224,6 +216,22 @@ export async function calculatePredictedVsActual(
   if (!data || data.length === 0) {
     return getEmptyPredictedVsActual()
   }
+
+  // Get unique agendamento IDs
+  const agendamentoIds = [...new Set(data.map(item => item.agendamento_id).filter(Boolean))]
+
+  // Fetch agendamento statuses from Prisma (only past appointments)
+  const agendamentos = await prisma.appointment.findMany({
+    where: {
+      id: { in: agendamentoIds },
+      dataHora: { lt: new Date() }, // Only past appointments
+      status: { in: ['nao_compareceu', 'concluida', 'confirmada'] },
+    },
+    select: { id: true, status: true },
+  })
+
+  // Create a map for quick lookup
+  const statusMap = new Map(agendamentos.map(a => [a.id, a.status]))
 
   // Track outcomes by risk level
   const outcomes: Record<RiskLevel, { noShow: number; attended: number }> = {
@@ -236,7 +244,7 @@ export async function calculatePredictedVsActual(
     const level = getRiskLevel(item.risco_noshow)
     if (!level) return
 
-    const status = (item.agendamentos as any)?.status
+    const status = statusMap.get(item.agendamento_id)
     if (!status) return
 
     // Check if appointment was a no-show or attended

@@ -345,11 +345,15 @@ Tracking de lembretes anti no-show.
 | `id` | SERIAL | PK | Identificador único |
 | `agendamento_id` | INTEGER | FK | Referência para agendamentos.id |
 | `telefone` | VARCHAR(20) | Sim | Telefone do paciente |
-| `tipo_lembrete` | VARCHAR(20) | Sim | Tipo: `48h`, `24h`, `2h` |
-| `status_resposta` | VARCHAR(20) | Sim | Status: `pendente`, `confirmado`, `cancelado` |
+| `tipo_lembrete` | VARCHAR(20) | Sim | Tipo: `lembrete_48h`, `lembrete_24h`, `lembrete_2h` |
+| `status_resposta` | VARCHAR(20) | Sim | Status: `pendente`, `confirmado`, `cancelado`, `reagenda` |
 | `evento_id` | VARCHAR(100) | Não | ID do evento externo |
-| `enviado_em` | TIMESTAMP | Auto | Data/hora do envio |
-| `respondido_em` | TIMESTAMP | Não | Data/hora da resposta |
+| `data_envio` | TIMESTAMP | Auto | Data/hora do envio |
+| `data_resposta` | TIMESTAMP | Não | Data/hora da resposta |
+| `mensagem_enviada` | TEXT | Não | Conteúdo da mensagem enviada |
+| `risco_noshow` | INTEGER | Não | Score de risco de no-show (0-100) |
+| `escalado_humano` | BOOLEAN | Não | Se foi escalado para atendente humano |
+| `data_escalacao` | TIMESTAMP | Não | Data/hora da escalação |
 
 ---
 

@@ -60,12 +60,12 @@ export function LembretesEnviadosPageClient({
       params.set('limit', limit.toString());
 
       const response = await fetch(`/api/lembretes-enviados?${params.toString()}`);
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error('Erro ao buscar lembretes enviados');
+        console.error('API error:', response.status, data);
+        throw new Error(data.details || data.error || 'Erro ao buscar lembretes enviados');
       }
-
-      const data = await response.json();
       setLembretes(data.lembretes);
       setPagination(data.pagination);
     } catch (error) {
