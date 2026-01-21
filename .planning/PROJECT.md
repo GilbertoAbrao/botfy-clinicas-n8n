@@ -10,12 +10,12 @@ Dashboard de alertas que mostra "at glance" tudo que precisa de atenção: conve
 
 ## Current State
 
-**v1.1 Anti No-Show Intelligence shipped: 2026-01-21**
+**v1.2 Agenda List View + Pre-Checkin Management shipped: 2026-01-21**
 
-- 12 phases, 41 plans, 97 requirements completed (v1.0 + v1.1)
-- 26,658 lines of TypeScript across 300 files
+- 16 phases, 59 plans, 143 requirements completed (v1.0 + v1.1 + v1.2)
+- 36,339 lines of TypeScript across 370+ files
 - Production-ready with HIPAA compliance
-- Full no-show risk management system integrated
+- Full agenda management, pre-checkin workflow, and document validation
 
 **Tech Stack:**
 - Next.js 15 + TypeScript + Tailwind CSS + shadcn/ui
@@ -25,7 +25,7 @@ Dashboard de alertas que mostra "at glance" tudo que precisa de atenção: conve
 
 ## Requirements
 
-### Validated (v1.0 + v1.1)
+### Validated (v1.0 + v1.1 + v1.2)
 
 - ✓ **Dashboard de Alertas** — Real-time alert queue with filtering, sorting, priority scoring, pattern detection — v1.0
 - ✓ **Gestão de Agenda** — Calendar views, appointment CRUD, waitlist auto-fill, N8N sync — v1.0
@@ -39,15 +39,14 @@ Dashboard de alertas que mostra "at glance" tudo que precisa de atenção: conve
 - ✓ **CRUD config_lembretes** — Admin UI for reminder configurations (48h/24h/2h) with validation — v1.1
 - ✓ **Painel lembretes_enviados** — Read-only history with filters by date, patient, status, risk score — v1.1
 - ✓ **Analytics de Risco No-Show** — Dashboard with distribution, predicted vs actual, patterns by day/time/service — v1.1
+- ✓ **Agenda List View** — Toggle calendário/lista, tabela com filtros avançados, ações rápidas, mobile cards — v1.2
+- ✓ **Pre-Checkin Dashboard** — Status tracking, analytics, timeline, N8N webhook reminders — v1.2
+- ✓ **CRUD Instruções de Procedimentos** — 7 instruction types, WhatsApp preview, soft delete — v1.2
+- ✓ **Gestão de Documentos Paciente** — Preview, approve/reject, bulk actions, Supabase Storage — v1.2
 
 ### Active
 
-**v1.2 Agenda List View + Pre-Checkin Management**
-
-- [ ] **Agenda List View** — Toggle calendário/lista, tabela com filtros avançados e ações rápidas
-- [ ] **Pre-Checkin Dashboard** — Visualizar status dos pré-checkins por agendamento
-- [ ] **CRUD Instruções de Procedimentos** — Gerenciar instruções (preparo, jejum, medicamentos, etc.)
-- [ ] **Gestão de Documentos Paciente** — Visualizar, validar/rejeitar documentos enviados
+*No active requirements — run `/gsd:new-milestone` to define v1.3 or v2.0*
 
 ### Out of Scope
 
@@ -108,4 +107,4 @@ Dashboard de alertas que mostra "at glance" tudo que precisa de atenção: conve
 | Risk level thresholds | baixo (<40), medio (40-69), alto (≥70) matches UI patterns | ✓ Good |
 
 ---
-*Last updated: 2026-01-21 after v1.2 milestone started*
+*Last updated: 2026-01-21 after v1.2 milestone shipped*

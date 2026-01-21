@@ -1,8 +1,8 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-21
-**Status:** v1.2 Complete
-**Current Milestone:** v1.2 Agenda List View + Pre-Checkin Management
+**Status:** v1.2 Complete — Ready for next milestone
+**Current Milestone:** None (run `/gsd:new-milestone` to start v1.3 or v2.0)
 
 ---
 
@@ -11,37 +11,38 @@
 See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 **Core value:** Dashboard de alertas que mostra "at glance" tudo que precisa de atenção
-**Current focus:** Agenda list view and pre-checkin management UI
+**Current focus:** Planning next milestone
 
 ---
 
 ## Current Position
 
-**Milestone:** v1.2 Agenda List View + Pre-Checkin Management
-**Phase:** 16 of 16 (Document Management)
-**Plan:** 4 of 4
-**Status:** Phase Complete
+**Milestone:** v1.2 Complete
+**Phase:** 16 of 16 (all phases complete)
+**Plan:** All complete
+**Status:** Ready to plan next milestone
 
-**Last activity:** 2026-01-21 — Completed 16-04-PLAN.md (Page Integration)
+**Last activity:** 2026-01-21 — v1.2 milestone archived
 
-**Progress:** ████████████████████ 100% (22/22 plans)
-
----
-
-## v1.2 Milestone Summary
-
-| Phase | Name | Requirements | Status |
-|-------|------|--------------|--------|
-| 13 | Agenda List View | ALIST-01 to ALIST-12 | ● Complete (5/5 plans) |
-| 14 | Pre-Checkin Dashboard | PCHK-01 to PCHK-13 | ● Complete (5/5 plans) |
-| 15 | Procedure Instructions | INST-01 to INST-09 | ● Complete (4/4 plans) |
-| 16 | Document Management | DOCS-01 to DOCS-12 | ● Complete (4/4 plans) |
-
-**Total:** 4 phases, 46 requirements
+**Progress:** ████████████████████ 100% (59/59 plans across v1.0-v1.2)
 
 ---
 
-## Milestone Summary
+## Shipped Milestones
+
+**v1.2 Agenda List View + Pre-Checkin Management (Shipped 2026-01-21)**
+
+| Phase | Status | Plans |
+|-------|--------|-------|
+| 13. Agenda List View | Complete | 5/5 |
+| 14. Pre-Checkin Dashboard | Complete | 5/5 |
+| 15. Procedure Instructions | Complete | 4/4 |
+| 16. Document Management | Complete | 4/4 |
+
+**Stats:**
+- 4 phases, 18 plans, 46 requirements
+- 70+ files, 9,681 lines added (36,339 total TypeScript)
+- 1 day (2026-01-21)
 
 **v1.1 Anti No-Show Intelligence (Shipped 2026-01-21)**
 
@@ -79,6 +80,12 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 ## Archives
 
+**v1.2 archives (created 2026-01-21):**
+- `.planning/milestones/v1.2-ROADMAP.md` — Full phase details
+- `.planning/milestones/v1.2-REQUIREMENTS.md` — All 46 requirements with status
+- `.planning/milestones/v1.2-MILESTONE-AUDIT.md` — Verification report
+- `.planning/MILESTONES.md` — Summary entry
+
 **v1.1 archives (created 2026-01-21):**
 - `.planning/milestones/v1.1-ROADMAP.md` — Full phase details
 - `.planning/milestones/v1.1-REQUIREMENTS.md` — All 18 requirements with status
@@ -95,8 +102,14 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 ## Next Steps
 
-1. **v1.2 Milestone Complete** — All 22 plans executed, 46 requirements delivered
-2. **Ready for v1.3 Planning** — Next milestone to be defined
+1. **Plan next milestone** — Run `/gsd:new-milestone` to define v1.3 or v2.0
+2. **Potential features for next milestone:**
+   - Two-Factor Authentication (2FA)
+   - ML-based no-show predictions (upgrade from heuristics)
+   - Bulk appointment confirmations
+   - Password reset UI
+   - Drag-and-drop calendar rescheduling
+   - CSV export enhancements
 
 ---
 
@@ -109,74 +122,23 @@ None
 ## Tech Debt (Tracked)
 
 - formatPhone/formatCPF utilities duplicated in components
-- Missing VERIFICATION.md for phases 4, 5, 6, 9, 10
+- Missing VERIFICATION.md for phases 4, 5, 6, 9, 10, 15
+- Missing 15-04-SUMMARY.md (phase 15 page integration)
 
 ---
 
 ## Accumulated Decisions
 
-| Phase | Decision | Impact |
-|-------|----------|--------|
-| 13-01 | Use @tanstack/react-table for headless table logic | Integrates with shadcn/ui Table components |
-| 13-01 | Default 50 appointments per page (ALIST-11) | Set in validation schema defaults |
-| 13-01 | Provider filter as comma-separated IDs | Enables multi-select UI without complex query params |
-| 13-01 | Search filter applied client-side | Trade-off: acceptable for 50 items/page, avoids RPC complexity |
-| 13-01 | Status stored lowercase in DB | Matches existing appointments table convention |
-| 13-03 | Use Popover with Checkbox list for provider multi-select | shadcn/ui doesn't have native multi-select, this is the recommended pattern |
-| 13-03 | 300ms debounce for search input | Balance between responsiveness and reducing API calls |
-| 13-03 | Quick date presets (hoje, amanha, esta semana, este mes) | Common use cases for faster filtering |
-| 13-03 | Preserve all filter params when paginating | Users expect filters to remain active when navigating pages |
-| 13-03 | Reset to page 1 when changing filters or items per page | Prevents empty pages, predictable behavior |
-| 13-05 | ViewToggle preserves all search params when switching views | Seamless experience, users don't lose their filters |
-| 13-05 | Default view is calendar when no param specified | Maintains existing behavior, list is opt-in |
-| 13-05 | WaitlistManager only shows in calendar view | Waitlist is calendar-specific feature, keeps list view focused |
-| 13-05 | Status param validated against AppointmentStatus enum | Type safety prevents runtime errors in useAgendaList |
-| 13-05 | Desktop/mobile responsive with CSS media queries | Table on desktop, cards on mobile for optimal UX |
-| 14-01 | Client-side filtering for date range and search | Supabase nested field limitation, acceptable for 50 items/page |
-| 14-01 | Overdue threshold: 12 hours before appointment | Gives staff time to intervene |
-| 14-01 | Progress calculation: 0/33/66/100 based on 3 boolean fields | Simple, clear progression indicator |
-| 14-02 | Completion rate color: green >= 70%, yellow >= 50%, red < 50% | Aligns with existing kpi-cards.tsx pattern |
-| 14-02 | Overdue count color: green = 0, yellow <= 3, red > 3 | Escalating urgency for overdue items |
-| 14-02 | Pendentes card always yellow | Pending items inherently need attention |
-| 14-03 | StatusBadge uses className override for consistent colors | Works across theme variations |
-| 14-03 | ProgressBar normalizes values to 0-100 range | Safety against invalid input |
-| 14-03 | Filters use usePathname for route flexibility | Component reusable on different routes |
-| 14-03 | 25/50/100 pagination options for pre-checkin | More granular control for smaller lists |
-| 14-04 | Rate limit 4 hours between reminders, server-side enforcement | Returns 429 status for rate limit violations |
-| 14-04 | Confirmation dialog before sending reminders | Per CONTEXT.md, always confirm before N8N webhook |
-| 14-04 | Timeline steps dynamic based on status | Shows current workflow state, not just timestamps |
-| 14-04 | N8N webhook graceful degradation | Works without webhook configured (dev-friendly) |
-| 14-05 | Dashboard wrapped in Suspense | Provides loading skeleton while client component hydrates |
-| 14-05 | Table and Cards both rendered (CSS visibility) | Simpler than conditional rendering, prevents layout shift |
-| 14-05 | No RBAC in page | Admin layout already enforces ADMIN role |
-| 15-01 | Exclude embedding column from Prisma model | pgvector not supported by Prisma, managed by N8N |
-| 15-01 | Use z.enum with message param | Zod v4 API compatibility |
-| 15-01 | DEACTIVATE_INSTRUCTION instead of DELETE | Soft delete pattern per INST-07 |
-| 15-02 | PATCH restricted to deactivation only | Enforces soft delete per INST-07 |
-| 15-02 | Duplicate titulo check scoped by servicoId | Same title allowed for different services |
-| 15-02 | Content diff placeholder in audit log | Avoids large audit entries |
-| 15-03 | Remove .default() from Zod instruction schema | react-hook-form zodResolver compatibility |
-| 15-03 | WhatsApp preview with Brazilian sample data | Joao Silva, 15/01 as 14h, etc. for realistic preview |
-| 15-03 | Character warnings at 1000/2000 chars | Visual feedback, not hard limits |
-| 15-04 | Status column uses Switch toggle instead of action button | Direct toggle, no confirmation dialog needed |
-| 15-04 | Instructions reference N8N servicos table (int IDs) | Separate from Prisma Service model (UUID IDs) |
-| 16-01 | Status computed from validado boolean field | null=pendente, true=aprovado, false=rejeitado |
-| 16-01 | Document types match Supabase documentos_paciente table enum | Consistent with database schema |
-| 16-01 | Hook includes counts for status filter badges | Enables pendente/aprovado/rejeitado badge counts |
-| 16-02 | Status counts in GET response | Enables filter badge counts without extra request |
-| 16-02 | Client-side search on patient name | Supabase limitation on joined field filtering |
-| 16-02 | 1-hour signed URL expiry | Consistent with existing document preview pattern |
-| 16-02 | Bulk reject requires reason | Server-side validation for mandatory observacoes |
-| 16-03 | Controlled row selection state | Table passes rowSelection via props for parent control |
-| 16-03 | Route-agnostic filters with usePathname | Component reusable on different routes |
-| 16-03 | Preview modal fetches signed URL on open | Avoids stale URLs, fetches fresh on each open |
-| 16-03 | Reject modal clears form on close | Clean state for re-opens |
-| 16-03 | Fixed positioning for bulk actions bar | Visible regardless of scroll position |
-| 16-04 | Dashboard component orchestrates all UI without internal routing | Single component manages all state |
-| 16-04 | Pagination props named to match existing interface | currentPage, totalItems, itemsPerPage |
-| 16-04 | Back button links to Pre-Checkin page | Navigation hierarchy |
+See `.planning/milestones/v1.2-ROADMAP.md` for full v1.2 decision log.
+
+Key patterns established:
+- TanStack Table for list views with shadcn/ui integration
+- URL-based filter state for shareable/bookmarkable links
+- Floating bulk action bars for multi-select operations
+- 300ms debounce for search inputs
+- Client-side filtering for Supabase nested field limitations
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-21 — Completed 16-04-PLAN.md (Page Integration)*
+*Last updated: 2026-01-21 — v1.2 milestone archived*

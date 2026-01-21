@@ -1,5 +1,31 @@
 # Project Milestones: Botfy ClinicOps - Console Administrativo
 
+## v1.2 Agenda List View + Pre-Checkin Management (Shipped: 2026-01-21)
+
+**Delivered:** Comprehensive agenda management with list view toggle and pre-checkin workflow tools including instructions CRUD, document validation, and analytics.
+
+**Phases completed:** 13-16 (18 plans total)
+
+**Key accomplishments:**
+- Agenda list view with TanStack Table, advanced filters (date/provider/service/status), sorting, search, and mobile cards
+- Pre-checkin dashboard with analytics cards, status tracking, workflow timeline, and N8N webhook integration
+- Procedure instructions CRUD with live WhatsApp preview, 7 instruction types, and soft delete
+- Document validation workflow with preview, approve/reject actions, and bulk operations
+- Cross-phase integration verified: all components wired correctly with consistent patterns
+- Mobile responsive: all new interfaces support card layouts on mobile devices
+
+**Stats:**
+- 70+ files created/modified
+- 9,681 lines added (36,339 total TypeScript)
+- 4 phases, 18 plans, 46 requirements
+- 1 day (2026-01-21)
+
+**Git range:** `c1896f5` → `90e8c78`
+
+**What's next:** v1.3 or v2.0 with ML-based predictions, 2FA, or production deployment
+
+---
+
 ## v1.1 Anti No-Show Intelligence (Shipped: 2026-01-21)
 
 **Delivered:** Complete no-show risk management with N8N workflow fix to persist risk scores, admin UI for reminder configurations, history panel with filtering, and analytics dashboard visualizing risk patterns.
