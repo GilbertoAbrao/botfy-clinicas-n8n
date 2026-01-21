@@ -18,13 +18,13 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 ## Current Position
 
 **Milestone:** v1.2 Agenda List View + Pre-Checkin Management
-**Phase:** 14 of 16 (Pre-Checkin Dashboard)
-**Plan:** Complete (5/5 plans)
-**Status:** Phase Complete
+**Phase:** 15 of 16 (Procedure Instructions)
+**Plan:** 1 of 4
+**Status:** In Progress
 
-**Last activity:** 2026-01-21 — Completed 14-05-PLAN.md (Page Integration)
+**Last activity:** 2026-01-21 — Completed 15-01-PLAN.md (Data Layer Foundation)
 
-**Progress:** ███████████░░░░░░░░░ 55% (11/20 plans)
+**Progress:** ████████████░░░░░░░░ 60% (12/20 plans)
 
 ---
 
@@ -34,7 +34,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 |-------|------|--------------|--------|
 | 13 | Agenda List View | ALIST-01 to ALIST-12 | ● Complete (5/5 plans) |
 | 14 | Pre-Checkin Dashboard | PCHK-01 to PCHK-13 | ● Complete (5/5 plans) |
-| 15 | Procedure Instructions | INST-01 to INST-09 | ○ Pending |
+| 15 | Procedure Instructions | INST-01 to INST-09 | ◐ In Progress (1/4 plans) |
 | 16 | Document Management | DOCS-01 to DOCS-12 | ○ Pending |
 
 **Total:** 4 phases, 46 requirements
@@ -95,8 +95,8 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 ## Next Steps
 
-1. **Start Phase 15** — Procedure Instructions (INST-01 to INST-09)
-2. **Continue v1.2 Milestone** — Complete remaining 2 phases (15, 16)
+1. **Continue Phase 15** — Plan 02 (List API endpoint)
+2. **Continue v1.2 Milestone** — Complete remaining plans in phases 15, 16
 
 ---
 
@@ -149,8 +149,11 @@ None
 | 14-05 | Dashboard wrapped in Suspense | Provides loading skeleton while client component hydrates |
 | 14-05 | Table and Cards both rendered (CSS visibility) | Simpler than conditional rendering, prevents layout shift |
 | 14-05 | No RBAC in page | Admin layout already enforces ADMIN role |
+| 15-01 | Exclude embedding column from Prisma model | pgvector not supported by Prisma, managed by N8N |
+| 15-01 | Use z.enum with message param | Zod v4 API compatibility |
+| 15-01 | DEACTIVATE_INSTRUCTION instead of DELETE | Soft delete pattern per INST-07 |
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-21 — Completed 14-05-PLAN.md (Page Integration) - Phase 14 Complete*
+*Last updated: 2026-01-21 — Completed 15-01-PLAN.md (Data Layer Foundation)*
