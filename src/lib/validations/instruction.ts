@@ -61,11 +61,10 @@ export const instructionSchema = z.object({
     .number()
     .int()
     .min(0, 'Prioridade deve ser no minimo 0')
-    .max(100, 'Prioridade deve ser no maximo 100')
-    .default(0),
+    .max(100, 'Prioridade deve ser no maximo 100'),
 
   // Active status
-  ativo: z.boolean().default(true),
+  ativo: z.boolean(),
 });
 
 /**
