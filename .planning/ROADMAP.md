@@ -20,6 +20,15 @@
 
 **Goal:** Adicionar view de lista como alternativa ao calendário na página de agenda, com filtros avançados e ações rápidas.
 
+**Plans:** 5 plans
+
+Plans:
+- [ ] 13-01-PLAN.md — Data layer: install TanStack Table, create API endpoint and hook
+- [ ] 13-02-PLAN.md — Table columns and sorting with TanStack Table
+- [ ] 13-03-PLAN.md — Filter controls and pagination
+- [ ] 13-04-PLAN.md — Mobile card layout
+- [ ] 13-05-PLAN.md — Wire up list view and page integration
+
 **Requirements covered:** ALIST-01 to ALIST-12 (12 requirements)
 
 | ID | Requirement |
@@ -61,6 +70,8 @@
 ## Phase 14: Pre-Checkin Dashboard
 
 **Goal:** Dashboard para visualizar e gerenciar status de pré-checkins, com analytics e ações de intervenção.
+
+**Plans:** (created by /gsd:plan-phase)
 
 **Requirements covered:** PCHK-01 to PCHK-13 (13 requirements)
 
@@ -105,6 +116,8 @@
 
 **Goal:** Interface ADMIN para gerenciar instruções de procedimentos que o N8N envia aos pacientes.
 
+**Plans:** (created by /gsd:plan-phase)
+
 **Requirements covered:** INST-01 to INST-09 (9 requirements)
 
 | ID | Requirement |
@@ -142,6 +155,8 @@
 ## Phase 16: Document Management
 
 **Goal:** Interface para visualizar e validar documentos de pacientes enviados durante pré-checkin.
+
+**Plans:** (created by /gsd:plan-phase)
 
 **Requirements covered:** DOCS-01 to DOCS-12 (12 requirements)
 
