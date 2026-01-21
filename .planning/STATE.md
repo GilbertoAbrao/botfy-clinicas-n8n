@@ -19,12 +19,12 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 **Milestone:** v1.2 Agenda List View + Pre-Checkin Management
 **Phase:** 13 of 16 (Agenda List View)
-**Plan:** 13-04 of 5 (Mobile Card Layout)
+**Plan:** 13-03 of 5 (Filters & Pagination)
 **Status:** In Progress
 
-**Last activity:** 2026-01-21 — Completed 13-04-PLAN.md
+**Last activity:** 2026-01-21 — Completed 13-03-PLAN.md
 
-**Progress:** ███░░░░░░░░░░░░░░░░░ 15% (3/20 plans)
+**Progress:** ██░░░░░░░░░░░░░░░░░░ 10% (2/20 plans)
 
 ---
 
@@ -32,7 +32,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 | Phase | Name | Requirements | Status |
 |-------|------|--------------|--------|
-| 13 | Agenda List View | ALIST-01 to ALIST-12 | ◐ In Progress (3/5 plans) |
+| 13 | Agenda List View | ALIST-01 to ALIST-12 | ◐ In Progress (2/5 plans) |
 | 14 | Pre-Checkin Dashboard | PCHK-01 to PCHK-13 | ○ Pending |
 | 15 | Procedure Instructions | INST-01 to INST-09 | ○ Pending |
 | 16 | Document Management | DOCS-01 to DOCS-12 | ○ Pending |
@@ -95,8 +95,8 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 ## Next Steps
 
-1. **Continue Phase 13** — Execute plan 13-03 (Filters & Actions) [if not done]
-2. **Complete Phase 13** — Execute plan 13-05 (Integration)
+1. **Continue Phase 13** — Execute plan 13-02 (List View UI)
+2. **Complete Phase 13** — Execute remaining plans through 13-05
 
 ---
 
@@ -122,15 +122,13 @@ None
 | 13-01 | Provider filter as comma-separated IDs | Enables multi-select UI without complex query params |
 | 13-01 | Search filter applied client-side | Trade-off: acceptable for 50 items/page, avoids RPC complexity |
 | 13-01 | Status stored lowercase in DB | Matches existing appointments table convention |
-| 13-02 | Column definitions in separate file | Improves reusability and testability |
-| 13-02 | Action buttons use stopPropagation | Prevents row click when clicking actions |
-| 13-02 | Desktop-only table (hidden md:block) | Mobile will use separate card layout |
-| 13-02 | Badge variants mapped by status | Consistent color coding across UI |
-| 13-04 | Mobile cards use md:hidden (desktop hidden) | Complementary to desktop table view |
-| 13-04 | Risk badge conditional on future + non-terminal status | Prevents showing risk on completed/cancelled appointments |
-| 13-04 | Action buttons conditionally rendered by status | Edit always shown, Confirm/Cancel based on appointment state |
+| 13-03 | Use Popover with Checkbox list for provider multi-select | shadcn/ui doesn't have native multi-select, this is the recommended pattern |
+| 13-03 | 300ms debounce for search input | Balance between responsiveness and reducing API calls |
+| 13-03 | Quick date presets (hoje, amanha, esta semana, este mes) | Common use cases for faster filtering |
+| 13-03 | Preserve all filter params when paginating | Users expect filters to remain active when navigating pages |
+| 13-03 | Reset to page 1 when changing filters or items per page | Prevents empty pages, predictable behavior |
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-21 — Completed 13-04-PLAN.md*
+*Last updated: 2026-01-21 — Completed 13-03-PLAN.md*
