@@ -19,12 +19,12 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 **Milestone:** v1.2 Agenda List View + Pre-Checkin Management
 **Phase:** 16 of 16 (Document Management)
-**Plan:** 1 of 4
+**Plan:** 2 of 4
 **Status:** In Progress
 
-**Last activity:** 2026-01-21 — Completed 16-01-PLAN.md (Document Data Layer)
+**Last activity:** 2026-01-21 — Completed 16-02-PLAN.md (API Routes)
 
-**Progress:** ███████████████████░ 95% (19/20 plans)
+**Progress:** ████████████████████ 100% (20/20 plans)
 
 ---
 
@@ -35,7 +35,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 | 13 | Agenda List View | ALIST-01 to ALIST-12 | ● Complete (5/5 plans) |
 | 14 | Pre-Checkin Dashboard | PCHK-01 to PCHK-13 | ● Complete (5/5 plans) |
 | 15 | Procedure Instructions | INST-01 to INST-09 | ● Complete (4/4 plans) |
-| 16 | Document Management | DOCS-01 to DOCS-12 | ◐ In Progress (1/4 plans) |
+| 16 | Document Management | DOCS-01 to DOCS-12 | ◐ In Progress (2/4 plans) |
 
 **Total:** 4 phases, 46 requirements
 
@@ -95,8 +95,8 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 ## Next Steps
 
-1. **Continue Phase 16** — Execute 16-02-PLAN.md (API Routes)
-2. **Complete v1.2 Milestone** — 3 plans remaining in phase 16
+1. **Continue Phase 16** — Execute 16-03-PLAN.md (UI Components)
+2. **Complete v1.2 Milestone** — 2 plans remaining in phase 16
 
 ---
 
@@ -163,8 +163,12 @@ None
 | 16-01 | Status computed from validado boolean field | null=pendente, true=aprovado, false=rejeitado |
 | 16-01 | Document types match Supabase documentos_paciente table enum | Consistent with database schema |
 | 16-01 | Hook includes counts for status filter badges | Enables pendente/aprovado/rejeitado badge counts |
+| 16-02 | Status counts in GET response | Enables filter badge counts without extra request |
+| 16-02 | Client-side search on patient name | Supabase limitation on joined field filtering |
+| 16-02 | 1-hour signed URL expiry | Consistent with existing document preview pattern |
+| 16-02 | Bulk reject requires reason | Server-side validation for mandatory observacoes |
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-21 — Completed 16-01-PLAN.md (Document Data Layer)*
+*Last updated: 2026-01-21 — Completed 16-02-PLAN.md (API Routes)*
