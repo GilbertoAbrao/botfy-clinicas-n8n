@@ -18,13 +18,13 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 ## Current Position
 
 **Milestone:** v1.2 Agenda List View + Pre-Checkin Management
-**Phase:** 13 of 16 (Agenda List View)
-**Plan:** 13-05 of 5 (Integration)
-**Status:** Phase Complete
+**Phase:** 14 of 16 (Pre-Checkin Dashboard)
+**Plan:** 14-02 of 5 (Analytics Cards)
+**Status:** In Progress
 
-**Last activity:** 2026-01-21 — Completed 13-05-PLAN.md (Phase 13 complete)
+**Last activity:** 2026-01-21 — Completed 14-02-PLAN.md
 
-**Progress:** ███░░░░░░░░░░░░░░░░░ 15% (5/20 plans)
+**Progress:** ███░░░░░░░░░░░░░░░░░ 20% (7/20 plans)
 
 ---
 
@@ -33,7 +33,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 | Phase | Name | Requirements | Status |
 |-------|------|--------------|--------|
 | 13 | Agenda List View | ALIST-01 to ALIST-12 | ● Complete (5/5 plans) |
-| 14 | Pre-Checkin Dashboard | PCHK-01 to PCHK-13 | ○ Pending |
+| 14 | Pre-Checkin Dashboard | PCHK-01 to PCHK-13 | ◐ In Progress (2/5 plans) |
 | 15 | Procedure Instructions | INST-01 to INST-09 | ○ Pending |
 | 16 | Document Management | DOCS-01 to DOCS-12 | ○ Pending |
 
@@ -95,7 +95,7 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 ## Next Steps
 
-1. **Start Phase 14** — Pre-Checkin Dashboard (PCHK-01 through PCHK-13)
+1. **Continue Phase 14** — Pre-Checkin Dashboard (14-03: List Component)
 2. **Continue v1.2 Milestone** — Complete remaining 3 phases (14, 15, 16)
 
 ---
@@ -132,8 +132,11 @@ None
 | 13-05 | WaitlistManager only shows in calendar view | Waitlist is calendar-specific feature, keeps list view focused |
 | 13-05 | Status param validated against AppointmentStatus enum | Type safety prevents runtime errors in useAgendaList |
 | 13-05 | Desktop/mobile responsive with CSS media queries | Table on desktop, cards on mobile for optimal UX |
+| 14-02 | Completion rate color: green >= 70%, yellow >= 50%, red < 50% | Aligns with existing kpi-cards.tsx pattern |
+| 14-02 | Overdue count color: green = 0, yellow <= 3, red > 3 | Escalating urgency for overdue items |
+| 14-02 | Pendentes card always yellow | Pending items inherently need attention |
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-21 — Completed 13-05-PLAN.md (Phase 13 complete)*
+*Last updated: 2026-01-21 — Completed 14-02-PLAN.md*

@@ -60,6 +60,11 @@ export enum AuditAction {
 
   // Data export (HIPAA compliance)
   EXPORT_DATA = 'EXPORT_DATA',
+
+  // Pre-checkin management
+  VIEW_PRE_CHECKIN = 'VIEW_PRE_CHECKIN',
+  UPDATE_PRE_CHECKIN = 'UPDATE_PRE_CHECKIN',
+  SEND_PRE_CHECKIN_REMINDER = 'SEND_PRE_CHECKIN_REMINDER',
 }
 
 interface LogAuditParams {
