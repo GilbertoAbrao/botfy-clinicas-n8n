@@ -19,10 +19,10 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 **Milestone:** v1.2 Agenda List View + Pre-Checkin Management
 **Phase:** 13 of 16 (Agenda List View)
-**Plan:** 13-04 of 5 (Mobile Card Layout)
+**Plan:** 13-02 of 5 (List View UI)
 **Status:** In Progress
 
-**Last activity:** 2026-01-21 — Completed 13-04-PLAN.md
+**Last activity:** 2026-01-21 — Completed 13-02-PLAN.md
 
 **Progress:** ██░░░░░░░░░░░░░░░░░░ 10% (2/20 plans)
 
@@ -95,8 +95,9 @@ See: `.planning/PROJECT.md` (updated 2026-01-21)
 
 ## Next Steps
 
-1. **Continue Phase 13** — Execute plan 13-02 (List View UI)
-2. **Complete Phase 13** — Execute plan 13-03 (Filters & Actions)
+1. **Continue Phase 13** — Execute plan 13-03 (Filters & Actions)
+2. **Continue Phase 13** — Execute plan 13-04 (Mobile Card Layout)
+3. **Complete Phase 13** — Execute plan 13-05 (Integration)
 
 ---
 
