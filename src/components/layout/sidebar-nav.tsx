@@ -115,6 +115,13 @@ const navigation = [
     adminOnly: true,
   },
   {
+    name: 'Instrucoes',
+    href: '/admin/pre-checkin/instrucoes',
+    icon: FileText,
+    enabled: true,
+    adminOnly: true,
+  },
+  {
     name: 'Configuracoes',
     href: '/admin/configuracoes',
     icon: Settings,
