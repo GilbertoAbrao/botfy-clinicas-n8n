@@ -79,6 +79,13 @@ export async function GET(request: NextRequest) {
           { prioridade: 'asc' },
           { createdAt: 'desc' },
         ],
+        include: {
+          servico: {
+            select: {
+              nome: true,
+            },
+          },
+        },
       }),
       prisma.procedureInstruction.count({ where }),
     ]);

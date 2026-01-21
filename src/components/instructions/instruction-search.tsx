@@ -72,7 +72,7 @@ export function InstructionSearch({ onCreateClick }: InstructionSearchProps) {
     // Reset to page 1 on new search
     params.set('page', '1');
 
-    router.push(`/admin/instrucoes?${params.toString()}`);
+    router.push(`/admin/pre-checkin/instrucoes?${params.toString()}`);
   }, [router]);
 
   // Handle search input change
@@ -108,7 +108,7 @@ export function InstructionSearch({ onCreateClick }: InstructionSearchProps) {
     setSearchValue('');
     setTypeFilter('all');
     setActiveFilter('all');
-    router.push('/admin/instrucoes');
+    router.push('/admin/pre-checkin/instrucoes');
   };
 
   // Handle submit (for Enter key)

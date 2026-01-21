@@ -35,7 +35,7 @@ import {
 import { WhatsAppPreview } from './whatsapp-preview';
 
 interface Service {
-  id: string;
+  id: number;
   nome: string;
 }
 
@@ -120,12 +120,13 @@ export function InstructionFormModal({
   const fetchServices = async () => {
     setLoadingServices(true);
     try {
-      const response = await fetch('/api/servicos?limit=100&ativo=true');
+      // Fetch from N8N servicos table (integer IDs) instead of services table (UUID IDs)
+      const response = await fetch('/api/n8n/servicos?limit=100&ativo=true');
       if (!response.ok) {
         throw new Error('Erro ao buscar servicos');
       }
       const data = await response.json();
-      setServices(data.services || []);
+      setServices(data.servicos || []);
     } catch (error) {
       console.error('Error fetching services:', error);
       toast.error('Erro ao carregar servicos');
@@ -260,7 +261,7 @@ export function InstructionFormModal({
                   <SelectContent>
                     <SelectItem value="geral">Geral (todos os servicos)</SelectItem>
                     {services.map((service) => (
-                      <SelectItem key={service.id} value={service.id}>
+                      <SelectItem key={service.id} value={service.id.toString()}>
                         {service.nome}
                       </SelectItem>
                     ))}

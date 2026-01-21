@@ -91,7 +91,7 @@ export function InstructionTable({
     params.set('page', page.toString());
     params.set('limit', (limit || pagination.limit).toString());
 
-    return `/admin/instrucoes?${params.toString()}`;
+    return `/admin/pre-checkin/instrucoes?${params.toString()}`;
   };
 
   const handlePageChange = (newPage: number) => {
@@ -391,7 +391,7 @@ export function InstructionTable({
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeactivate}
-              className="bg-orange-600 hover:bg-orange-700"
+              className="bg-orange-600 hover:bg-orange-700 text-white focus:ring-orange-600"
             >
               Desativar
             </AlertDialogAction>

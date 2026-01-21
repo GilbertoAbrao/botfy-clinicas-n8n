@@ -247,6 +247,22 @@ model Waitlist {
   @@map("waitlist")
 }
 
+// N8N Servicos - Procedures offered by the clinic (managed by N8N)
+// Note: This is different from the 'services' table (UUID IDs) - this table uses integer IDs
+model Servico {
+  id             Int      @id @default(autoincrement())
+  nome           String   @db.VarChar(100)
+  duracaoMinutos Int      @map("duracao_minutos")
+  ativo          Boolean  @default(true)
+  preco          Decimal? @db.Decimal(10, 2)
+
+  instrucoes ProcedureInstruction[]
+
+  @@index([nome])
+  @@index([ativo])
+  @@map("servicos")
+}
+
 // Procedure instructions for patient preparation (RAG-enabled)
 // Maps to existing 'instrucoes_procedimentos' table
 // Note: 'embedding' column excluded - pgvector not supported by Prisma, managed by N8N
@@ -260,6 +276,8 @@ model ProcedureInstruction {
   ativo         Boolean  @default(true)
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz
+
+  servico Servico? @relation(fields: [servicoId], references: [id])
 
   @@index([servicoId])
   @@index([tipoInstrucao])
