@@ -46,8 +46,18 @@ export function useChatHistorySubscription(
   const statusRef = useRef<SubscriptionStatus>('disconnected')
 
   useEffect(() => {
-    // Create Supabase client
-    const supabase = createBrowserClient()
+    // Try to create Supabase client - may fail if env vars missing
+    let supabase
+    try {
+      supabase = createBrowserClient()
+    } catch (error) {
+      console.warn('[Supabase Realtime] Failed to initialize client:', error)
+      statusRef.current = 'error'
+      if (onStatusChange) {
+        onStatusChange({ status: 'error', error: 'Supabase not configured' })
+      }
+      return // Exit early, no cleanup needed
+    }
 
     // Create channel for n8n_chat_histories table
     const channel = supabase
@@ -99,7 +109,7 @@ export function useChatHistorySubscription(
           }
         }
       })
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         if (status === 'SUBSCRIBED') {
           statusRef.current = 'subscribed'
           if (onStatusChange) {

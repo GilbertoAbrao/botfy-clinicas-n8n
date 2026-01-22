@@ -123,7 +123,7 @@ export function AgendaListFilters() {
 
         if (appointmentsData) {
           const uniqueServices = [
-            ...new Set(appointmentsData.map((apt) => apt.service_type).filter(Boolean)),
+            ...new Set(appointmentsData.map((apt: { service_type: string | null }) => apt.service_type).filter(Boolean)),
           ]
           setServiceTypes(uniqueServices as string[])
         }

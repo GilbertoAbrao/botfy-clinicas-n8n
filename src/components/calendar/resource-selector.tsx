@@ -43,7 +43,7 @@ export function ResourceSelector({
 
         if (appointmentsData) {
           // Get unique service types
-          const uniqueServices = [...new Set(appointmentsData.map(apt => apt.service_type).filter(Boolean))]
+          const uniqueServices = [...new Set(appointmentsData.map((apt: { service_type: string | null }) => apt.service_type).filter(Boolean))]
           setServices(uniqueServices as string[])
         }
       } catch (error) {

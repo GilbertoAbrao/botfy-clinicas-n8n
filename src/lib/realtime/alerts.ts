@@ -41,13 +41,23 @@ export function useAlertSubscription(
   const statusRef = useRef<SubscriptionStatus>('disconnected')
 
   useEffect(() => {
-    // Create Supabase client
-    const supabase = createBrowserClient()
+    // Try to create Supabase client - may fail if env vars missing
+    let supabase
+    try {
+      supabase = createBrowserClient()
+    } catch (error) {
+      console.warn('[Supabase Realtime] Failed to initialize client:', error)
+      statusRef.current = 'error'
+      if (onStatusChange) {
+        onStatusChange({ status: 'error', error: 'Supabase not configured' })
+      }
+      return // Exit early, no cleanup needed
+    }
 
     // Create channel for alerts table
     const channel = supabase
       .channel('alerts-changes')
-      .on<Alert>(
+      .on(
         'postgres_changes',
         {
           event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
@@ -94,7 +104,7 @@ export function useAlertSubscription(
           }
         }
       })
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         if (status === 'SUBSCRIBED') {
           statusRef.current = 'subscribed'
           if (onStatusChange) {
@@ -149,12 +159,23 @@ export function useAlertDetailSubscription(
   useEffect(() => {
     if (!alertId) return
 
-    const supabase = createBrowserClient()
+    // Try to create Supabase client - may fail if env vars missing
+    let supabase
+    try {
+      supabase = createBrowserClient()
+    } catch (error) {
+      console.warn('[Supabase Realtime] Failed to initialize client:', error)
+      statusRef.current = 'error'
+      if (onStatusChange) {
+        onStatusChange({ status: 'error', error: 'Supabase not configured' })
+      }
+      return // Exit early, no cleanup needed
+    }
 
     // Create channel for specific alert
     const channel = supabase
       .channel(`alert-${alertId}`)
-      .on<Alert>(
+      .on(
         'postgres_changes',
         {
           event: 'UPDATE',
@@ -188,7 +209,7 @@ export function useAlertDetailSubscription(
           }
         }
       })
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         if (status === 'SUBSCRIBED') {
           statusRef.current = 'subscribed'
           if (onStatusChange) {

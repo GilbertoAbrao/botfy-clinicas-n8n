@@ -17,6 +17,17 @@ export interface CalendarEvent {
   status: string
 }
 
+// Type for appointment data from Supabase query
+interface AppointmentData {
+  id: string
+  service_type: string
+  scheduled_at: string
+  duration: number | null
+  status: string
+  patient: { id: string; nome: string } | { id: string; nome: string }[] | null
+  provider: { id: string; nome: string; cor_calendario: string | null } | { id: string; nome: string; cor_calendario: string | null }[] | null
+}
+
 export function useCalendarEvents(startDate: Date, endDate: Date) {
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [loading, setLoading] = useState(true)
@@ -59,7 +70,7 @@ export function useCalendarEvents(startDate: Date, endDate: Date) {
       if (fetchError) throw fetchError
 
       // Transform to calendar events
-      const calendarEvents: CalendarEvent[] = (data || []).map(apt => {
+      const calendarEvents: CalendarEvent[] = (data as AppointmentData[] || []).map((apt) => {
         const start = dbTimestampToTZDate(apt.scheduled_at)
         const end = new Date(start.getTime() + (apt.duration || 60) * 60000)
 
