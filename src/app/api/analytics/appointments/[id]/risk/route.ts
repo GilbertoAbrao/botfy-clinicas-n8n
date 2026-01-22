@@ -39,11 +39,12 @@ export async function GET(
   }
 
   try {
-    const appointmentId = parseInt(id, 10)
-    if (isNaN(appointmentId)) {
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (!uuidRegex.test(id)) {
       return NextResponse.json({ error: 'Invalid appointment ID' }, { status: 400 })
     }
-    const prediction = await predictNoShowRisk(appointmentId)
+    const prediction = await predictNoShowRisk(id)
     return NextResponse.json(prediction)
   } catch (error) {
     console.error('[Appointment Risk API] Error:', error)

@@ -99,12 +99,9 @@ export function CalendarView() {
     const event = eventsRef.current.find(e => String(e.id) === clickedId)
     if (event) {
       setSelectedAppointment(event.id) // Use the original event ID
-      setInitialModalData({
-        pacienteId: event.patientId,
-        servicoId: event.serviceId,
-        dataHora: calendarEvent.start,
-        status: event.status,
-      })
+      // Don't pass initialData for existing events - let modal fetch full data from DB
+      // This ensures all fields (including observacoes) are loaded
+      setInitialModalData(undefined)
       setModalOpen(true)
     }
   }, [])

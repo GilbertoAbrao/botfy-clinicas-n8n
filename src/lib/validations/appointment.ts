@@ -42,14 +42,14 @@ export interface AppointmentFilters {
 
 // Query params validation schema
 export const appointmentFiltersSchema = z.object({
-  dateStart: z.string().datetime().optional(),
-  dateEnd: z.string().datetime().optional(),
+  dateStart: z.string().optional(), // ISO date string (flexible format)
+  dateEnd: z.string().optional(),   // ISO date string (flexible format)
   providerId: z.string().optional(), // comma-separated list
   serviceType: z.string().optional(),
   status: z.enum(STATUS_APPOINTMENT).optional(),
   search: z.string().optional(),
   page: z.coerce.number().int().min(1).optional().default(1),
-  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
+  limit: z.coerce.number().int().min(1).max(500).optional().default(50),
 })
 
 export type AppointmentFiltersQuery = z.infer<typeof appointmentFiltersSchema>
@@ -67,9 +67,9 @@ export const createAppointmentSchema = z.object({
 // Update appointment schema (all fields optional for partial updates)
 export const updateAppointmentSchema = z.object({
   pacienteId: z.string().uuid().optional(),
-  servicoId: z.string().uuid().optional(),
+  servicoId: z.string().min(1).optional(), // Can be UUID or service name
   providerId: z.string().uuid().optional(),
-  dataHora: z.string().datetime().optional(),
+  dataHora: z.string().min(1).optional(), // Accepts datetime-local format (YYYY-MM-DDTHH:mm)
   observacoes: z.string().optional(),
   status: z.enum(['AGENDADO', 'CONFIRMADO', 'REALIZADO', 'CANCELADO', 'FALTOU']).optional(),
 })

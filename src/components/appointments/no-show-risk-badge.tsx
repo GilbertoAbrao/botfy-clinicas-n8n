@@ -50,7 +50,16 @@ export function NoShowRiskBadge({ appointmentId, className }: NoShowRiskBadgePro
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<boolean>(false)
 
+  // Check if appointmentId is a UUID (not supported by current risk predictor)
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(appointmentId)
+
   useEffect(() => {
+    // Skip fetching for UUID IDs - risk predictor only supports numeric IDs from agendamentos table
+    if (isUuid) {
+      setLoading(false)
+      return
+    }
+
     let isMounted = true
 
     const fetchRisk = async () => {
@@ -81,7 +90,7 @@ export function NoShowRiskBadge({ appointmentId, className }: NoShowRiskBadgePro
     return () => {
       isMounted = false
     }
-  }, [appointmentId])
+  }, [appointmentId, isUuid])
 
   // Loading state: small skeleton pill
   if (loading) {

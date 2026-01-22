@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUserWithRole } from '@/lib/auth/session'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import { updateAppointmentSchema } from '@/lib/validations/appointment'
 import { logAudit, AuditAction } from '@/lib/audit/logger'
 import { findConflicts, addBufferTime, TimeSlot } from '@/lib/calendar/conflict-detection'
@@ -22,14 +22,16 @@ export async function PUT(
 
     const { id } = await params
     const body = await req.json()
+    console.log('[API agendamentos PUT] Raw body:', JSON.stringify(body))
     const validatedData = updateAppointmentSchema.parse(body)
+    console.log('[API agendamentos PUT] Validated data:', JSON.stringify(validatedData))
 
-    const supabase = await createServerSupabaseClient()
+    const supabase = createAdminSupabaseClient()
 
-    // Fetch original appointment
+    // Fetch original appointment (from appointments table - same as calendar)
     const { data: original } = await supabase
-      .from('agendamentos')
-      .select('data_hora, provider_id, servico_id')
+      .from('appointments')
+      .select('scheduled_at, provider_id, service_type, duration')
       .eq('id', id)
       .single()
 
@@ -38,22 +40,28 @@ export async function PUT(
     }
 
     // Only check conflicts if time or provider changed
-    const timeChanged = validatedData.dataHora && validatedData.dataHora !== original.data_hora
+    const timeChanged = validatedData.dataHora && validatedData.dataHora !== original.scheduled_at
     const providerChanged = validatedData.providerId && validatedData.providerId !== original.provider_id
 
     if (timeChanged || providerChanged) {
-      // Fetch service duration
-      const servicoId = validatedData.servicoId || original.servico_id
-      const { data: service } = await supabase
-        .from('servicos')
-        .select('duracao_minutos')
-        .eq('id', servicoId)
-        .single()
+      // Use stored duration or fetch from services table
+      const serviceType = validatedData.servicoId || original.service_type
+      let duration = original.duration || 60
 
-      const duration = service?.duracao_minutos || 60
+      // If service changed, fetch new duration
+      if (validatedData.servicoId && validatedData.servicoId !== original.service_type) {
+        const { data: service } = await supabase
+          .from('services')
+          .select('duracao')
+          .eq('nome', serviceType)
+          .single()
+        if (service?.duracao) {
+          duration = service.duracao
+        }
+      }
 
       // Create proposed slot
-      const startTime = new Date(validatedData.dataHora || original.data_hora)
+      const startTime = new Date(validatedData.dataHora || original.scheduled_at)
       const endTime = new Date(startTime.getTime() + duration * 60000)
 
       const proposedSlot: TimeSlot = {
@@ -72,18 +80,18 @@ export async function PUT(
       endOfDay.setHours(23, 59, 59, 999)
 
       const { data: existingApts } = await supabase
-        .from('agendamentos')
-        .select('id, data_hora, provider_id, servicos(duracao_minutos)')
+        .from('appointments')
+        .select('id, scheduled_at, provider_id, duration')
         .eq('provider_id', slotWithBuffer.providerId)
-        .gte('data_hora', startOfDay.toISOString())
-        .lte('data_hora', endOfDay.toISOString())
-        .neq('status', 'CANCELADO')
+        .gte('scheduled_at', startOfDay.toISOString())
+        .lte('scheduled_at', endOfDay.toISOString())
+        .neq('status', 'cancelled')
 
       // Convert to TimeSlot format
       const existingSlots: TimeSlot[] = (existingApts || []).map(apt => {
-        const start = new Date(apt.data_hora)
-        const duration = (apt.servicos as any)?.duracao_minutos || 60
-        const end = new Date(start.getTime() + duration * 60000)
+        const start = new Date(apt.scheduled_at)
+        const aptDuration = apt.duration || 60
+        const end = new Date(start.getTime() + aptDuration * 60000)
 
         return {
           id: apt.id,
@@ -108,16 +116,59 @@ export async function PUT(
     }
 
     // No conflicts or no time change - proceed with update
+    // Map status from Portuguese frontend to English DB format
+    const statusMap: Record<string, string> = {
+      'AGENDADO': 'tentative',
+      'CONFIRMADO': 'confirmed',
+      'REALIZADO': 'completed',
+      'CANCELADO': 'cancelled',
+      'FALTOU': 'no_show',
+    }
+
     const updateData: any = {}
-    if (validatedData.pacienteId) updateData.paciente_id = validatedData.pacienteId
-    if (validatedData.servicoId) updateData.servico_id = validatedData.servicoId
+    if (validatedData.pacienteId) updateData.patient_id = validatedData.pacienteId
+
+    // Handle servicoId - can be UUID or service name
+    if (validatedData.servicoId) {
+      // Check if it's a UUID
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      if (uuidRegex.test(validatedData.servicoId)) {
+        // Fetch service name from UUID
+        const { data: serviceData } = await supabase
+          .from('services')
+          .select('nome')
+          .eq('id', validatedData.servicoId)
+          .single()
+        if (serviceData?.nome) {
+          updateData.service_type = serviceData.nome
+        }
+      } else {
+        // Already a service name
+        updateData.service_type = validatedData.servicoId
+      }
+    }
+
     if (validatedData.providerId) updateData.provider_id = validatedData.providerId
-    if (validatedData.dataHora) updateData.data_hora = validatedData.dataHora
-    if (validatedData.observacoes !== undefined) updateData.observacoes = validatedData.observacoes
-    if (validatedData.status) updateData.status = validatedData.status
+    if (validatedData.dataHora) {
+      // Convert datetime-local format to ISO if needed
+      const dateStr = validatedData.dataHora
+      updateData.scheduled_at = dateStr.includes('Z') ? dateStr : new Date(dateStr).toISOString()
+    }
+
+    // Always include notes (even if empty string)
+    if (validatedData.observacoes !== undefined) {
+      updateData.notes = validatedData.observacoes
+    }
+
+    if (validatedData.status) {
+      // Convert Portuguese status to English DB status
+      updateData.status = statusMap[validatedData.status] || validatedData.status.toLowerCase()
+    }
+
+    console.log('[API agendamentos PUT] updateData:', updateData)
 
     const { data, error } = await supabase
-      .from('agendamentos')
+      .from('appointments')
       .update(updateData)
       .eq('id', id)
       .select()
@@ -129,7 +180,7 @@ export async function PUT(
     await logAudit({
       userId: user.id,
       action: AuditAction.UPDATE_APPOINTMENT,
-      resource: 'agendamentos',
+      resource: 'appointments',
       resourceId: id,
       details: validatedData,
     })
@@ -169,7 +220,7 @@ export async function DELETE(
     }
 
     const { id } = await params
-    const supabase = await createServerSupabaseClient()
+    const supabase = createAdminSupabaseClient()
 
     // Fetch appointment details before deleting (from appointments table - same as calendar)
     const { data: appointment } = await supabase

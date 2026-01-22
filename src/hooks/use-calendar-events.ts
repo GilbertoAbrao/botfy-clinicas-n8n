@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { createBrowserClient } from '@/lib/supabase/client'
 import { dbTimestampToTZDate } from '@/lib/calendar/time-zone-utils'
 
 export interface CalendarEvent {
@@ -17,15 +16,19 @@ export interface CalendarEvent {
   status: string
 }
 
-// Type for appointment data from Supabase query
-interface AppointmentData {
+// Type for API response item
+interface AppointmentListItem {
   id: string
-  service_type: string
-  scheduled_at: string
-  duration: number | null
+  scheduledAt: string
+  patientId: string
+  patientName: string
+  patientPhone: string | null
+  serviceType: string
+  providerId: string
+  providerName: string
+  providerColor: string
   status: string
-  patient: { id: string; nome: string } | { id: string; nome: string }[] | null
-  provider: { id: string; nome: string; cor_calendario: string | null } | { id: string; nome: string; cor_calendario: string | null }[] | null
+  duration: number
 }
 
 export function useCalendarEvents(startDate: Date, endDate: Date) {
@@ -33,77 +36,81 @@ export function useCalendarEvents(startDate: Date, endDate: Date) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchEvents = useCallback(async () => {
+  const fetchEvents = useCallback(async (signal?: AbortSignal) => {
     setLoading(true)
     setError(null)
 
     console.log('[useCalendarEvents] Fetching events...', { startDate: startDate.toISOString(), endDate: endDate.toISOString() })
 
     try {
-      const supabase = createBrowserClient()
+      // Use the API route which handles auth on the server side
+      const params = new URLSearchParams({
+        dateStart: startDate.toISOString(),
+        dateEnd: endDate.toISOString(),
+        limit: '500', // Get all events for the month
+      })
 
-      // Fetch appointments from appointments table with patient and provider joins
-      const { data, error: fetchError } = await supabase
-        .from('appointments')
-        .select(`
-          id,
-          service_type,
-          scheduled_at,
-          duration,
-          status,
-          patient:patients!patient_id (
-            id,
-            nome
-          ),
-          provider:providers!provider_id (
-            id,
-            nome,
-            cor_calendario
-          )
-        `)
-        .gte('scheduled_at', startDate.toISOString())
-        .lte('scheduled_at', endDate.toISOString())
-        .order('scheduled_at', { ascending: true })
+      const response = await fetch(`/api/agendamentos/list?${params}`, {
+        signal,
+      })
 
-      console.log('[useCalendarEvents] Query result:', { data, fetchError })
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Erro ao buscar agendamentos')
+      }
 
-      if (fetchError) throw fetchError
+      const data = await response.json()
+      console.log('[useCalendarEvents] API result:', data)
 
       // Transform to calendar events
-      const calendarEvents: CalendarEvent[] = (data as AppointmentData[] || []).map((apt) => {
-        const start = dbTimestampToTZDate(apt.scheduled_at)
+      const calendarEvents: CalendarEvent[] = (data.appointments || []).map((apt: AppointmentListItem) => {
+        const start = dbTimestampToTZDate(apt.scheduledAt)
         const end = new Date(start.getTime() + (apt.duration || 60) * 60000)
-
-        // Handle patient and provider data (can be null)
-        const patient = Array.isArray(apt.patient) ? apt.patient[0] : apt.patient
-        const provider = Array.isArray(apt.provider) ? apt.provider[0] : apt.provider
 
         return {
           id: apt.id,
-          title: `${patient?.nome || 'Sem paciente'} - ${apt.service_type}`,
+          title: `${apt.patientName} - ${apt.serviceType}`,
           start,
           end,
-          patientId: patient?.id || '',
-          serviceId: apt.service_type,
-          providerId: provider?.id || '',
-          providerName: provider?.nome || 'Sem profissional',
-          providerColor: provider?.cor_calendario || '#8B5CF6',
+          patientId: apt.patientId,
+          serviceId: apt.serviceType,
+          providerId: apt.providerId,
+          providerName: apt.providerName,
+          providerColor: apt.providerColor,
           status: apt.status,
         }
       })
 
       setEvents(calendarEvents)
-    } catch (err) {
+    } catch (err: any) {
+      // Ignore AbortError - happens when component unmounts during fetch (normal in React StrictMode)
+      // Check multiple ways since different environments may report it differently
+      if (
+        err?.name === 'AbortError' ||
+        err?.code === 'ABORT_ERR' ||
+        err?.message?.includes('abort') ||
+        err?.message?.includes('cancelled') ||
+        signal?.aborted
+      ) {
+        return
+      }
       console.error('[useCalendarEvents] Error:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch appointments')
     } finally {
-      console.log('[useCalendarEvents] Fetch complete')
-      setLoading(false)
+      // Only update loading state if not aborted
+      if (!signal?.aborted) {
+        setLoading(false)
+      }
     }
   }, [startDate, endDate])
 
   useEffect(() => {
-    fetchEvents()
+    const abortController = new AbortController()
+    fetchEvents(abortController.signal)
+
+    return () => {
+      abortController.abort()
+    }
   }, [fetchEvents])
 
   const refetch = useCallback(() => {

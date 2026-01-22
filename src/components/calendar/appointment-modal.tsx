@@ -12,6 +12,52 @@ import { Trash2 } from 'lucide-react'
 import { createBrowserClient } from '@/lib/supabase/client'
 import { NoShowRiskBadge } from '@/components/appointments/no-show-risk-badge'
 
+// Helper to check if a string is a UUID
+function isUuid(str: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str)
+}
+
+// Convert various date formats to datetime-local input format (YYYY-MM-DDTHH:mm)
+function toDateTimeLocal(dateStr: string): string {
+  if (!dateStr) return ''
+  // Already in correct format
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(dateStr)) {
+    return dateStr.slice(0, 16)
+  }
+  // Schedule-X format: YYYY-MM-DD HH:mm
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(dateStr)) {
+    return dateStr.replace(' ', 'T')
+  }
+  // ISO format: YYYY-MM-DDTHH:mm:ss.sssZ
+  try {
+    const date = new Date(dateStr)
+    if (!isNaN(date.getTime())) {
+      return date.toISOString().slice(0, 16)
+    }
+  } catch {
+    // ignore
+  }
+  return dateStr
+}
+
+// Map Portuguese status to English (for API)
+const STATUS_TO_EN: Record<string, string> = {
+  'agendada': 'AGENDADO',
+  'confirmado': 'CONFIRMADO',
+  'realizada': 'REALIZADO',
+  'cancelada': 'CANCELADO',
+  'faltou': 'FALTOU',
+}
+
+// Map English status to modal values
+const STATUS_TO_MODAL: Record<string, string> = {
+  'confirmed': 'CONFIRMADO',
+  'tentative': 'AGENDADO',
+  'cancelled': 'CANCELADO',
+  'completed': 'REALIZADO',
+  'no_show': 'FALTOU',
+}
+
 interface AppointmentModalProps {
   isOpen: boolean
   onClose: () => void
@@ -19,7 +65,7 @@ interface AppointmentModalProps {
   appointmentId?: string  // undefined = create mode, string = edit mode
   initialData?: {
     pacienteId: string
-    servicoId: string
+    servicoId: string  // Can be UUID or service type name
     dataHora: string
     observacoes?: string
     status?: string
@@ -45,6 +91,97 @@ export function AppointmentModal({
     status: initialData?.status || 'AGENDADO',
   })
 
+  // Update form when initialData changes (e.g., when editing different appointments)
+  useEffect(() => {
+    if (initialData) {
+      // Normalize status from Portuguese frontend format to modal format
+      let normalizedStatus = initialData.status || 'AGENDADO'
+      if (STATUS_TO_EN[normalizedStatus.toLowerCase()]) {
+        normalizedStatus = STATUS_TO_EN[normalizedStatus.toLowerCase()]
+      }
+
+      setFormData({
+        pacienteId: initialData.pacienteId || '',
+        servicoId: initialData.servicoId || '',
+        dataHora: toDateTimeLocal(initialData.dataHora || ''),
+        observacoes: initialData.observacoes || '',
+        status: normalizedStatus,
+      })
+    }
+  }, [initialData])
+
+  // Fetch appointment data when appointmentId is provided but initialData is not
+  useEffect(() => {
+    if (!isOpen || !appointmentId || initialData) return
+
+    const controller = new AbortController()
+
+    const fetchAppointment = async () => {
+      try {
+        const supabase = createBrowserClient()
+        const { data, error } = await supabase
+          .from('appointments')
+          .select(`
+            id,
+            scheduled_at,
+            service_type,
+            status,
+            notes,
+            patient_id,
+            provider_id
+          `)
+          .eq('id', appointmentId)
+          .single()
+
+        if (error) throw error
+        if (!data) return
+
+        // Map DB status to modal status
+        const modalStatus = STATUS_TO_MODAL[data.status] || 'AGENDADO'
+
+        setFormData({
+          pacienteId: data.patient_id || '',
+          servicoId: data.service_type || '', // This is the service name, will be mapped to ID below
+          dataHora: toDateTimeLocal(data.scheduled_at || ''),
+          observacoes: data.notes || '',
+          status: modalStatus,
+        })
+      } catch (err: any) {
+        // Ignore AbortError - happens when modal closes during fetch
+        if (
+          err?.name === 'AbortError' ||
+          err?.message?.includes('abort') ||
+          controller.signal.aborted
+        ) {
+          return
+        }
+        console.error('[AppointmentModal] Error fetching appointment:', err)
+      }
+    }
+
+    fetchAppointment()
+
+    return () => {
+      controller.abort()
+    }
+  }, [isOpen, appointmentId, initialData])
+
+  // Map service name/type to ID when services are loaded (for edit mode)
+  useEffect(() => {
+    if (services.length > 0 && formData.servicoId && !isUuid(formData.servicoId)) {
+      // servicoId is a service name or type, find the matching service ID
+      const serviceName = formData.servicoId.toLowerCase()
+      const matchingService = services.find(s =>
+        s.nome?.toLowerCase() === serviceName ||
+        s.nome?.toLowerCase().includes(serviceName) ||
+        serviceName.includes(s.nome?.toLowerCase() || '')
+      )
+      if (matchingService) {
+        setFormData(prev => ({ ...prev, servicoId: matchingService.id }))
+      }
+    }
+  }, [services, formData.servicoId])
+
   // Determine if we should show the no-show risk badge
   // Only show for existing appointments that are in the future and not cancelled/completed
   const showRiskBadge = useMemo(() => {
@@ -59,20 +196,56 @@ export function AppointmentModal({
 
   // Fetch patients and services on mount
   useEffect(() => {
+    if (!isOpen) return
+
+    const controller = new AbortController()
+
     const fetchData = async () => {
-      const supabase = createBrowserClient()
+      try {
+        const supabase = createBrowserClient()
 
-      const [patientsRes, servicesRes] = await Promise.all([
-        supabase.from('pacientes').select('id, nome').order('nome'),
-        supabase.from('servicos').select('id, nome').eq('ativo', true).order('nome'),
-      ])
+        // Fetch patients from patients table (UUID-based, used by appointments)
+        const { data: patientsData, error: patientsError } = await supabase
+          .from('patients')
+          .select('id, nome, telefone')
+          .order('nome')
+          .limit(500)
 
-      if (patientsRes.data) setPatients(patientsRes.data)
-      if (servicesRes.data) setServices(servicesRes.data)
+        if (patientsError) {
+          console.error('[AppointmentModal] Error fetching patients:', patientsError)
+        } else if (patientsData) {
+          setPatients(patientsData)
+        }
+
+        // Fetch services from services table (UUID-based, used by appointments)
+        const { data: servicesData, error: servicesError } = await supabase
+          .from('services')
+          .select('id, nome, duracao, preco')
+          .eq('ativo', true)
+          .order('nome')
+
+        if (servicesError) {
+          console.error('[AppointmentModal] Error fetching services:', servicesError)
+        } else if (servicesData) {
+          setServices(servicesData)
+        }
+      } catch (err: any) {
+        // Ignore AbortError - happens when modal closes during fetch
+        if (
+          err?.name === 'AbortError' ||
+          err?.message?.includes('abort') ||
+          controller.signal.aborted
+        ) {
+          return
+        }
+        console.error('[AppointmentModal] Error fetching data:', err)
+      }
     }
 
-    if (isOpen) {
-      fetchData()
+    fetchData()
+
+    return () => {
+      controller.abort()
     }
   }, [isOpen])
 

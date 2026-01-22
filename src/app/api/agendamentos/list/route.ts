@@ -1,11 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUserWithRole } from '@/lib/auth/session'
-import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createAdminSupabaseClient } from '@/lib/supabase/server'
 import {
   appointmentFiltersSchema,
   AppointmentListItem,
   AppointmentStatus,
 } from '@/lib/validations/appointment'
+
+// Map English DB status to Portuguese frontend status
+const STATUS_MAP: Record<string, AppointmentStatus> = {
+  confirmed: 'confirmado',
+  tentative: 'agendada',
+  cancelled: 'cancelada',
+  completed: 'realizada',
+  no_show: 'faltou',
+}
+
+// Map Portuguese frontend status to English DB status for filtering
+const STATUS_MAP_REVERSE: Record<AppointmentStatus, string> = {
+  confirmado: 'confirmed',
+  agendada: 'tentative',
+  cancelada: 'cancelled',
+  realizada: 'completed',
+  faltou: 'no_show',
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -30,8 +48,8 @@ export async function GET(request: NextRequest) {
     const { page, limit, dateStart, dateEnd, providerId, serviceType, status, search } = params
     const offset = (page - 1) * limit
 
-    // 4. Build Supabase query
-    const supabase = await createServerSupabaseClient()
+    // 4. Build Supabase query (using admin client since user is already authenticated above)
+    const supabase = createAdminSupabaseClient()
 
     let query = supabase
       .from('appointments')
@@ -67,7 +85,9 @@ export async function GET(request: NextRequest) {
     }
 
     if (status) {
-      query = query.eq('status', status)
+      // Convert Portuguese status to English for DB query
+      const dbStatus = STATUS_MAP_REVERSE[status]
+      query = query.eq('status', dbStatus)
     }
 
     // Search filter - match on patient name OR phone (using OR with ilike for partial match)
@@ -108,7 +128,7 @@ export async function GET(request: NextRequest) {
         providerId: provider?.id || '',
         providerName: provider?.nome || 'Sem profissional',
         providerColor: provider?.cor_calendario || '#8B5CF6',
-        status: (apt.status as AppointmentStatus) || 'agendada',
+        status: STATUS_MAP[apt.status] || 'agendada',
         duration: apt.duration || 60,
       }
     })
@@ -132,12 +152,14 @@ export async function GET(request: NextRequest) {
       appointments,
       pagination: { page, limit, total, totalPages },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('[API /agendamentos/list] Error:', error)
+    console.error('[API /agendamentos/list] Error stack:', error?.stack)
     return NextResponse.json(
       {
         error: 'Erro ao buscar agendamentos',
         details: error instanceof Error ? error.message : 'Unknown error',
+        stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined,
       },
       { status: 500 }
     )
