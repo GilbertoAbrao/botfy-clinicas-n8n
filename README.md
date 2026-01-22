@@ -2,6 +2,8 @@
 
 Console administrativo web para gerenciar o sistema Botfy ClinicOps. Permite visualizar agenda, pacientes, conversas WhatsApp e identificar problemas que precisam de intervenção humana através de um dashboard de alertas centralizado.
 
+**Versão atual:** v1.2 (Shipped 2026-01-21)
+
 ## Arquitetura
 
 ```
@@ -9,57 +11,63 @@ Console administrativo web para gerenciar o sistema Botfy ClinicOps. Permite vis
 │  WhatsApp   │────>│ Evolution API│────>│ N8N Workflow│────>│  Supabase   │
 │  (Paciente) │     │  (Gateway)   │     │  (Backend)  │     │ (PostgreSQL)│
 └─────────────┘     └──────────────┘     └──────┬──────┘     └──────┬──────┘
-                                                │                    │
-                                                │                    │
-                                                ▼                    ▼
-                                          ┌──────────────────────────────┐
-                                          │   Console Administrativo     │
-                                          │   (Next.js Frontend)         │
-                                          │   - Dashboard de Alertas     │
-                                          │   - Gestão de Pacientes      │
-                                          │   - Calendário/Agenda        │
-                                          │   - Conversas WhatsApp       │
-                                          └──────────────────────────────┘
+                                               │                    │
+                                               │                    │
+                                               ▼                    ▼
+                                         ┌──────────────────────────────┐
+                                         │   Console Administrativo     │
+                                         │   (Next.js Frontend)         │
+                                         │   - Dashboard de Alertas     │
+                                         │   - Gestão de Pacientes      │
+                                         │   - Calendário/Agenda        │
+                                         │   - Conversas WhatsApp       │
+                                         │   - Pre-Checkin Management   │
+                                         │   - Document Validation      │
+                                         └──────────────────────────────┘
 ```
 
 ## Stack Tecnológico
 
 ### Frontend (Console Administrativo)
-- **Framework**: Next.js 15 (App Router)
-- **UI**: shadcn/ui + Tailwind CSS
+- **Framework**: Next.js 16 (App Router, Standalone Output)
+- **UI**: shadcn/ui + Tailwind CSS v4
+- **Tabelas**: TanStack Table v8
 - **Autenticação**: Supabase Auth (email/senha, RBAC)
 - **Calendário**: Schedule-X (day/week/month views, multi-provider)
 - **Timezone**: @date-fns/tz (DST-aware, Brazil timezones)
-- **Deploy**: EasyPanel
+- **Charts**: Recharts
+- **Deploy**: EasyPanel (Docker)
 
 ### Backend (Automação)
 - **Workflows**: N8N
 - **WhatsApp**: Evolution API
 - **IA**: OpenAI GPT-4o-mini (Agente Marília)
 - **Database**: Supabase PostgreSQL
+- **ORM**: Prisma
 - **Deploy**: EasyPanel
 
 ## Início Rápido
 
 ### Pré-requisitos
 
-- Node.js 18+
-- npm ou yarn
+- Node.js 22+
+- npm
 - Conta Supabase (já configurada)
+- Docker (para deploy)
 
 ### Instalação
 
 ```bash
 # Clone o repositório
 git clone <repo-url>
-cd botfy-clinicas-n8n.worktree
+cd botfy-clinicas-n8n
 
 # Instale dependências
 npm install
 
 # Configure variáveis de ambiente
 cp .env.example .env.local
-# Edite .env.local com suas credenciais Supabase
+# Edite .env.local com suas credenciais
 ```
 
 ### Desenvolvimento
@@ -86,11 +94,136 @@ Acesse: http://localhost:3051
 
 ### Rotas Principais
 
-- **Dashboard**: http://localhost:3051/dashboard
-- **Pacientes**: http://localhost:3051/pacientes
-- **Agenda**: http://localhost:3051/agenda
-- **Conversas**: http://localhost:3051/conversas
-- **Configurações**: http://localhost:3051/configuracoes
+| Rota | Descrição |
+|------|-----------|
+| `/dashboard` | Dashboard de alertas |
+| `/agenda` | Calendário e lista de agendamentos |
+| `/pacientes` | Gestão de pacientes |
+| `/conversas` | Monitoramento WhatsApp |
+| `/admin/pre-checkin` | Dashboard de pré-checkins |
+| `/admin/pre-checkin/instrucoes` | CRUD de instruções |
+| `/admin/pre-checkin/documentos` | Validação de documentos |
+| `/admin/servicos` | Configuração de serviços |
+| `/admin/usuarios` | Gestão de usuários |
+| `/admin/lembretes` | Configuração de lembretes |
+| `/admin/analytics/risco` | Analytics de no-show |
+
+## Funcionalidades
+
+### v1.0 MVP ✅
+- **Secure Foundation**: Auth, RBAC, RLS, Audit logging (HIPAA)
+- **Alert Dashboard**: Alertas centralizados, priorização, padrões
+- **Patient Management**: CRUD, busca, documentos, no-show tracking
+- **Calendar & Scheduling**: Schedule-X, conflict detection, waitlist
+- **Conversation Monitoring**: WhatsApp threads, clear memory
+- **One-Click Interventions**: Reschedule, send message
+- **System Configuration**: Services, users, business hours
+- **Analytics**: Priority scoring, pattern detection, CSV export
+
+### v1.1 Anti No-Show Intelligence ✅
+- **N8N Workflow Fix**: Salva `risco_noshow` e `mensagem_enviada`
+- **Config Lembretes**: CRUD de configurações (48h/24h/2h)
+- **Painel Lembretes**: Histórico com filtros
+- **Analytics de Risco**: Dashboard com distribuição e padrões
+
+### v1.2 Agenda List View + Pre-Checkin Management ✅
+- **Agenda List View**: Toggle calendário/lista, filtros avançados, TanStack Table
+- **Pre-Checkin Dashboard**: Analytics, timeline, N8N webhook reminders
+- **Procedure Instructions**: CRUD com preview WhatsApp, 7 tipos
+- **Document Management**: Preview, approve/reject, bulk actions
+
+## Deploy EasyPanel (Docker)
+
+### Arquivos de Deploy
+
+O projeto inclui configuração Docker otimizada:
+
+```
+├── Dockerfile          # Multi-stage build (Node 22 Alpine)
+├── .dockerignore       # Exclui arquivos de dev
+└── next.config.ts      # Standalone output habilitado
+```
+
+### Passo a Passo
+
+#### 1. Push para o repositório
+
+```bash
+git push origin main
+```
+
+#### 2. Criar serviço no EasyPanel
+
+1. Acesse seu EasyPanel
+2. Clique em **+ Service** → **App**
+3. Selecione **GitHub** e escolha o repositório
+4. EasyPanel detecta o `Dockerfile` automaticamente
+
+#### 3. Configurar variáveis de ambiente
+
+No EasyPanel, adicione estas variáveis em **Environment**:
+
+```env
+# Supabase (obrigatório)
+NEXT_PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-anon-key
+SUPABASE_SERVICE_ROLE_KEY=sua-service-role-key
+DATABASE_URL=postgresql://postgres:senha@db.seu-projeto.supabase.co:5432/postgres
+
+# N8N Webhooks (obrigatório para integração)
+NEXT_PUBLIC_N8N_URL=https://seu-n8n.easypanel.host
+N8N_WEBHOOK_APPOINTMENT_CREATED=https://seu-n8n.easypanel.host/webhook/calendar/appointment-created
+N8N_WEBHOOK_APPOINTMENT_UPDATED=https://seu-n8n.easypanel.host/webhook/calendar/appointment-updated
+N8N_WEBHOOK_APPOINTMENT_CANCELLED=https://seu-n8n.easypanel.host/webhook/calendar/appointment-cancelled
+N8N_WEBHOOK_WAITLIST_NOTIFY=https://seu-n8n.easypanel.host/webhook/calendar/waitlist-notify
+N8N_WEBHOOK_PRE_CHECKIN_REMINDER=https://seu-n8n.easypanel.host/webhook/pre-checkin/reminder
+
+# Evolution API (opcional - para WhatsApp links)
+EVOLUTION_API_URL=https://sua-evolution-api.easypanel.host
+EVOLUTION_INSTANCE=SuaInstancia
+```
+
+#### 4. Configurar porta e domínio
+
+- **Port**: `3000`
+- **Domain**: Configure seu domínio personalizado ou use o subdomínio EasyPanel
+
+#### 5. Deploy
+
+Clique em **Deploy** e aguarde o build (~3-5 minutos).
+
+### Health Check
+
+O endpoint `/api/health` é usado para monitoramento:
+
+```bash
+curl https://seu-dominio/api/health
+```
+
+Resposta:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2026-01-21T19:00:00.000Z",
+  "version": "1.2.0"
+}
+```
+
+### Verificação pós-deploy
+
+1. Acesse `https://seu-dominio/login`
+2. Faça login com suas credenciais
+3. Verifique se o dashboard carrega corretamente
+4. Teste a conexão com Supabase em `/api/health/supabase`
+
+### Troubleshooting
+
+| Problema | Solução |
+|----------|---------|
+| Build falha | Verifique se todas as env vars estão configuradas |
+| 500 no login | Verifique `NEXT_PUBLIC_SUPABASE_URL` e `ANON_KEY` |
+| Dados não carregam | Verifique `DATABASE_URL` e `SERVICE_ROLE_KEY` |
+| Webhooks não funcionam | Verifique URLs dos webhooks N8N |
 
 ## Estrutura do Projeto
 
@@ -102,62 +235,36 @@ Acesse: http://localhost:3051
 │   │   ├── pacientes/          # Gestão de pacientes
 │   │   ├── agenda/             # Calendário de agendamentos
 │   │   ├── conversas/          # Monitoramento WhatsApp
-│   │   ├── configuracoes/      # Configurações do sistema
+│   │   ├── admin/              # Área administrativa
+│   │   │   ├── pre-checkin/    # Dashboard pre-checkin
+│   │   │   ├── servicos/       # Configuração de serviços
+│   │   │   ├── usuarios/       # Gestão de usuários
+│   │   │   └── analytics/      # Analytics e relatórios
 │   │   └── api/                # API Routes
 │   ├── components/             # Componentes React
 │   │   ├── ui/                 # shadcn/ui components
 │   │   ├── calendar/           # Componentes de calendário
+│   │   ├── agenda/             # Lista de agendamentos
+│   │   ├── pre-checkin/        # Dashboard pre-checkin
+│   │   ├── instructions/       # CRUD instruções
+│   │   ├── documents/          # Gestão documentos
 │   │   └── layout/             # Layouts e navegação
 │   ├── lib/                    # Utilitários e helpers
 │   │   ├── supabase/           # Cliente Supabase
 │   │   ├── auth/               # Autenticação e RBAC
 │   │   ├── calendar/           # Timezone, conflitos, waitlist
+│   │   ├── audit/              # Audit logging
+│   │   ├── pre-checkin/        # N8N reminder integration
 │   │   └── validations/        # Schemas Zod
 │   └── hooks/                  # React Hooks customizados
 ├── prisma/                     # Prisma schema e migrations
+├── public/                     # Assets estáticos
 ├── .planning/                  # GSD framework (planejamento)
-├── workflows-backup/           # Backup dos workflows N8N
+├── Dockerfile                  # Build Docker para EasyPanel
+├── .dockerignore               # Arquivos excluídos do Docker
 ├── AGENTS.md                   # Documentação N8N workflows
 └── CLAUDE.md                   # Documentação para Claude AI
 ```
-
-## Funcionalidades
-
-### Phase 1: Secure Foundation ✅
-- Autenticação com Supabase Auth (email/senha)
-- RBAC (ADMIN, ATENDENTE)
-- RLS policies no Supabase
-- Audit logging (HIPAA compliant)
-- Rate limiting (100 req/min por usuário)
-
-### Phase 2: Alert Dashboard ✅
-- Dashboard de alertas centralizado
-- Conversas travadas (IA não conseguiu resolver)
-- Pré check-ins pendentes
-- Agendamentos não confirmados
-- Handoffs humanos (normais e por erro)
-
-### Phase 3: Patient Management ✅
-- Lista e busca de pacientes (nome, telefone, CPF)
-- Perfil do paciente (contato, histórico, conversas)
-- Cadastro e edição de pacientes
-- Upload de documentos (Supabase Storage)
-- Métricas de no-show e presença
-
-### Phase 4: Calendar & Scheduling ✅
-- Calendário Schedule-X (day/week/month views)
-- Multi-provider (resource lanes com cores)
-- CRUD de agendamentos (criar, editar, cancelar)
-- Conflict detection (O(n log n), 15min buffer)
-- Waitlist com priority queue (URGENT first)
-- Filters por provider e service
-- DST-aware (Brazil timezone)
-
-### Phase 5-8: Roadmap
-- Conversation Monitoring (histórico detalhado)
-- One-Click Interventions (transferir para humano, limpar memória)
-- System Configuration (horários, serviços, templates)
-- Analytics & Smart Features
 
 ## Integração N8N
 
@@ -167,63 +274,44 @@ O console se integra com os workflows N8N via webhooks. O N8N é responsável po
 
 | Workflow | Função | Trigger |
 |----------|--------|---------|
-| **Botfy - Agendamento** | AI Agent principal (Marília) - agenda, remarca, cancela | Webhook WhatsApp |
-| **Botfy - Anti No-Show** | Lembretes automáticos 48h/24h/2h antes da consulta | Schedule (15min) |
-| **Botfy - Pre Check-In** | Envia formulário de pré check-in 24h antes | Schedule (1h) |
-| **Botfy - Pre Check-In Lembrete** | Reenvia pré check-in pendente 12h antes | Schedule (2h) |
-| **Botfy - Verificar Pendências** | Notifica clínica sobre pré check-ins pendentes | Schedule (2h) |
-| **Botfy - Waitlist Notify** | Notifica paciente quando horário fica disponível | Webhook do Console |
-| **Botfy WX - ChatAgent v2** | Gateway HTTP para integração direta com AI | HTTP Request |
-| **Botfy WX - Message Processor** | Processador de mensagens do Chat Agent | Execute Workflow |
+| **Botfy - Agendamento** | AI Agent principal (Marília) | Webhook WhatsApp |
+| **Botfy - Anti No-Show** | Lembretes 48h/24h/2h | Schedule (15min) |
+| **Botfy - Pre Check-In** | Formulário 24h antes | Schedule (1h) |
+| **Botfy - Pre Check-In Lembrete** | Reenvia pendente 12h antes | Schedule (2h) |
+| **Botfy - Verificar Pendências** | Notifica clínica | Schedule (2h) |
+| **Botfy - Waitlist Notify** | Notifica paciente | Webhook Console |
 
-### Tools do AI Agent
-
-O AI Agent utiliza sub-workflows (tools) para executar ações:
-
-- `buscar_slots_disponiveis` - Busca horários livres por data/período
-- `criar_agendamento` - Cria paciente (se necessário) e agendamento
-- `reagendar_agendamento` - Remarca consulta para nova data/hora
-- `cancelar_agendamento` - Cancela consulta
-- `buscar_agendamentos` - Lista agendamentos do paciente
-- `buscar_paciente` - Busca dados e histórico do paciente
-- `atualizar_dados_paciente` - Atualiza cadastro do paciente
-- `buscar_instrucoes` - Busca instruções por embedding (RAG)
-- `processar_documento` - Processa documentos enviados
-- `consultar_status_pre_checkin` - Verifica status do pré check-in
-
-### Webhooks do Calendário
+### Webhooks do Console → N8N
 
 | Evento | Webhook | Payload |
 |--------|---------|---------|
-| Appointment Created | `/webhook/calendar/appointment-created` | `{appointmentId, patientId, serviceId, providerId, dataHora, status}` |
-| Appointment Updated | `/webhook/calendar/appointment-updated` | `{appointmentId, changes: {dataHora?, status?}}` |
-| Appointment Cancelled | `/webhook/calendar/appointment-cancelled` | `{appointmentId, patientId, serviceId, dataHora}` |
-| Waitlist Notification | `/webhook/calendar/waitlist-notify` | `{patientPhone, patientName, availableSlot, serviceName, waitlistId}` |
+| Appointment Created | `/webhook/calendar/appointment-created` | `{appointmentId, patientId, ...}` |
+| Appointment Updated | `/webhook/calendar/appointment-updated` | `{appointmentId, changes}` |
+| Appointment Cancelled | `/webhook/calendar/appointment-cancelled` | `{appointmentId, ...}` |
+| Waitlist Notification | `/webhook/calendar/waitlist-notify` | `{patientPhone, availableSlot, ...}` |
+| Pre-Checkin Reminder | `/webhook/pre-checkin/reminder` | `{preCheckinId, patientPhone, ...}` |
 
-**Configuração**: Defina URLs dos webhooks em `.env.local`:
-
-```bash
-N8N_WEBHOOK_APPOINTMENT_CREATED=https://seu-n8n.com/webhook/calendar/appointment-created
-N8N_WEBHOOK_APPOINTMENT_UPDATED=https://seu-n8n.com/webhook/calendar/appointment-updated
-N8N_WEBHOOK_APPOINTMENT_CANCELLED=https://seu-n8n.com/webhook/calendar/appointment-cancelled
-N8N_WEBHOOK_WAITLIST_NOTIFY=https://seu-n8n.com/webhook/calendar/waitlist-notify
-```
-
-Consulte `AGENTS.md` para detalhes completos dos workflows N8N, troubleshooting e histórico de correções.
+Consulte `AGENTS.md` para detalhes completos dos workflows N8N.
 
 ## Banco de Dados
 
 ### Principais Tabelas
 
-- `pacientes` - Cadastro de pacientes
-- `agendamentos` - Consultas agendadas
-- `servicos` - Procedimentos oferecidos
-- `providers` - Profissionais da clínica
-- `waitlist` - Lista de espera com prioridades
-- `chats` - Sessões de conversa WhatsApp
-- `n8n_chat_histories` - Memória do AI Agent
-- `pre_checkin` - Status de pré check-in
-- `lembretes_enviados` - Tracking anti no-show
+| Tabela | Descrição |
+|--------|-----------|
+| `pacientes` | Cadastro de pacientes |
+| `agendamentos` | Consultas agendadas |
+| `servicos` | Procedimentos oferecidos |
+| `providers` | Profissionais da clínica |
+| `waitlist` | Lista de espera |
+| `chats` | Sessões WhatsApp |
+| `n8n_chat_histories` | Memória do AI Agent |
+| `pre_checkin` | Status de pré check-in |
+| `lembretes_enviados` | Tracking anti no-show |
+| `config_lembretes` | Configurações de lembretes |
+| `instrucoes_procedimentos` | Instruções para pacientes |
+| `documentos_paciente` | Documentos enviados |
+| `audit_logs` | Logs de auditoria (HIPAA) |
 
 Consulte `AGENTS.md` para schema completo e relacionamentos.
 
@@ -235,7 +323,7 @@ Consulte `AGENTS.md` para schema completo e relacionamentos.
 npm run dev                 # Next.js dev server (padrão 3000)
 
 # Build
-npm run build               # Build de produção
+npm run build               # Build de produção (standalone)
 npm run start               # Servidor de produção
 
 # Database
@@ -243,45 +331,52 @@ npx prisma generate         # Gera Prisma client
 npx prisma migrate dev      # Aplica migrations
 npx prisma studio           # Interface visual do DB
 
+# Docker (local)
+docker build -t botfy-clinicops .
+docker run -p 3000:3000 --env-file .env.local botfy-clinicops
+
 # Testes (N8N workflows)
 ./test-workflows.sh         # Testa todos os webhooks N8N
 ```
 
 ## Variáveis de Ambiente
 
-```bash
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=https://gkweofpjwzsvlvnvfbom.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon_key>
-SUPABASE_SERVICE_ROLE_KEY=<service_role_key>
-
-# N8N Webhooks (Calendário)
-N8N_WEBHOOK_APPOINTMENT_CREATED=https://botfy-ai-agency-n8n.tb0oe2.easypanel.host/webhook/calendar/appointment-created
-N8N_WEBHOOK_APPOINTMENT_UPDATED=https://botfy-ai-agency-n8n.tb0oe2.easypanel.host/webhook/calendar/appointment-updated
-N8N_WEBHOOK_APPOINTMENT_CANCELLED=https://botfy-ai-agency-n8n.tb0oe2.easypanel.host/webhook/calendar/appointment-cancelled
-N8N_WEBHOOK_WAITLIST_NOTIFY=https://botfy-ai-agency-n8n.tb0oe2.easypanel.host/webhook/calendar/waitlist-notify
-
-# Evolution API (se necessário)
-EVOLUTION_API_URL=https://botfy-ai-agency-evolution-api.tb0oe2.easypanel.host
-EVOLUTION_INSTANCE=Botfy AI - Brazil
-EVOLUTION_API_KEY=<api_key>
-```
-
-## Deploy
-
-### EasyPanel (Recomendado)
-
-1. Conecte repositório Git
-2. Configure variáveis de ambiente
-3. Build command: `npm run build`
-4. Start command: `npm run start`
-5. Port: 3000 (ou configure PORT env var)
-
-### Vercel
+Veja `.env.example` para lista completa. Principais:
 
 ```bash
-vercel deploy
+# Supabase (obrigatório)
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+DATABASE_URL=
+
+# N8N Webhooks
+NEXT_PUBLIC_N8N_URL=
+N8N_WEBHOOK_APPOINTMENT_CREATED=
+N8N_WEBHOOK_APPOINTMENT_UPDATED=
+N8N_WEBHOOK_APPOINTMENT_CANCELLED=
+N8N_WEBHOOK_WAITLIST_NOTIFY=
+N8N_WEBHOOK_PRE_CHECKIN_REMINDER=
+
+# Evolution API (opcional)
+EVOLUTION_API_URL=
+EVOLUTION_INSTANCE=
 ```
+
+## Milestones
+
+| Versão | Nome | Status | Data |
+|--------|------|--------|------|
+| v1.0 | MVP | ✅ Shipped | 2026-01-17 |
+| v1.1 | Anti No-Show Intelligence | ✅ Shipped | 2026-01-21 |
+| v1.2 | Agenda List View + Pre-Checkin | ✅ Shipped | 2026-01-21 |
+
+**Stats totais:**
+- 16 phases, 59 plans, 143 requirements
+- 36,339 lines of TypeScript
+- 370+ files
+
+Veja `.planning/MILESTONES.md` para detalhes completos.
 
 ## Documentação Adicional
 
