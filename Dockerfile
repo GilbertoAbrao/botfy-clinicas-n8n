@@ -40,6 +40,16 @@ COPY --from=deps /app/prisma ./prisma
 # Copy source code
 COPY . .
 
+# Build arguments for NEXT_PUBLIC_* variables (must be available at build time)
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ARG NEXT_PUBLIC_N8N_URL
+
+# Convert build args to env vars for Next.js build
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+ENV NEXT_PUBLIC_N8N_URL=$NEXT_PUBLIC_N8N_URL
+
 # Set environment for build
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
