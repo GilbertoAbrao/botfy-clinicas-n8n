@@ -6,8 +6,8 @@
 # ============================================
 FROM node:22-alpine AS base
 
-# Install dependencies needed for Prisma and native modules
-RUN apk add --no-cache libc6-compat openssl
+# Install dependencies needed for Prisma, native modules, and health check
+RUN apk add --no-cache libc6-compat openssl curl
 
 WORKDIR /app
 
@@ -79,8 +79,8 @@ USER nextjs
 EXPOSE 3051
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3051/api/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:3051/api/health || exit 1
 
 # Start the application
 CMD ["node", "server.js"]
