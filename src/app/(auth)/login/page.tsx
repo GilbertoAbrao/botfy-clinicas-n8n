@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -7,7 +8,16 @@ import { signIn } from '@/lib/auth/actions'
 export default function LoginPage() {
   return (
     <Card className="w-full max-w-md">
-      <CardHeader>
+      <CardHeader className="text-center">
+        <div className="flex justify-center mb-4">
+          <Image
+            src="/logo-dark.png"
+            alt="Botfy Logo"
+            width={180}
+            height={60}
+            priority
+          />
+        </div>
         <CardTitle>Botfy ClinicOps</CardTitle>
         <CardDescription>
           Entre com suas credenciais para acessar o console administrativo
