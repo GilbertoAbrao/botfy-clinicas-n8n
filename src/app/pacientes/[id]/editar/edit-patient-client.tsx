@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Patient } from '@prisma/client';
+import type { Patient } from '@prisma/client';
 
 import { PatientForm } from '@/components/patients/patient-form';
 import type { PatientFormData } from '@/lib/validations/patient';

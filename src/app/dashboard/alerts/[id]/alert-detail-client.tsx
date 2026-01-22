@@ -6,7 +6,7 @@ import { AlertDetail } from '@/components/alerts/alert-detail'
 import { AlertWithRelations } from '@/lib/api/alerts'
 import { useAlertDetailSubscription, type SubscriptionState } from '@/lib/realtime/alerts'
 import { toast } from 'sonner'
-import { Alert as AlertType } from '@prisma/client'
+import type { Alert as AlertType } from '@prisma/client'
 import { Badge } from '@/components/ui/badge'
 
 interface AlertDetailClientProps {
