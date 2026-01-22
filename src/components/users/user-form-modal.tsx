@@ -25,7 +25,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
-import { Role } from '@prisma/client';
+import type { Role } from '@prisma/client';
 
 interface User {
   id: string;

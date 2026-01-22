@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { AlertStatus } from '@prisma/client'
+import type { AlertStatus } from '@prisma/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {

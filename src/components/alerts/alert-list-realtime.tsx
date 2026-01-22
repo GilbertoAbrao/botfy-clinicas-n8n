@@ -6,7 +6,7 @@ import { AlertList } from './alert-list'
 import { useAlertSubscription, type AlertChangeEvent, type SubscriptionState } from '@/lib/realtime/alerts'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
-import { AlertPriority } from '@prisma/client'
+import type { AlertPriority } from '@prisma/client'
 
 interface AlertListRealtimeProps {
   initialAlerts: AlertWithRelations[]

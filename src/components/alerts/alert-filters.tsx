@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select'
 import { Calendar } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { AlertType, AlertStatus } from '@prisma/client'
+import type { AlertType, AlertStatus } from '@prisma/client'
 import { AlertSortBy } from '@/lib/api/alerts'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'

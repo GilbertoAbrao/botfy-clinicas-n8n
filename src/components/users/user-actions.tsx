@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { MoreHorizontal, Pencil, UserX, UserCheck, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Role } from '@prisma/client';
+import type { Role } from '@prisma/client';
 import { UserFormModal } from './user-form-modal';
 
 interface User {
