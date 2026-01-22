@@ -15,7 +15,7 @@ import { predictNoShowRisk, NoShowPrediction } from '@/lib/analytics/no-show-pre
  * - Confirmation status (15% weight)
  *
  * Returns:
- * - appointmentId: string
+ * - appointmentId: number
  * - riskLevel: 'high' | 'medium' | 'low'
  * - riskScore: number (0-100)
  * - factors: breakdown of individual risk factors
@@ -39,12 +39,12 @@ export async function GET(
   }
 
   try {
-    // Validate UUID format
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-    if (!uuidRegex.test(id)) {
+    // Validate and convert ID to number
+    const appointmentId = parseInt(id, 10)
+    if (isNaN(appointmentId) || appointmentId <= 0) {
       return NextResponse.json({ error: 'Invalid appointment ID' }, { status: 400 })
     }
-    const prediction = await predictNoShowRisk(id)
+    const prediction = await predictNoShowRisk(appointmentId)
     return NextResponse.json(prediction)
   } catch (error) {
     console.error('[Appointment Risk API] Error:', error)
