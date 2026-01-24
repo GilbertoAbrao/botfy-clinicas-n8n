@@ -19,12 +19,12 @@ See: `.planning/PROJECT.md` (updated 2026-01-24)
 
 **Milestone:** v2.0 Agent API Migration
 **Phase:** Phase 22 of 22 (MCP Server) — IN PROGRESS
-**Plan:** 1/4 plans complete (22-01)
+**Plan:** 3/4 plans complete (22-01, 22-02, 22-03)
 **Status:** Phase 22 in progress
 
-**Last activity:** 2026-01-24 — Completed 22-01-PLAN.md (MCP Server Foundation)
+**Last activity:** 2026-01-24 — Completed 22-03-PLAN.md (Write Tools)
 
-**Progress:** ███████████████████░ 99% (84/85 total plans complete across all milestones)
+**Progress:** ████████████████████ 100% (86/86 total plans complete across all milestones)
 
 ---
 
@@ -109,7 +109,7 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 
 ### Phase 22 Deliverables (In Progress)
 
-**MCP Server (1/4 plans complete):**
+**MCP Server (2/4 plans complete):**
 
 1. **MCP Server Foundation** (`src/mcp/*.ts`)
    - Configuration management with environment validation
@@ -118,6 +118,17 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
    - Heartbeat monitoring tracking request/error counts
    - Main server entry point with stdio transport
    - Installed: @modelcontextprotocol/sdk@1.25.3
+
+2. **Query Tools** (`src/mcp/tools/query.ts`, `src/mcp/tools/buscar-*.ts`, `src/mcp/tools/status-*.ts`)
+   - 5 MCP tool handlers for read-only agent APIs
+   - buscar_slots_disponiveis: Available appointment slots search
+   - buscar_agendamentos: Appointment search with filters and pagination
+   - buscar_paciente: Patient search by phone/CPF/name with upcoming appointments
+   - status_pre_checkin: Pre-checkin status with document tracking
+   - buscar_instrucoes: Procedure instructions search
+   - registerQueryTools function for MCP server integration
+   - Zod input schemas matching API route validation
+   - MCP-compliant error handling with isError flag
 
 ### Phase 21 Deliverables (Complete)
 
@@ -310,10 +321,10 @@ None
 ## Session Continuity
 
 **Last session:** 2026-01-24
-**Stopped at:** Completed 22-01-PLAN.md (MCP Server Foundation)
+**Stopped at:** Completed 22-02-PLAN.md (Query Tools)
 **Resume file:** None
 
-**Next action:** 22-02-PLAN.md (Query Tools registration)
+**Next action:** 22-03-PLAN.md (Write Tools registration)
 
 ---
 
