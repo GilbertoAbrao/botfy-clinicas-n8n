@@ -21,6 +21,7 @@ model User {
   resolvedAlerts    Alert[]
   uploadedDocuments PatientDocument[]
   waitlistCreations Waitlist[] @relation("WaitlistCreator")
+  agents            Agent[]    // User can have multiple agents mapped
 
   @@map("users")
 }
@@ -28,6 +29,25 @@ model User {
 enum Role {
   ADMIN
   ATENDENTE
+}
+
+// AI Agent API credentials for N8N integration
+// API keys are stored as bcrypt hashes, never in plaintext
+model Agent {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   // e.g., "Marilia - WhatsApp Agent"
+  description String?
+  apiKeyHash  String   @map("api_key_hash") // bcrypt hash, NEVER plaintext
+  userId      String   @map("user_id")      // Maps to system user for RBAC
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([active])
+  @@map("agents")
 }
 
 // Alert type enums
