@@ -1,911 +1,1444 @@
-# Pitfalls Research
+# Pitfalls Research: Agent API + MCP Migration
 
-**Domain:** Admin Dashboard / Operations Console (Healthcare SaaS)
-**Researched:** 2026-01-15
-**Confidence:** HIGH
+**Domain:** AI Agent Tool APIs + MCP Server Implementation
+**Migration Context:** N8N Sub-workflows → Next.js APIs + MCP Server
+**Researched:** 2026-01-24
+**Overall Confidence:** HIGH
+
+## Executive Summary
+
+Migrating from N8N sub-workflow tools to HTTP APIs introduces three critical failure modes: (1) production bot disruption during cutover, (2) AI agent tool calling failures from poor API design, and (3) security vulnerabilities from exposing APIs without proper authentication. The research reveals that most AI agent pilots fail not from model limitations, but from integration architecture mistakes—specifically "brittle connectors" that don't handle third-party API constraints and function calling interfaces that violate the "intern test" (would a human understand how to use this from the description alone?).
+
+For healthcare systems with HIPAA requirements, the stakes are higher: prompt injection attacks can expose PHI, inadequate audit logging breaks compliance, and agent hallucinations during function calls can corrupt patient data. The good news: proven patterns exist for zero-downtime migration (canary + blue-green), secure agent authentication (OAuth 2.1 + short-lived tokens), and hallucination reduction (structured outputs + RAG, reducing error rates from 38% to ~1-2% in 2026 models).
 
 ## Critical Pitfalls
 
-### Pitfall 1: Supabase Realtime Memory Leaks from Improper Cleanup
+### 1. Breaking Production Bot During Migration
 
-**What goes wrong:**
-Client-side memory leaks occur when Supabase Realtime subscriptions are not properly cleaned up. The application consumes more memory over time, eventually leading to performance degradation or crashes. WebSocket connections accumulate without being released, event listeners remain active in unmounted components, and data subscriptions continue to receive updates that are no longer needed.
+**Risk:** Switching all 11 tools to APIs simultaneously causes WhatsApp bot downtime, lost patient conversations, and emergency rollback scramble.
 
-**Why it happens:**
-Developers forget to unsubscribe from realtime channels in useEffect cleanup functions, or they don't understand that Supabase only auto-cleans connections 30 seconds after disconnection. The Realtime API's WebSocket-based architecture requires explicit cleanup that many React developers overlook, especially when rapidly prototyping.
+**Root Cause:** "Big bang" API migration without gradual traffic shifting or rollback strategy.
 
-**How to avoid:**
-Always use cleanup functions in useEffect hooks:
+**Warning Signs:**
+- No staging environment mirroring production N8N configuration
+- No automated tests validating N8N HTTP Request → API integration
+- No monitoring for tool calling failures (agent just "stops working")
+- Deployment plan has a single cutover timestamp, no phases
 
-```javascript
-useEffect(() => {
-  const channel = supabase.channel('room:123')
-  channel.subscribe()
+**Prevention:**
+1. **Canary Migration Pattern**: Migrate tools one at a time in risk order (lowest → highest)
+   - Start with: `buscar_paciente` (read-only, simple)
+   - Middle: `buscar_slots_disponiveis`, `buscar_agendamentos` (read-only, complex)
+   - Last: `criar_agendamento`, `cancelar_agendamento` (write operations)
 
-  return () => {
-    supabase.removeChannel(channel)
-    // or channel.unsubscribe()
-  }
-}, [])
-```
+2. **Blue-Green per Tool**: Maintain both N8N sub-workflow AND API endpoint during transition
+   ```javascript
+   // N8N HTTP Request Tool with fallback
+   const toolResult = await fetch(NEXT_API_URL).catch(async (err) => {
+     console.error('[Fallback] API failed, using N8N workflow', err)
+     return await executeWorkflow(WORKFLOW_ID) // Fallback to old tool
+   })
+   ```
 
-Test for memory leaks by monitoring Chrome DevTools Memory profiler during navigation between dashboard views. Implement a centralized subscription manager that tracks active channels and provides cleanup utilities.
+3. **Health Checks + Circuit Breaker**: API must expose `/health` endpoint; N8N falls back to workflow if API unhealthy for >30s
 
-**Warning signs:**
-- Browser memory usage steadily increases over time
-- Application becomes sluggish after 10-15 minutes of use
-- Chrome DevTools shows growing number of detached DOM nodes
-- WebSocket connection count increases without bound in network tab
-- Realtime subscriptions stop receiving updates after extended use
+4. **Automated Integration Tests**: Test N8N → API path before deploying
+   ```bash
+   # Test from N8N perspective
+   curl "$N8N_URL/webhook/test/tool-migration" -d '{"tool": "buscar_paciente", "telefone": "5511999999999"}'
+   ```
 
-**Phase to address:**
-Phase 1 (Foundation) - Establish realtime subscription patterns with mandatory cleanup. Create reusable hooks that enforce proper subscription lifecycle management.
+**Phase Addressed:** Phase 1 (Migration Infrastructure), Phase 2 (Tool-by-Tool Migration)
 
-**Sources:**
-- [Supabase Realtime Client-Side Memory Leak](https://drdroid.io/stack-diagnosis/supabase-realtime-client-side-memory-leak) - HIGH confidence
-- [Supabase Realtime Getting Started](https://supabase.com/docs/guides/realtime/getting_started) - HIGH confidence
-- [Managing real-time subscriptions](https://app.studyraid.com/en/read/8395/231602/managing-real-time-subscriptions) - MEDIUM confidence
-
----
-
-### Pitfall 2: Row Level Security (RLS) Bypass and Performance Issues
-
-**What goes wrong:**
-Missing or incorrectly configured RLS policies expose sensitive patient data to unauthorized users. Even with RLS enabled, poorly designed policies can create security vulnerabilities or cause massive performance degradation. Views bypass RLS by default, and using user_metadata in policies creates exploitable security holes since authenticated users can modify this information.
-
-**Why it happens:**
-Developers disable RLS during prototyping and forget to enable it before production launch. RLS syntax is complex and non-intuitive, making it easy to write policies that don't actually enforce intended restrictions. The performance impact of RLS is not apparent during development with small datasets but becomes catastrophic at scale when policies evaluate for every row.
-
-**How to avoid:**
-- Enable RLS from day one, even in development
-- Never use `user_metadata` claims in security policies
-- Set `security_invoker = true` on views (Postgres 15+) to respect RLS
-- Test policies with multiple user roles and verify unauthorized access fails
-- Use IN or ANY operations instead of subqueries in WHERE clauses for performance
-- Avoid calling functions directly in RLS policies - they're evaluated per row
-- Run EXPLAIN ANALYZE on queries to measure RLS performance impact
-
-For healthcare data, implement defense-in-depth:
-1. RLS at database level
-2. Additional validation in API routes/Server Actions
-3. Audit logging for all PHI access
-
-**Warning signs:**
-- Queries that return instantly in development take 5+ seconds in production
-- Database CPU usage spikes during simple SELECT operations
-- Users can access data they shouldn't through API endpoints
-- EXPLAIN ANALYZE shows sequential scans on large tables
-- Missing "SECURITY DEFINER" warnings in database logs
-
-**Phase to address:**
-Phase 1 (Foundation) - Define and test all RLS policies before building features.
-Phase 2 (HIPAA Compliance) - Audit all policies, implement monitoring, add comprehensive testing.
-
-**Sources:**
-- [Row-Level Recklessness: Testing Supabase Security](https://www.precursorsecurity.com/security-blog/row-level-recklessness-testing-supabase-security) - HIGH confidence
-- [RLS Performance and Best Practices](https://supabase.com/docs/guides/troubleshooting/rls-performance-and-best-practices-Z5Jjwv) - HIGH confidence
-- [Supabase Best Practices | Security](https://www.leanware.co/insights/supabase-best-practices) - HIGH confidence
+**Real-World Evidence:** According to GetYourGuide's API migration post-mortem, issues only surface in production under real load/concurrency—integration tests in staging miss edge cases. Teams that skip staging see 2+ hours downtime before rollback.
 
 ---
 
-### Pitfall 3: Next.js Middleware Authorization Bypass (CVE-2025-29927)
+### 2. AI Agent Can't Call New APIs (Function Calling Schema Mismatch)
 
-**What goes wrong:**
-Attackers bypass Next.js middleware entirely by adding the `x-middleware-subrequest` header to HTTP requests. Developers implement authorization checks exclusively in middleware, believing this provides comprehensive protection, but the middleware execution model creates false security assumptions. This allows direct access to API routes and Server Actions that were thought to be protected.
+**Risk:** APIs work in Postman but agent never calls them, calls with `undefined` parameters, or hallucinates non-existent functions.
 
-**Why it happens:**
-The Next.js hybrid architecture (SSR, client components, edge middleware, API routes) creates multiple attack surfaces. Developers assume middleware provides universal protection without understanding that it can be bypassed. The false sense of security leads to omitting server-side authorization checks in individual routes.
+**Root Cause:** Function schema violates LLM expectations, descriptions too vague, parameter types mismatched between N8N `$fromAI()` and API schema.
 
-**How to avoid:**
-- NEVER rely solely on middleware for authorization
-- Implement authorization checks in every API route and Server Action
-- Validate user permissions on the server side, even if middleware "should have" blocked access
-- Use defense-in-depth: middleware + route-level checks + RLS
-- For healthcare data, validate HIPAA authorization at multiple layers
+**Warning Signs:**
+- Agent says "I can't help with that" when it should call a tool
+- Agent execution logs show tool called with `{param: undefined}`
+- Agent invents parameters not in schema (e.g., `periodo: "manha"` becomes `period: "morning"`)
+- Agent calls wrong tool because descriptions are ambiguous
 
-Server Action example:
+**Prevention:**
+
+**1. Pass the "Intern Test"**
+> "Could an intern correctly use this function given only what you gave the model?"
+
 ```typescript
-export async function getPatientData(patientId: string) {
-  // Don't assume middleware validated this
-  const user = await getCurrentUser()
-  if (!user || !hasPatientAccess(user, patientId)) {
-    throw new Error('Unauthorized')
+// ❌ FAILS INTERN TEST - Vague description
+{
+  name: "buscar_slots",
+  description: "Busca slots",
+  parameters: {
+    data: { type: "string" } // What format? YYYY-MM-DD? ISO? Epoch?
   }
+}
 
-  // Additional RLS protection at database level
-  const data = await supabase
-    .from('patients')
-    .select('*')
-    .eq('id', patientId)
-    .single()
-
-  return data
+// ✅ PASSES INTERN TEST - Explicit, unambiguous
+{
+  name: "buscar_slots_disponiveis",
+  description: "Busca horários LIVRES (não ocupados) em data específica. Use quando paciente pergunta 'tem horário amanhã?' ou 'quais horários disponíveis dia 20?'",
+  parameters: {
+    data: {
+      type: "string",
+      description: "Data no formato YYYY-MM-DD (exemplo: 2026-01-20)",
+      pattern: "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    periodo: {
+      type: "string",
+      enum: ["manha", "tarde", "qualquer"],
+      description: "Período do dia: 'manha' (08:00-12:00), 'tarde' (13:00-20:00), 'qualquer' (dia todo)"
+    }
+  },
+  required: ["data"]
 }
 ```
 
-**Warning signs:**
-- Authorization logic exists only in middleware.ts
-- API routes don't check user permissions
-- Server Actions assume authenticated user context
-- No authorization tests for direct API access
-- Relying on "if it worked in dev, it's secure" assumption
+**2. Align N8N Schema with API Schema**
 
-**Phase to address:**
-Phase 1 (Foundation) - Establish authorization patterns with route-level checks.
-Phase 2 (RBAC Implementation) - Comprehensive authorization testing across all attack surfaces.
+N8N `$fromAI()` configuration MUST match API's Zod schema:
 
-**Sources:**
-- [Building a Scalable RBAC System in Next.js](https://medium.com/@muhebollah.diu/building-a-scalable-role-based-access-control-rbac-system-in-next-js-b67b9ecfe5fa) - HIGH confidence
-- [Implement RBAC Authorization in Next.js - 2024 Guide](https://www.permit.io/blog/how-to-add-rbac-in-nextjs) - HIGH confidence
-- [Auth.js | Role Based Access Control](https://authjs.dev/guides/role-based-access-control) - HIGH confidence
-
----
-
-### Pitfall 4: Critical React Server Components Deserialization RCE (CVE-2025-55182, CVE-2025-66478)
-
-**What goes wrong:**
-Specially crafted HTTP requests exploit insecure deserialization in React Server Components and Next.js Server Actions, allowing unauthenticated remote code execution (RCE) with CVSS 10.0 severity. Even newly generated Next.js applications created with `create-next-app` are immediately vulnerable without any code modifications. Malicious requests can return compiled source code of Server Functions, potentially revealing business logic and exposing secrets if hardcoded.
-
-**Why it happens:**
-This is a framework-level vulnerability, not a developer mistake. The vulnerability exists in React 19.0-19.2.0 and requires no special setup or configuration to be exploitable. Default framework configurations are vulnerable under normal use.
-
-**How to avoid:**
-- Immediately upgrade to patched versions:
-  - React: 19.0.1, 19.1.2, 19.2.1, or later
-  - Note: Initial fixes were incomplete; CVE-2025-67779 requires another upgrade
-- NEVER hardcode secrets in Server Actions - always use environment variables
-- Implement Web Application Firewall (WAF) rules to detect exploitation attempts
-- Monitor for suspicious patterns: unusual HTTP requests to Server Action endpoints
-- For healthcare applications, this is a HIPAA breach risk if PHI is exposed
-
-**Warning signs:**
-- Using React 19.0, 19.1.0, 19.1.1, or 19.2.0
-- Not running latest patch versions
-- Secrets defined directly in Server Action code
-- Lack of WAF protection on production endpoints
-- No monitoring for unusual Server Action requests
-
-**Phase to address:**
-IMMEDIATE - Check versions and upgrade before any development.
-Phase 1 (Foundation) - Establish secret management and environment variable patterns.
-Phase 3 (Security Hardening) - Implement WAF and monitoring for exploitation attempts.
-
-**Sources:**
-- [Next.js Security Update: December 11, 2025](https://nextjs.org/blog/security-update-2025-12-11) - HIGH confidence
-- [Critical Security Vulnerability in React Server Components](https://react.dev/blog/2025/12/03/critical-security-vulnerability-in-react-server-components) - HIGH confidence
-- [CVE-2025-55182: React2Shell RCE](https://securitylabs.datadoghq.com/articles/cve-2025-55182-react2shell-remote-code-execution-react-server-components/) - HIGH confidence
-- [Exploitation of Critical Vulnerability in React Server Components](https://unit42.paloaltonetworks.com/cve-2025-55182-react-and-cve-2025-66478-next/) - HIGH confidence
-
----
-
-### Pitfall 5: Database Connection Pool Exhaustion
-
-**What goes wrong:**
-Improperly configured connection pool settings lead to resource exhaustion and connection errors. Applications crash with "connection pool exhausted" errors even with only 1-2 active users. The problem worsens at scale: if two distinct database clients each have a pool size of 120, they collectively exhaust all 240 available direct connections. When all connections are taken, the n+1 client gets rejected and must constantly poll for availability.
-
-**Why it happens:**
-Developers don't understand Supabase's connection model and use direct database connections instead of Supavisor pooler. Supabase transitioned to IPv6-only direct connections in early 2024, breaking many existing applications. Connection leaks occur when applications don't properly close database connections, creating 100+ "zombie" connections.
-
-**How to avoid:**
-- Use Supavisor connection pooler, not direct database URLs
-- Switch from direct connection strings to pooled connection strings:
-  - Direct: `postgresql://[user]:[pass]@db.[project].supabase.co:5432/postgres`
-  - Pooled: `postgresql://[user]:[pass]@aws-0-[region].pooler.supabase.com:6543/postgres`
-- Configure appropriate pool sizes based on your plan limits
-- Monitor connection usage in Supabase Dashboard
-- Use CLI to identify connection issues: `npx supabase inspect db connections`
-- Implement proper connection cleanup in serverless functions
-- For IPv6 issues: ensure server/container supports IPv6 or use pooler
-
-**Warning signs:**
-- "connection pool exhausted" errors
-- Database connection errors with < 10 concurrent users
-- Growing number of "idle in transaction" connections
-- Supabase dashboard showing 90%+ connection pool usage
-- Application works locally but fails in production
-- Intermittent database timeouts during normal load
-
-**Phase to address:**
-Phase 1 (Foundation) - Configure Supavisor from the start, establish connection patterns.
-Phase 4 (Performance Optimization) - Load testing, connection monitoring, autoscaling strategies.
-
-**Sources:**
-- [Connection management | Supabase Docs](https://supabase.com/docs/guides/database/connection-management) - HIGH confidence
-- [Supavisor FAQ](https://supabase.com/docs/guides/troubleshooting/supavisor-faq-YyP5tI) - HIGH confidence
-- [Solving Supabase IPv6 Connection Issues](https://medium.com/@lhc1990/solving-supabase-ipv6-connection-issues-the-complete-developers-guide-96f8481f42c1) - MEDIUM confidence
-- [Critical Softr - Supabase connection issue](https://community.softr.io/t/critical-softr-supabase-connection-issue-supabase-pool-exhausted-with-only-1-user/14713) - MEDIUM confidence
-
----
-
-### Pitfall 6: Missing Database Indexes Causing Query Performance Collapse
-
-**What goes wrong:**
-Queries that work fine in development with 100 records become unusable in production with 10,000+ records. Dashboard pages take 30+ seconds to load. Simple patient searches time out. The root cause is missing indexes on frequently queried columns, forcing Postgres to perform sequential scans on entire tables.
-
-**Why it happens:**
-Developers prototype without thinking about indexes, and performance issues don't manifest until production data volumes are reached. PostgREST adds minimal overhead (a few milliseconds), so slow queries are almost always database-level problems. RLS policies compound the issue by causing index scans to become sequential scans when poorly designed.
-
-**How to avoid:**
-- Use Supabase's Index Advisor (available in Dashboard) to identify missing indexes
-- Run `npx supabase inspect db unused-indexes` to find unnecessary indexes
-- Use EXPLAIN ANALYZE to profile query performance before deploying
-- Create indexes on:
-  - Foreign key columns
-  - Columns used in WHERE clauses
-  - Columns used in JOIN conditions
-  - Columns used in ORDER BY
-  - Timestamp columns used for date range filtering
-- For RLS optimization: ensure policies can utilize indexes
-
-Example for patient conversation logs:
-```sql
--- Bad: Sequential scan on 100k records
-SELECT * FROM conversation_logs
-WHERE patient_id = 'xyz'
-ORDER BY created_at DESC
-LIMIT 50;
-
--- Good: Create composite index
-CREATE INDEX idx_conversation_logs_patient_created
-ON conversation_logs(patient_id, created_at DESC);
+```javascript
+// N8N HTTP Request Tool - Edit Fields node preparing request
+{
+  "data": "={{ $fromAI('data', 'Data no formato YYYY-MM-DD', 'string') }}",
+  "periodo": "={{ $fromAI('periodo', 'Período: manha, tarde ou qualquer', 'string') }}"
+}
 ```
 
-**Warning signs:**
-- Queries taking >100ms in production vs <10ms in development
-- EXPLAIN ANALYZE showing "Seq Scan" instead of "Index Scan"
-- Database CPU usage spikes during simple queries
-- Dashboard becomes unusable with realistic data volumes
-- Users complain about "slow search" or "loading forever"
-
-**Phase to address:**
-Phase 1 (Foundation) - Index critical query paths (auth, patient lookup).
-Phase 4 (Performance Optimization) - Comprehensive index review and optimization.
-
-**Sources:**
-- [Debugging performance issues | Supabase Docs](https://supabase.com/docs/guides/database/debugging-performance) - HIGH confidence
-- [Steps to improve query performance with indexes](https://supabase.com/docs/guides/troubleshooting/steps-to-improve-query-performance-with-indexes-q8PoC9) - HIGH confidence
-- [Best Practices for Supabase | Scaling](https://www.leanware.co/insights/supabase-best-practices) - HIGH confidence
-
----
-
-### Pitfall 7: Large Table Rendering Without Virtualization
-
-**What goes wrong:**
-Rendering 10,000+ rows in a React table component overwhelms the DOM, causing sluggish performance, browser freezing, and excessive memory consumption. The application becomes unusable when viewing conversation history or patient records. Users experience multi-second delays when scrolling or filtering data.
-
-**Why it happens:**
-Developers render entire datasets without implementing virtualization. The browser creates DOM nodes for every row, even those not visible in the viewport. This works fine with 50-100 rows but catastrophically fails at healthcare data scales where a single patient might have thousands of conversation logs.
-
-**How to avoid:**
-- Use TanStack Virtual or react-window for virtualization
-- Only enable virtualization for >50 rows (adds overhead for small datasets)
-- Virtual rendering keeps ~35 DOM nodes in memory regardless of total items
-- For Material React Table or TanStack Table, enable built-in virtualization
-- Implement server-side pagination for 100k+ records (client virtualization has limits)
-- Consider infinite scroll with virtual scrolling for best UX
-
-Example with TanStack Table + Virtual:
 ```typescript
-import { useVirtualizer } from '@tanstack/react-virtual'
-
-// Only render visible rows
-const rowVirtualizer = useVirtualizer({
-  count: data.length,
-  getScrollElement: () => parentRef.current,
-  estimateSize: () => 50, // row height
-  overscan: 5
+// Next.js API - src/app/api/agent-tools/buscar-slots/route.ts
+const schema = z.object({
+  data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Data inválida'),
+  periodo: z.enum(['manha', 'tarde', 'qualquer']).optional()
 })
 ```
 
-**Warning signs:**
-- Browser tab becomes unresponsive when loading tables
-- Chrome DevTools showing 50,000+ DOM nodes
-- Memory usage exceeding 500MB for a single page
-- Scroll lag or janky scrolling in data tables
-- "This page is slowing down your browser" warnings
-- Tables with >1000 rows without pagination or virtualization
+**CRITICAL BUG**: N8N issue #14274 reports `$fromAI()` in HTTP Request node causes immediate execution failure. Workaround: Use Execute Workflow node with Edit Fields to prepare parameters, THEN HTTP Request.
 
-**Phase to address:**
-Phase 2 (Core Features) - Implement virtualization for conversation logs and patient lists.
-Phase 4 (Performance Optimization) - Performance testing with realistic data volumes.
+**3. Use Structured Outputs (Not JSON Mode)**
 
-**Sources:**
-- [Build Tables in React: Data Grid Performance Guide](https://strapi.io/blog/table-in-react-performance-guide) - HIGH confidence
-- [Optimizing Large Data Sets with Virtualized Columns and Rows in React TanStack Table](https://borstch.com/blog/development/optimizing-large-data-sets-with-virtualized-columns-and-rows-in-react-tanstack-table) - HIGH confidence
-- [Row Virtualization Example - Material React Table](https://www.material-react-table.com/docs/examples/row-virtualization) - HIGH confidence
+OpenAI/Anthropic 2026 best practice: Structured Outputs enforce schema compliance at model level.
+
+```typescript
+// API response MUST use structured format
+return NextResponse.json({
+  success: true,
+  data: slots.map(s => ({
+    data_hora: s.data_hora, // ✅ Explicit field names
+    duracao_minutos: s.duracao
+  }))
+})
+
+// ❌ AVOID - Forces agent to parse nested/ambiguous structure
+return NextResponse.json({ result: JSON.stringify(slots) })
+```
+
+**4. Limit Function Count (<20 Tools)**
+
+Loading 50+ tools into system prompt causes cost/latency problems and accuracy degradation. Internal Anthropic testing: 58 tools consumed ~55k tokens.
+
+**Mitigation for 11 Tools:**
+- Group related functions: `criar_agendamento` also handles patient creation (don't split into `criar_paciente` + `criar_agendamento`)
+- Use tool description to narrow scope: "ONLY use for confirmed appointments, NOT for 'maybe' conversations"
+
+**Phase Addressed:** Phase 3 (API Design), Phase 4 (N8N Integration)
+
+**Real-World Evidence:** Prompt Engineering Guide reports function calling hallucinations (misspelled tool names, invalid parameters) correlate with entropy—models guess when descriptions are vague. 2026 best models achieve 1-2% error rates with proper schemas, vs 8-38% with poor design.
 
 ---
 
-### Pitfall 8: Supabase Realtime Connection Reliability Issues in Production
+### 3. Prompt Injection Exposes Patient PHI
 
-**What goes wrong:**
-Realtime connections disconnect after 8 seconds in active windows. Connections close when screens lock or apps go to the background. Subscription status changes to "CLOSED" when tabs aren't visible, but connection state remains "open," preventing automatic resubscription. Some developers report abandoning Supabase Realtime entirely for Firebase or Pusher due to these reliability issues.
+**Risk:** Malicious patient messages inject instructions that bypass HIPAA safeguards, leak other patients' data, or corrupt records.
 
-**Why it happens:**
-Browser tab visibility detection, aggressive connection timeouts, and Supabase's default reconnection logic don't handle background tabs well. The service reaches maximum allowed connections or exceeds client-side connection limits. Mobile browsers are particularly aggressive about suspending WebSocket connections to save battery.
+**Root Cause:** Agent APIs trust user input without sanitization; agent has unrestricted database access; no audit trail to detect attacks.
 
-**How to avoid:**
-- Implement custom reconnection logic that handles visibility changes:
+**Warning Signs:**
+- API logs show queries like `SELECT * FROM pacientes WHERE telefone = '... OR 1=1 --'`
+- Agent returns data for patients other than the requester
+- Audit logs missing for sensitive operations (delete, PHI access)
+- API doesn't validate user identity matches data access scope
+
+**Prevention:**
+
+**1. Zero Trust Architecture for Agent APIs**
+
+Every agent API call MUST authenticate as if it's a new user request:
+
 ```typescript
-useEffect(() => {
-  const channel = supabase.channel('alerts')
+// src/app/api/agent-tools/buscar-paciente/route.ts
+export async function POST(req: NextRequest) {
+  // 1. AUTHENTICATE: Verify request from N8N (not random attacker)
+  const apiKey = req.headers.get('x-api-key')
+  if (apiKey !== process.env.AGENT_API_SECRET) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
 
-  const handleVisibilityChange = () => {
-    if (document.visibilityState === 'visible') {
-      channel.subscribe() // Resubscribe when tab becomes visible
+  // 2. AUTHORIZE: Verify patient can only access their OWN data
+  const { telefone } = await req.json()
+  const requestorPhone = req.headers.get('x-requestor-phone') // From N8N
+  if (telefone !== requestorPhone) {
+    await logAudit({
+      action: 'UNAUTHORIZED_ACCESS_ATTEMPT',
+      details: { requestor: requestorPhone, target: telefone }
+    })
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  // 3. SANITIZE: Use parameterized queries (Supabase RLS enforces this)
+  const { data } = await supabase
+    .from('pacientes')
+    .select('*')
+    .eq('telefone', telefone) // ✅ Parameterized
+    .single()
+
+  return NextResponse.json({ success: true, data })
+}
+```
+
+**2. Short-Lived Tokens (Not Static API Keys)**
+
+```typescript
+// ❌ AVOID - Static key in N8N env vars (if compromised, valid forever)
+headers: { 'x-api-key': process.env.NEXT_API_KEY }
+
+// ✅ BETTER - Generate JWT with 5min expiry
+const token = jwt.sign(
+  { telefone, exp: Math.floor(Date.now() / 1000) + 300 },
+  process.env.JWT_SECRET
+)
+headers: { 'Authorization': `Bearer ${token}` }
+```
+
+**3. Audit Logging for ALL Agent Actions**
+
+```typescript
+await logAudit({
+  userId: 'agent-marilia',
+  action: AuditAction.AGENT_BUSCAR_PACIENTE,
+  resource: 'pacientes',
+  resourceId: patientId,
+  details: {
+    telefone: requestorPhone,
+    timestamp: new Date().toISOString(),
+    tool: 'buscar_paciente'
+  }
+})
+```
+
+**4. Rate Limiting per Patient**
+
+Prevent prompt injection loop attacks:
+
+```typescript
+// Redis: INCR agent:buscar_paciente:5511999999999
+if (await redis.get(`agent:${tool}:${telefone}`) > 10) {
+  return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
+}
+await redis.setex(`agent:${tool}:${telefone}`, 60, callCount + 1)
+```
+
+**Phase Addressed:** Phase 5 (Security), throughout all phases
+
+**Real-World Evidence:** CyberArk 2026 AI Agent Security Report: Prompt injection is the #1 attack vector for AI agents with API access. Payment processors reported unauthorized refunds from injected "approve all refunds" prompts. HIPAA compliance requires audit trails for PHI access—agent APIs are NOT exempt.
+
+---
+
+### 4. API Response Format Breaks Agent Conversation Flow
+
+**Risk:** API returns correct data but agent says "An error occurred" or repeats the question, confusing patients.
+
+**Root Cause:** API error messages not descriptive, response structure doesn't match agent's expectations, missing context for agent to formulate natural response.
+
+**Warning Signs:**
+- Agent says "I couldn't find that information" when API returned empty array (not an error)
+- Agent can't distinguish between "no slots available" vs "date is in the past"
+- API returns HTTP 500 with generic "Internal Server Error", agent can't explain to patient
+- Agent repeats tool call in infinite loop because response doesn't signal completion
+
+**Prevention:**
+
+**1. Rich, Agent-Friendly Error Messages**
+
+```typescript
+// ❌ AVOID - Generic errors agent can't explain
+if (!data) {
+  return NextResponse.json({ error: 'Not found' }, { status: 404 })
+}
+
+// ✅ BETTER - Descriptive errors agent can relay to patient
+if (slots.length === 0) {
+  return NextResponse.json({
+    success: true,
+    data: [],
+    message: "Nenhum horário disponível nesta data. Próximas datas com vagas: 2026-01-25 (3 slots), 2026-01-27 (5 slots).",
+    metadata: {
+      next_available_dates: ['2026-01-25', '2026-01-27'],
+      reason: 'fully_booked'
+    }
+  })
+}
+
+// For errors, return valid list of options to save agent another call
+if (!isValidPeriodo(periodo)) {
+  return NextResponse.json({
+    success: false,
+    error: `Período inválido: '${periodo}'. Valores aceitos: ${VALID_PERIODOS.join(', ')}`,
+    valid_values: VALID_PERIODOS
+  }, { status: 400 })
+}
+```
+
+**2. Consistent Response Envelope**
+
+All agent APIs MUST use same structure:
+
+```typescript
+type AgentApiResponse<T> = {
+  success: boolean
+  data?: T
+  error?: string
+  message?: string // Natural language for agent to relay
+  metadata?: Record<string, any> // Context for decision-making
+}
+```
+
+**3. Empty State != Error State**
+
+```typescript
+// ✅ Empty array is SUCCESS (agent should offer alternatives)
+GET /agent-tools/buscar-slots?data=2026-01-20&periodo=manha
+{
+  "success": true,
+  "data": [],
+  "message": "Todos os horários da manhã do dia 20/01 estão ocupados. A tarde tem 3 horários disponíveis."
+}
+
+// ❌ Don't return 404 for empty results
+```
+
+**4. Prevent Infinite Loops**
+
+When agent calls same tool repeatedly:
+
+```typescript
+// Add completion signal to response
+{
+  "success": true,
+  "data": { /* agendamento criado */ },
+  "message": "Agendamento criado com sucesso para 2026-01-20 às 14:00.",
+  "metadata": {
+    "action_completed": true, // Signal: don't retry
+    "confirmation_needed": false
+  }
+}
+```
+
+**Phase Addressed:** Phase 3 (API Design), Phase 6 (Testing)
+
+**Real-World Evidence:** N8N community reports (issue #223783) show agent tools fail silently with generic errors, requiring descriptive messages. According to Composio's 2026 Agent Report, "dumb RAG" and poor tool responses cause 70% of agent pilot failures—not model limitations.
+
+---
+
+### 5. N8N HTTP Request Node Configuration Hell
+
+**Risk:** API works in curl/Postman but N8N HTTP Request node returns 401/500/timeout, blocking migration.
+
+**Root Cause:** N8N HTTP Request node quirks: header formatting, JSON body encoding, timeout defaults, SSL certificate validation.
+
+**Warning Signs:**
+- curl succeeds, N8N HTTP Request fails with same URL/payload
+- API logs show request body as `"[object Object]"` instead of JSON
+- Intermittent timeouts on fast API (N8N default timeout too low)
+- CORS errors (N8N making preflight OPTIONS requests)
+
+**Prevention:**
+
+**1. N8N HTTP Request Node Best Practices**
+
+```javascript
+// N8N HTTP Request Tool Configuration
+{
+  "method": "POST",
+  "url": "={{ $env.NEXT_API_URL }}/api/agent-tools/buscar-slots",
+  "authentication": "genericCredentialType",
+  "genericAuthType": "httpHeaderAuth",
+  "sendHeaders": true,
+  "headerParameters": {
+    "parameters": [
+      {
+        "name": "Content-Type",
+        "value": "application/json"
+      },
+      {
+        "name": "x-api-key",
+        "value": "={{ $env.AGENT_API_SECRET }}"
+      },
+      {
+        "name": "x-requestor-phone",
+        "value": "={{ $json.telefone }}" // For authorization
+      }
+    ]
+  },
+  "sendBody": true,
+  "bodyParameters": {
+    "parameters": [
+      {
+        "name": "data",
+        "value": "={{ $json.data }}"
+      },
+      {
+        "name": "periodo",
+        "value": "={{ $json.periodo }}"
+      }
+    ]
+  },
+  "options": {
+    "timeout": 10000, // ✅ 10s (default 5s often too low)
+    "response": {
+      "response": {
+        "responseFormat": "json" // ✅ Auto-parse JSON
+      }
+    }
+  }
+}
+```
+
+**2. Known N8N Gotchas**
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Body sent as `"[object Object]"` | Body type set to "JSON" but not stringified | Use "Body Parameters" option, not raw JSON |
+| 401 Unauthorized | Header name case-sensitive | Use exact case: `x-api-key` not `X-API-KEY` |
+| Timeout on local dev | N8N can't reach `localhost` | Use Docker network name or ngrok |
+| SSL certificate error | Self-signed cert in dev | Set `Ignore SSL Issues: true` (dev only!) |
+| `$fromAI()` returns undefined | Missing `specifyInputSchema: true` | See AGENTS.md troubleshooting section |
+
+**3. Test Webhook for N8N → API Validation**
+
+Create test endpoint that logs EXACTLY what N8N sends:
+
+```typescript
+// src/app/api/agent-tools/test/route.ts
+export async function POST(req: NextRequest) {
+  const body = await req.text() // Get raw body
+  const headers = Object.fromEntries(req.headers.entries())
+
+  console.log('=== N8N REQUEST DEBUG ===')
+  console.log('Headers:', JSON.stringify(headers, null, 2))
+  console.log('Body (raw):', body)
+  console.log('Body (parsed):', JSON.parse(body))
+
+  return NextResponse.json({
+    success: true,
+    received: { headers, body: JSON.parse(body) }
+  })
+}
+```
+
+**Phase Addressed:** Phase 4 (N8N Integration)
+
+**Real-World Evidence:** N8N GitHub issues #14274 and community forum posts show HTTP Request node fails with `$fromAI()` in certain configurations. N8N docs recommend using Execute Workflow + Edit Fields workaround.
+
+---
+
+### 6. Missing Rollback Strategy for Data Corruption
+
+**Risk:** New API has bug that corrupts patient data (wrong appointment times, duplicate records), no way to restore.
+
+**Root Cause:** No database snapshots before migration, no soft-delete pattern, no data validation layer.
+
+**Warning Signs:**
+- API `DELETE` operations use `DELETE FROM` (hard delete)
+- API `UPDATE` operations directly overwrite without history
+- No staging database with production data copy for testing
+- No automated data integrity checks (referential integrity, required fields)
+
+**Prevention:**
+
+**1. Soft Delete Pattern**
+
+```typescript
+// ❌ AVOID - Hard delete (can't undo)
+await supabase.from('agendamentos').delete().eq('id', id)
+
+// ✅ BETTER - Soft delete (can restore)
+await supabase
+  .from('agendamentos')
+  .update({
+    status: 'cancelada',
+    deleted_at: new Date().toISOString(),
+    deleted_by: 'agent-marilia'
+  })
+  .eq('id', id)
+```
+
+**2. Audit Trail for Rollback**
+
+```typescript
+// Store before/after for all updates
+await logAudit({
+  action: 'UPDATE_AGENDAMENTO',
+  resourceId: id,
+  details: {
+    before: oldData,
+    after: newData,
+    changes: diff(oldData, newData)
+  }
+})
+
+// Rollback function
+async function rollbackUpdate(auditId: string) {
+  const audit = await getAuditLog(auditId)
+  await supabase
+    .from('agendamentos')
+    .update(audit.details.before)
+    .eq('id', audit.resourceId)
+}
+```
+
+**3. Database Snapshots Before Migration**
+
+```bash
+# Before each tool migration
+pg_dump -h <SUPABASE_HOST> -U postgres -d postgres > backup-$(date +%Y%m%d-%H%M%S).sql
+```
+
+**4. Data Validation Layer**
+
+```typescript
+// Validate AFTER database operation
+const created = await createAgendamento(data)
+
+// Sanity checks
+if (!created.id) throw new Error('Agendamento sem ID')
+if (created.paciente_id !== data.paciente_id) throw new Error('Paciente ID mismatch')
+if (new Date(created.data_hora) < new Date()) throw new Error('Agendamento no passado')
+
+// Cross-check with Supabase
+const verified = await supabase
+  .from('agendamentos')
+  .select('*')
+  .eq('id', created.id)
+  .single()
+
+if (!verified.data) {
+  throw new Error(`Agendamento ${created.id} não encontrado após criação`)
+}
+```
+
+**Phase Addressed:** Phase 1 (Migration Infrastructure), Phase 5 (Security)
+
+**Real-World Evidence:** Composio 2026 Agent Report: Data pipeline failures are the #1 cause of AI agents operating incorrectly in production. Payment processor case study: agent API bug caused ~$50k in duplicate charges before detection.
+
+---
+
+### 7. MCP Server Architecture Mismatch
+
+**Risk:** Building MCP server adds complexity without value; or skipping MCP when it would enable better agent orchestration.
+
+**Root Cause:** Misunderstanding when MCP is appropriate vs direct HTTP APIs.
+
+**Warning Signs:**
+- MCP server becomes "kitchen sink" with 50+ tools (security nightmare)
+- MCP in hot path causes 300-800ms latency for every agent call
+- OR: Direct HTTP APIs lack standardization, each tool has different auth/format
+
+**Prevention:**
+
+**DECISION FRAMEWORK: When to Use MCP**
+
+| Scenario | Use MCP? | Rationale |
+|----------|----------|-----------|
+| Single agent (Marília) calling tools | NO | Direct HTTP simpler, lower latency |
+| Multiple agents sharing tools | YES | MCP provides standard interface |
+| Tools need context from previous calls | YES | MCP handles session management |
+| Real-time customer-facing (WhatsApp) | NO | 300-800ms MCP latency unacceptable |
+| Background analysis (dashboards) | YES | Latency tolerance, benefits from caching |
+| Tools <20 functions | NO | Direct HTTP sufficient |
+| Tools >50 functions | YES | MCP governance/organization needed |
+
+**For Botfy Clinicas (11 tools, single agent, real-time WhatsApp):**
+- **Phase 1-4: Direct HTTP APIs** (no MCP)
+- **Phase 5 (Optional): MCP Wrapper** for future multi-agent scenarios
+
+**MCP Implementation Anti-Patterns to AVOID:**
+
+```typescript
+// ❌ KITCHEN SINK - One MCP server for everything
+const mcpServer = new MCPServer({
+  tools: [
+    buscar_slots, criar_agendamento, cancelar_agendamento, // Calendar
+    buscar_paciente, atualizar_paciente, // Patients
+    processar_documento, buscar_instrucoes, // Documents
+    send_email, create_invoice, run_report // ??? Unrelated functions
+  ]
+}) // Security nightmare, privilege escalation risk
+
+// ✅ MODULAR - Separate MCP servers by domain
+const calendarMCP = new MCPServer({ tools: [buscar_slots, criar_agendamento] })
+const patientMCP = new MCPServer({ tools: [buscar_paciente, atualizar_paciente] })
+
+// ❌ MCP IN HOT PATH - Agent waits 500ms for every tool call
+async function handleWhatsAppMessage() {
+  const response = await mcpServer.callTool('buscar_slots') // 300-800ms latency!
+  await sendWhatsApp(response) // User waiting...
+}
+
+// ✅ MCP IN BACKGROUND - Dashboard pre-loads data
+async function refreshDashboard() {
+  const stats = await mcpServer.callTool('aggregate_stats') // Latency OK
+  await cache.set('dashboard:stats', stats)
+}
+```
+
+**Phase Addressed:** Phase 0 (Architecture Decision), Phase 5+ (MCP Implementation)
+
+**Real-World Evidence:** Nate's Newsletter "MCP Implementation Guide": 300-800ms baseline latency can't be cached away—MCP in checkout flows destroys conversion. Descope MCP Security Report: Kitchen Sink servers create privilege escalation risks.
+
+---
+
+## Migration-Specific Risks
+
+### 8. Dual-Write Data Inconsistency
+
+**Risk:** During migration, N8N workflow writes to DB, API also writes to DB, creating duplicate/conflicting records.
+
+**Root Cause:** Both old (N8N) and new (API) systems active simultaneously without coordination.
+
+**Warning Signs:**
+- Duplicate appointments in database with same patient/time but different IDs
+- API and N8N have different business logic (one validates, other doesn't)
+- Race condition: patient creates appointment via WhatsApp (N8N) while agent calls API
+
+**Prevention:**
+
+**1. Read-Heavy First, Write-Heavy Last Migration Order**
+
+```
+Phase 1 (Read-only tools, safe to dual-run):
+- buscar_paciente
+- buscar_slots_disponiveis
+- buscar_agendamentos
+- status_pre_checkin
+
+Phase 2 (Read with side-effects):
+- buscar_instrucoes (embedding search)
+- processar_documento (file upload)
+
+Phase 3 (Write operations, LAST):
+- criar_agendamento
+- reagendar_agendamento
+- cancelar_agendamento
+- atualizar_dados_paciente
+- confirmar_presenca
+```
+
+**2. Idempotency Keys for Write Operations**
+
+```typescript
+// API accepts idempotency key from N8N
+const { idempotency_key } = await req.json()
+
+// Check if already processed
+const existing = await supabase
+  .from('agendamentos')
+  .select('*')
+  .eq('idempotency_key', idempotency_key)
+  .single()
+
+if (existing.data) {
+  return NextResponse.json({
+    success: true,
+    data: existing.data,
+    message: 'Agendamento já criado (idempotent)'
+  })
+}
+
+// Create with idempotency key
+const { data } = await supabase
+  .from('agendamentos')
+  .insert({ ...appointment, idempotency_key })
+```
+
+**3. Feature Flag for Gradual Cutover**
+
+```typescript
+// N8N HTTP Request Tool
+const USE_API = process.env.TOOL_CRIAR_AGENDAMENTO_USE_API === 'true'
+
+if (USE_API) {
+  // Call Next.js API
+  const result = await fetch(`${NEXT_API_URL}/agent-tools/criar-agendamento`, {...})
+} else {
+  // Call old N8N sub-workflow
+  const result = await executeWorkflow('eEx2enJk3YpreNUm', {...})
+}
+```
+
+**Phase Addressed:** Phase 2 (Tool-by-Tool Migration)
+
+**Real-World Evidence:** According to Mulesoft's API Migration STAR Pattern guide, dual-write consistency is the #1 failure mode. Recommendation: Strangler Fig pattern with feature flags for gradual cutover.
+
+---
+
+### 9. Agent Memory Pollution from Failed Migrations
+
+**Risk:** Tool migration fails/errors, but agent's chat memory stores incorrect responses, causing future conversations to reference wrong data.
+
+**Root Cause:** N8N Postgres Chat Memory stores ALL messages (including errors) without cleanup mechanism.
+
+**Warning Signs:**
+- Patient asks "what's my appointment?" → Agent says "You have appointment on [wrong date]" from previous failed tool call
+- Agent memory shows tool responses with error messages that agent treats as facts
+- Chat memory grows unbounded (>1000 messages per patient)
+
+**Prevention:**
+
+**1. Don't Store Failed Tool Calls in Memory**
+
+```javascript
+// N8N - AFTER HTTP Request Tool call
+const toolResult = $('HTTP Request Tool').first().json
+
+// Only store in chat memory if successful
+if (toolResult.success) {
+  // Store in Postgres Chat Memory
+} else {
+  // Log error but don't store in agent memory
+  console.error('Tool failed:', toolResult.error)
+  // Return error to agent without polluting memory
+}
+```
+
+**2. Memory Pruning Strategy**
+
+```typescript
+// API endpoint to clean stale/corrupt agent memory
+export async function POST() {
+  // Remove messages older than 30 days
+  await supabase
+    .from('n8n_chat_histories')
+    .delete()
+    .lt('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+
+  // Remove error messages from memory
+  await supabase
+    .from('n8n_chat_histories')
+    .delete()
+    .ilike('message->content', '%error%')
+
+  // Keep only last 50 messages per patient
+  // (complex query, use RPC function)
+}
+```
+
+**3. Structured Tool Response Format**
+
+```typescript
+// Tool response includes metadata for memory filtering
+{
+  "success": true,
+  "data": { /* actual data */ },
+  "metadata": {
+    "should_store_in_memory": true, // Explicit flag
+    "memory_summary": "Paciente tem agendamento dia 20/01 às 14h" // What to store
+  }
+}
+```
+
+**Phase Addressed:** Phase 4 (N8N Integration), Phase 6 (Testing)
+
+**Real-World Evidence:** AGENTS.md troubleshooting section documents "AI repete perguntas ou fica confusa" caused by corrupted chat memory requiring manual `DELETE FROM n8n_chat_histories`.
+
+---
+
+### 10. Timezone Handling Breaks During Migration
+
+**Risk:** N8N sub-workflows use TZDate correctly, but new APIs use JavaScript Date, causing DST bugs and wrong appointment times.
+
+**Root Cause:** Loss of institutional knowledge during migration—N8N developers knew about Brazil DST (Feb/Nov transitions), API developers don't.
+
+**Warning Signs:**
+- Appointments created 1 hour off during DST transition weeks (Feb 15-22, Nov 1-7)
+- API logs show times in UTC without timezone indicator
+- Frontend shows "14:00" but database stores "17:00" (UTC conversion)
+
+**Prevention:**
+
+**1. ALWAYS Use TZDate in APIs**
+
+```typescript
+// ❌ AVOID - JavaScript Date (DST-unaware)
+const appointmentTime = new Date(2026, 1, 17, 14, 0) // February 17, 2pm
+
+// ✅ CORRECT - TZDate (DST-aware)
+import { TZDate } from '@date-fns/tz'
+const appointmentTime = new TZDate(2026, 1, 17, 14, 0, 'America/Sao_Paulo')
+```
+
+**2. Validate Timezone in All Date Inputs**
+
+```typescript
+const schema = z.object({
+  data_hora: z.string().refine(
+    (val) => {
+      const date = new Date(val)
+      // Must include timezone or be in ISO format
+      return val.includes('-03:00') || val.includes('Z') || val.match(/T\d{2}:\d{2}:\d{2}/)
+    },
+    { message: 'data_hora must include timezone' }
+  )
+})
+```
+
+**3. Migration Checklist Item: Audit All Date Operations**
+
+```bash
+# Search codebase for Date usage
+grep -r "new Date(" src/app/api/agent-tools/
+
+# Flag any usage NOT using TZDate
+# Manual review required for each instance
+```
+
+**Phase Addressed:** Phase 3 (API Design), Phase 6 (Testing)
+
+**Real-World Evidence:** CLAUDE.md emphasizes "ALWAYS use TZDate for datas/horários" due to Brazil DST transitions. Calendar bugs in production were traced to mixing Date and TZDate.
+
+---
+
+## MCP Implementation Risks
+
+### 11. MCP Security Vulnerabilities (SQL Injection, Confused Deputy)
+
+**Risk:** MCP server trusts client input, allowing SQL injection or unauthorized data access.
+
+**Root Cause:** MCP servers often run with elevated privileges (database access) but don't validate client authorization.
+
+**Warning Signs:**
+- MCP server connects to database with admin credentials
+- No parameterized queries in MCP tool functions
+- MCP server doesn't check which user is calling the tool
+- Logs show MCP server executing queries for resources user shouldn't access
+
+**Prevention:**
+
+**1. Parameterized Queries ONLY**
+
+```typescript
+// ❌ VULNERABLE - SQL Injection
+const mcpServer = new MCPServer({
+  tools: {
+    buscar_paciente: async ({ telefone }) => {
+      // Attacker sends: telefone = "5511999999999' OR '1'='1"
+      const result = await db.query(`SELECT * FROM pacientes WHERE telefone = '${telefone}'`)
+      return result
+    }
+  }
+})
+
+// ✅ SECURE - Parameterized query
+const mcpServer = new MCPServer({
+  tools: {
+    buscar_paciente: async ({ telefone }) => {
+      const result = await supabase
+        .from('pacientes')
+        .select('*')
+        .eq('telefone', telefone) // Supabase auto-parameterizes
+        .single()
+      return result
+    }
+  }
+})
+```
+
+**2. Confused Deputy Prevention**
+
+```typescript
+// MCP server checks CALLER identity, not just request data
+const mcpServer = new MCPServer({
+  tools: {
+    buscar_paciente: async ({ telefone }, context) => {
+      // Verify caller is authorized for this patient
+      if (context.caller.role !== 'ADMIN' && context.caller.telefone !== telefone) {
+        throw new Error('Forbidden: Can only access own patient data')
+      }
+
+      const result = await supabase
+        .from('pacientes')
+        .select('*')
+        .eq('telefone', telefone)
+        .single()
+      return result
+    }
+  }
+})
+```
+
+**3. Read-Only by Default**
+
+```typescript
+// Start with read-only database connection
+const readOnlySupabase = createClient(SUPABASE_URL, SUPABASE_READ_ONLY_KEY)
+
+// Only elevate privileges when necessary (and with extra validation)
+async function criar_agendamento({ paciente_id, data_hora }) {
+  // Extra validation for write operations
+  await validateBusinessRules({ paciente_id, data_hora })
+
+  // Use write-enabled client only after validation
+  const writeSupabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+  const result = await writeSupabase.from('agendamentos').insert(...)
+  return result
+}
+```
+
+**Phase Addressed:** Phase 5+ (MCP Implementation, if applicable)
+
+**Real-World Evidence:** The Hacker News (Jan 2026): Three vulnerabilities in Anthropic's MCP Git Server enabled file access and code execution. Descope MCP Security Guide: SQL injection and confused deputy are top 2 MCP vulnerabilities.
+
+---
+
+### 12. MCP OAuth 2.1 Authentication Misconfiguration
+
+**Risk:** Using deprecated authentication methods or misconfiguring OAuth scopes, allowing unauthorized MCP access.
+
+**Root Cause:** MCP spec historically used custom auth; OAuth 2.1 standardization in 2025 means outdated tutorials are wrong.
+
+**Warning Signs:**
+- MCP server uses HTTP Basic Auth or custom API keys
+- OAuth implementation uses password grant (deprecated in 2.1)
+- Tokens don't expire or refresh
+- No scope enforcement (all clients get full access)
+
+**Prevention:**
+
+**1. Use OAuth 2.1 Client Credentials Flow**
+
+```typescript
+// MCP Server OAuth 2.1 Configuration
+const mcpServer = new MCPServer({
+  auth: {
+    type: 'oauth2.1',
+    tokenEndpoint: 'https://your-auth-server.com/token',
+    clientId: process.env.MCP_CLIENT_ID,
+    clientSecret: process.env.MCP_CLIENT_SECRET,
+    scopes: ['agent:read', 'agent:write:appointments']
+  }
+})
+
+// Client (N8N) obtains token
+const tokenResponse = await fetch('https://your-auth-server.com/token', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  body: new URLSearchParams({
+    grant_type: 'client_credentials',
+    client_id: process.env.MCP_CLIENT_ID,
+    client_secret: process.env.MCP_CLIENT_SECRET,
+    scope: 'agent:read agent:write:appointments'
+  })
+})
+
+const { access_token, expires_in } = await tokenResponse.json()
+
+// Use token in MCP calls (expires in 300-3600s)
+await mcpServer.callTool('buscar_slots', { data: '2026-01-20' }, {
+  headers: { Authorization: `Bearer ${access_token}` }
+})
+```
+
+**2. Token Expiry and Refresh**
+
+```typescript
+// Track token expiry
+let accessToken = null
+let tokenExpiry = null
+
+async function getValidToken() {
+  if (!accessToken || Date.now() > tokenExpiry) {
+    const { access_token, expires_in } = await fetchNewToken()
+    accessToken = access_token
+    tokenExpiry = Date.now() + (expires_in * 1000)
+  }
+  return accessToken
+}
+```
+
+**3. Scope Enforcement in MCP Server**
+
+```typescript
+const mcpServer = new MCPServer({
+  tools: {
+    buscar_slots: {
+      handler: async (params) => { /* ... */ },
+      requiredScopes: ['agent:read'] // Read-only
+    },
+    criar_agendamento: {
+      handler: async (params) => { /* ... */ },
+      requiredScopes: ['agent:write:appointments'] // Write
+    }
+  }
+})
+
+// MCP middleware checks scopes
+mcpServer.use((context, next) => {
+  const token = context.request.headers.authorization.split(' ')[1]
+  const { scopes } = jwt.verify(token, process.env.JWT_SECRET)
+
+  if (!tool.requiredScopes.every(s => scopes.includes(s))) {
+    throw new Error('Insufficient scopes')
+  }
+
+  return next()
+})
+```
+
+**Phase Addressed:** Phase 5+ (MCP Implementation, if applicable)
+
+**Real-World Evidence:** MCP Security Survival Guide (Towards Data Science): Modern MCP standardized on OAuth 2.1 as of 2025, deprecating basic auth and custom methods. Red Hat MCP Security Report emphasizes scope enforcement to prevent privilege escalation.
+
+---
+
+## Security Considerations
+
+### 13. API Key Exposure in N8N Logs/Webhooks
+
+**Risk:** API keys logged in N8N execution history or webhook payloads, visible to anyone with N8N access.
+
+**Root Cause:** N8N logs all node inputs/outputs by default, including headers with API keys.
+
+**Warning Signs:**
+- N8N execution history shows `x-api-key: abc123...` in HTTP Request node
+- Webhook test payloads include secrets
+- Environment variables printed in Code nodes for debugging
+
+**Prevention:**
+
+**1. Use N8N Credentials (Not Env Vars in Headers)**
+
+```javascript
+// ❌ AVOID - API key visible in execution logs
+{
+  "headerParameters": {
+    "parameters": [
+      { "name": "x-api-key", "value": "={{ $env.AGENT_API_SECRET }}" } // Logged!
+    ]
+  }
+}
+
+// ✅ BETTER - Use N8N Credentials feature
+// 1. Create credential: Settings → Credentials → Create New → Header Auth
+// 2. Add header: "x-api-key" with secret value
+// 3. In HTTP Request node:
+{
+  "authentication": "genericCredentialType",
+  "genericAuthType": "httpHeaderAuth",
+  "httpHeaderAuth": "={{ $credentials.AgentAPIKey }}" // Not logged
+}
+```
+
+**2. Sanitize Logs in Code Nodes**
+
+```javascript
+// Code node
+const apiKey = $env.AGENT_API_SECRET
+const headers = {
+  'x-api-key': apiKey
+}
+
+// ❌ AVOID
+console.log('Calling API with headers:', headers) // Logs secret!
+
+// ✅ BETTER
+console.log('Calling API with headers:', {
+  ...headers,
+  'x-api-key': '[REDACTED]'
+})
+```
+
+**3. Disable Execution Data Saving for Sensitive Workflows**
+
+```json
+// N8N Workflow Settings
+{
+  "settings": {
+    "saveExecutionProgress": false, // Don't log intermediate steps
+    "saveDataSuccessExecution": "none", // Don't save successful execution data
+    "saveDataErrorExecution": "all" // Only save errors (for debugging)
+  }
+}
+```
+
+**Phase Addressed:** Phase 4 (N8N Integration), Phase 5 (Security)
+
+**Real-World Evidence:** N8N community forum posts report API keys exposed in execution logs. Best practice: Use N8N's credential management system designed to prevent logging secrets.
+
+---
+
+### 14. No Rate Limiting on Agent APIs
+
+**Risk:** Runaway agent loop calls API 1000x/min, exhausting database connections or hitting Supabase rate limits.
+
+**Root Cause:** No rate limiting on API endpoints; agent can call tools unlimited times.
+
+**Warning Signs:**
+- Database connection pool exhausted errors
+- Supabase returns 429 Too Many Requests
+- Agent stuck in loop calling same tool repeatedly (hallucination)
+- API costs spike unexpectedly
+
+**Prevention:**
+
+**1. Per-Patient Rate Limiting**
+
+```typescript
+// lib/rate-limit.ts
+import { Redis } from '@upstash/redis'
+const redis = Redis.fromEnv()
+
+export async function checkRateLimit(
+  key: string,
+  limit: number,
+  window: number // seconds
+): Promise<{ allowed: boolean; remaining: number }> {
+  const current = await redis.incr(key)
+
+  if (current === 1) {
+    await redis.expire(key, window)
+  }
+
+  const remaining = limit - current
+
+  return {
+    allowed: current <= limit,
+    remaining: Math.max(0, remaining)
+  }
+}
+
+// API route
+export async function POST(req: NextRequest) {
+  const { telefone } = await req.json()
+
+  const { allowed, remaining } = await checkRateLimit(
+    `agent:buscar_slots:${telefone}`,
+    10, // 10 calls
+    60  // per 60 seconds
+  )
+
+  if (!allowed) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Rate limit exceeded. Aguarde 1 minuto antes de tentar novamente.',
+        metadata: { retry_after: 60 }
+      },
+      { status: 429 }
+    )
+  }
+
+  // Process request...
+  return NextResponse.json({ success: true, data: slots })
+}
+```
+
+**2. Global Rate Limiting per Tool**
+
+```typescript
+// Prevent total API overload
+const globalLimit = await checkRateLimit(
+  `agent:tool:buscar_slots:global`,
+  100, // 100 calls
+  60   // per minute across all patients
+)
+```
+
+**3. Circuit Breaker for Database**
+
+```typescript
+// lib/circuit-breaker.ts
+class CircuitBreaker {
+  private failures = 0
+  private lastFailure = 0
+  private state: 'closed' | 'open' | 'half-open' = 'closed'
+
+  async execute<T>(fn: () => Promise<T>): Promise<T> {
+    if (this.state === 'open') {
+      if (Date.now() - this.lastFailure > 30000) { // 30s cooldown
+        this.state = 'half-open'
+      } else {
+        throw new Error('Circuit breaker OPEN: Database unavailable')
+      }
+    }
+
+    try {
+      const result = await fn()
+      this.onSuccess()
+      return result
+    } catch (error) {
+      this.onFailure()
+      throw error
     }
   }
 
-  document.addEventListener('visibilitychange', handleVisibilityChange)
-  channel.subscribe()
-
-  return () => {
-    document.removeEventListener('visibilitychange', handleVisibilityChange)
-    supabase.removeChannel(channel)
+  private onSuccess() {
+    this.failures = 0
+    this.state = 'closed'
   }
-}, [])
+
+  private onFailure() {
+    this.failures++
+    this.lastFailure = Date.now()
+
+    if (this.failures >= 5) {
+      this.state = 'open'
+      console.error('[Circuit Breaker] OPEN - Too many database failures')
+    }
+  }
+}
+
+// Usage in API
+const dbCircuitBreaker = new CircuitBreaker()
+
+export async function POST(req: NextRequest) {
+  try {
+    const result = await dbCircuitBreaker.execute(async () => {
+      return await supabase.from('agendamentos').select('*')
+    })
+    return NextResponse.json({ success: true, data: result })
+  } catch (error) {
+    if (error.message.includes('Circuit breaker OPEN')) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Serviço temporariamente indisponível. Tente novamente em 30 segundos.'
+        },
+        { status: 503 }
+      )
+    }
+    throw error
+  }
+}
 ```
-- Monitor connection status and implement heartbeat/keepalive
-- Use Supabase Presence for connection state awareness
-- Consider polling fallback for critical alerts when realtime fails
-- For admin dashboards: accept that background tabs may need manual refresh
-- Test connection recovery after laptop sleep, network changes, tab backgrounding
 
-**Warning signs:**
-- Realtime updates stop after a few seconds
-- Alerts work only when dashboard tab is focused
-- Users report "stale data" until manual refresh
-- WebSocket shows "disconnected" in DevTools after brief period
-- Connection count grows without bound (indicates failed cleanup + reconnection loops)
+**Phase Addressed:** Phase 3 (API Design), Phase 5 (Security)
 
-**Phase to address:**
-Phase 2 (Core Features) - Implement robust realtime connection management.
-Phase 3 (Testing & Reliability) - Test reconnection scenarios, implement fallbacks.
-
-**Sources:**
-- [Supabase Realtime Troubleshooting](https://supabase.com/docs/guides/realtime/troubleshooting) - HIGH confidence
-- [My realtime subscriptions get terminated and I cannot recover them](https://github.com/orgs/supabase/discussions/5312) - HIGH confidence
-- [Supabase Realtime Data Inconsistency](https://drdroid.io/stack-diagnosis/supabase-realtime-data-inconsistency) - MEDIUM confidence
+**Real-World Evidence:** Composio 2026 Agent Report: "Polling Tax" wastes 95% of API calls and burns through quotas. Rate limiting + circuit breakers prevent runaway costs and database overload.
 
 ---
 
-### Pitfall 9: HIPAA Audit Logging Failures
+## Testing & Validation
 
-**What goes wrong:**
-Healthcare organizations fail to implement proper audit logging, violating HIPAA requirements and creating liability. A real case: a small clinic had no documentation of ePHI access log audits, and several employees inappropriately accessed patient records without detection. Without audit trails, breaches go unnoticed until it's too late. Small configuration mistakes lead to sensitive data leaks.
+### 15. No Agent End-to-End Testing Before Production
 
-**Why it happens:**
-Developers treat audit logging as a "nice to have" feature to add later, not realizing it's a legal requirement from day one. Ignorance of HIPAA classification leads to violations - teams don't understand what counts as PHI in intake forms, voicemails, and sign-in sheets. Manual logging increases human error and non-compliance risk.
+**Risk:** All unit tests pass, but agent can't complete real conversations (e.g., "book appointment for tomorrow at 2pm") in production.
 
-**How to avoid:**
-- Implement audit logging from Phase 1, not as an afterthought
-- Track ALL PHI access with who, when, what, and which data:
-  - User logins and authentication events
-  - All database queries accessing patient data
-  - Access control changes (role/permission modifications)
-  - Administrator actions
-  - Failed access attempts
-- Store audit logs for 6 years (HIPAA requirement)
-- Logs must be immutable and tamper-proof
-- Implement automated logging - don't rely on manual processes
-- Use Supabase RLS policies to enforce logging:
+**Root Cause:** Testing tools in isolation, not testing full agent conversation flows.
 
-```sql
--- Audit trigger for patient access
-CREATE TABLE audit_log (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL,
-  action text NOT NULL,
-  table_name text NOT NULL,
-  record_id uuid NOT NULL,
-  timestamp timestamptz DEFAULT now(),
-  ip_address inet,
-  details jsonb
-);
+**Warning Signs:**
+- Manual testing shows "buscar_slots works" but agent never calls it in conversation
+- Agent successfully calls tools but can't synthesize responses into natural language
+- No test data for edge cases (no slots available, patient doesn't exist, DST transition dates)
 
--- Trigger function for patient table access
-CREATE OR REPLACE FUNCTION log_patient_access()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO audit_log (user_id, action, table_name, record_id, details)
-  VALUES (
-    auth.uid(),
-    TG_OP,
-    'patients',
-    NEW.id,
-    jsonb_build_object('accessed_fields', NEW)
-  );
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-```
+**Prevention:**
 
-- Regular log review process: check for patterns indicating inappropriate access
-- Look for repeated views of same patient file or access outside working hours
-- Implement dashboard for administrators to audit access patterns
+**1. Agent Conversation Test Suite**
 
-**Warning signs:**
-- No audit logging implementation in initial architecture
-- Manual or optional logging mechanisms
-- Logs stored in mutable tables or with short retention
-- No process for regular log review
-- Inability to answer "who accessed patient X's data on date Y?"
-- Audit logging treated as Phase 3+ feature instead of Phase 1
-
-**Phase to address:**
-Phase 1 (Foundation) - Implement comprehensive audit logging before any PHI is stored.
-Phase 2 (HIPAA Compliance) - Verify logging completeness, implement review processes, ensure 6-year retention.
-
-**Sources:**
-- [HIPAA Audit Logs: Complete Requirements for Healthcare Compliance in 2025](https://www.kiteworks.com/hipaa-compliance/hipaa-audit-log-requirements/) - HIGH confidence
-- [HIPAA-compliant observability and security](https://www.datadoghq.com/blog/hipaa-compliant-log-management/) - HIGH confidence
-- [Understanding the HIPAA Audit Trail Requirements](https://auditboard.com/blog/hipaa-audit-trail-requirements) - HIGH confidence
-- [What Are HIPAA Audit Trail and Audit Log Requirements?](https://compliancy-group.com/hipaa-audit-log-requirements/) - HIGH confidence
-
----
-
-### Pitfall 10: Next.js App Router Cache Confusion Leading to Stale Data
-
-**What goes wrong:**
-Users see outdated information despite just updating data. Fresh links show stale content. The client-side router cache cannot be invalidated programmatically, so users must manually refresh the browser tab to see changes. ISR with s-maxage causes pages to serve stale content for up to 2 days. The stale-while-revalidate pattern shows cached data first, then fetches updates in the background, creating confusing UX.
-
-**Why it happens:**
-Next.js App Router has multiple caching layers (Request Cache, Full Route Cache, Router Cache, Data Cache), and developers don't understand which layer is causing stale data. The aggressive caching optimizes performance but sacrifices data freshness by default. Misunderstanding `revalidatePath` and `revalidateTag` leads to ineffective cache invalidation.
-
-**How to avoid:**
-- For admin dashboards with real-time data needs, disable aggressive caching:
 ```typescript
-// app/dashboard/patients/page.tsx
-export const revalidate = 0 // Disable static caching
-export const dynamic = 'force-dynamic' // Always fetch fresh data
+// tests/agent-e2e/booking-flow.test.ts
+describe('Agent Booking Flow', () => {
+  test('Happy path: Book appointment for tomorrow 2pm', async () => {
+    const conversation = [
+      { role: 'user', message: 'Quero agendar para amanhã às 14h' },
+    ]
 
-// Or per-fetch
-const data = await fetch(url, {
-  cache: 'no-store', // Don't cache this request
-  next: { revalidate: 0 }
+    const agentResponse = await testAgentConversation(conversation)
+
+    // Agent should:
+    // 1. Call buscar_slots_disponiveis with tomorrow's date
+    expect(agentResponse.toolCalls).toContainEqual({
+      tool: 'buscar_slots_disponiveis',
+      params: { data: getTomorrowDate(), periodo: 'tarde' }
+    })
+
+    // 2. Call criar_agendamento if slot available
+    expect(agentResponse.toolCalls).toContainEqual({
+      tool: 'criar_agendamento',
+      params: expect.objectContaining({
+        data_hora: expect.stringMatching(/14:00/)
+      })
+    })
+
+    // 3. Confirm in natural language
+    expect(agentResponse.message).toMatch(/confirmado|agendado/i)
+    expect(agentResponse.message).toMatch(/14:00|2.*tarde/i)
+  })
+
+  test('No slots available: Offer alternatives', async () => {
+    // Mock API to return empty slots
+    mockToolResponse('buscar_slots_disponiveis', {
+      success: true,
+      data: [],
+      message: 'Nenhum horário disponível. Próximas datas: 2026-01-25, 2026-01-27'
+    })
+
+    const conversation = [
+      { role: 'user', message: 'Tem horário amanhã?' }
+    ]
+
+    const agentResponse = await testAgentConversation(conversation)
+
+    // Agent should offer alternatives, not give up
+    expect(agentResponse.message).toMatch(/próxima|alternativa|outro dia/i)
+    expect(agentResponse.message).toMatch(/25|27/i) // Suggest next available dates
+  })
+
+  test('DST transition: Correct time handling', async () => {
+    // February 15, 2026 (DST transition week)
+    const conversation = [
+      { role: 'user', message: 'Agendar dia 15/02 às 14h' }
+    ]
+
+    const agentResponse = await testAgentConversation(conversation)
+
+    const toolCall = agentResponse.toolCalls.find(t => t.tool === 'criar_agendamento')
+
+    // Verify time is stored correctly with timezone
+    expect(toolCall.params.data_hora).toMatch(/-03:00|-02:00/) // Brazil DST offset
+    const parsedTime = new Date(toolCall.params.data_hora)
+    expect(parsedTime.getHours()).toBe(14) // Should be 2pm in local time
+  })
 })
 ```
 
-- Use cache tags for granular invalidation:
-```typescript
-// When fetching
-const data = await fetch(url, {
-  next: { tags: ['patients', `patient-${id}`] }
-})
+**2. Load Testing with Real Agent Patterns**
 
-// When updating
-import { revalidateTag } from 'next/cache'
-revalidateTag('patients')
-revalidateTag(`patient-${id}`)
-```
-
-- For ISR: set realistic revalidation times (1 hour, not 1 second)
-- Accept that some staleness is inevitable with caching - design UX accordingly
-- Show "Last updated" timestamps to manage user expectations
-- For critical real-time data (alerts): use client-side fetching with Supabase Realtime
-
-**Warning signs:**
-- Users report seeing "old data" after updates
-- Dashboard shows different data after browser refresh
-- Data updates don't reflect for several minutes/hours
-- `revalidatePath` calls have no effect
-- Confusion about which caching mechanism is active
-- No clear caching strategy documented
-
-**Phase to address:**
-Phase 1 (Foundation) - Define caching strategy per route type.
-Phase 4 (Performance Optimization) - Balance caching for performance vs. freshness needs.
-
-**Sources:**
-- [Deep Dive: Caching and Revalidating](https://github.com/vercel/next.js/discussions/54075) - HIGH confidence
-- [Mastering Cache Control and Revalidation in Next.js App Router](https://leapcell.io/blog/mastering-cache-control-and-revalidation-in-next-js-app-router) - MEDIUM confidence
-- [Finally Master Next.js's Most Complex Feature - Caching](https://blog.webdevsimplified.com/2024-01/next-js-app-router-cache/) - HIGH confidence
-
----
-
-### Pitfall 11: State Management Chaos from Mixing Server and Client State
-
-**What goes wrong:**
-Developers put everything in global state (Zustand, Redux) without distinguishing between server state (patient data, appointments) and client state (UI toggles, form inputs). This creates race conditions, duplicated requests, flashing loading states, wasted network traffic, and stale data. Using useEffect for data fetching adds unnecessary complexity and error handling.
-
-**Why it happens:**
-Lack of clear state boundaries - teams don't have a clear idea of which parts own which pieces of state. The misconception that "state management = global state library" leads to over-engineering. Developers derive state using useEffect unnecessarily instead of calculating during render.
-
-**How to avoid:**
-- Use TanStack Query (React Query) for ALL server state
-- Use Zustand/Context only for UI state (theme, sidebar open/closed, modal state)
-- Never use useState or useEffect for data fetching
-- TanStack Query handles caching, retries, background refresh, pagination, stale state automatically
-
-Recommended architecture for admin dashboard:
-```typescript
-// Server state: TanStack Query
-const { data: patients, isLoading } = useQuery({
-  queryKey: ['patients', filters],
-  queryFn: () => supabase.from('patients').select('*').match(filters)
-})
-
-// Client state: Zustand
-const useDashboardStore = create((set) => ({
-  sidebarOpen: true,
-  selectedTab: 'overview',
-  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen }))
-}))
-```
-
-- Enable TanStack Query DevTools and Zustand DevTools for debugging
-- Hydrate queries on the server for Next.js performance
-- Set appropriate staleTime and cacheTime based on data freshness needs
-
-**Warning signs:**
-- Global state store contains API data
-- Multiple sources of truth for same data
-- Race conditions between different data fetching mechanisms
-- Excessive useEffect hooks for data synchronization
-- Manually implementing retry/caching/loading state logic
-- Different components showing different versions of same data
-
-**Phase to address:**
-Phase 1 (Foundation) - Establish state management patterns before building features.
-Phase 4 (Performance Optimization) - Optimize caching strategies and query patterns.
-
-**Sources:**
-- [Mastering React State Management at Scale in 2025](https://dev.to/ash_dubai/mastering-react-state-management-at-scale-in-2025-52e8) - HIGH confidence
-- [React State Management in 2025: What You Actually Need](https://www.developerway.com/posts/react-state-management-2025) - HIGH confidence
-- [Seamless Server State Management in Next.js with TanStack Query](https://leapcell.io/blog/seamless-server-state-management-in-next-js-with-tanstack-query) - HIGH confidence
-
----
-
-### Pitfall 12: Database Migration Disasters in Production
-
-**What goes wrong:**
-Resetting migrations in production causes data loss and downtime. Migration history mismatches between local and remote databases break branching and deployments. Failed migrations leave the database in a partially-applied corrupted state. Long-running migrations lock tables, causing application downtime. Developers blindly "fix forward" after failed migrations without understanding database state.
-
-**Why it happens:**
-Testing migrations directly in production instead of staging first. Not understanding that Supabase branching relies on migration files, not schema dumps. Lack of downtime planning for large database upgrades (pg_upgrade operates at ~100MBps). Migration ordering issues due to timestamp conflicts or missing dependencies.
-
-**How to avoid:**
-- NEVER reset deployed migrations - always roll forward with new migration files
-- Test all migrations in staging environment first
-- Check for long-running operations that might lock tables:
-```sql
--- Check for locks before migration
-SELECT * FROM pg_locks WHERE NOT granted;
-```
-
-- Use Supabase migration workflow:
 ```bash
-# Create migration
-supabase migration new add_patient_index
+# Simulate 10 concurrent patient conversations
+k6 run tests/load/agent-booking.js
 
-# Test locally
-supabase db reset
+# agent-booking.js
+export default function() {
+  // Realistic conversation flow
+  http.post(`${N8N_URL}/webhook/marilia`, {
+    message: 'Quero agendar consulta',
+    telefone: `55119${Math.floor(Math.random() * 100000000)}`
+  })
+  sleep(2) // Wait for agent response
 
-# Deploy to staging first
-supabase db push --db-url [staging-url]
+  http.post(`${N8N_URL}/webhook/marilia`, {
+    message: 'Amanhã às 14h',
+    telefone: lastTelefone
+  })
+  sleep(2)
 
-# Verify in staging, then production
-supabase db push
+  http.post(`${N8N_URL}/webhook/marilia`, {
+    message: 'Confirmo',
+    telefone: lastTelefone
+  })
+}
 ```
 
-- For failed migrations:
-  1. Stop immediately - don't try to fix forward
-  2. Check migration logs for constraint violations, missing dependencies, locked tables
-  3. Assess database state - what was partially applied?
-  4. Manual cleanup if needed, or restore from backup
-  5. Fix migration file and test again
+**3. Regression Test Suite (Run Before Each Migration)**
 
-- Plan downtime windows for major upgrades:
-  - Estimate: database_size_GB / 0.1 = downtime_seconds
-  - Example: 50GB database ≈ 500 seconds ≈ 8 minutes downtime
+```bash
+# tests/regression/before-migration.sh
 
-- Use `supabase migration repair` for history mismatches
+# 1. Capture baseline metrics from current N8N workflows
+curl "$N8N_URL/webhook/test/anti-no-show" > baseline/anti-no-show.json
+curl "$N8N_URL/webhook/test/pre-checkin" > baseline/pre-checkin.json
 
-**Warning signs:**
-- No staging environment for testing migrations
-- Migrations tested only against empty local database
-- No backup strategy before running migrations
-- Migration files modified after deployment
-- Unclear migration history between environments
-- No monitoring during migration execution
+# 2. Test all tool sub-workflows
+for tool in buscar_slots criar_agendamento buscar_paciente; do
+  curl "$N8N_URL/webhook/test/tool/$tool" -d @test-data/$tool.json \
+    > baseline/$tool-response.json
+done
 
-**Phase to address:**
-Phase 1 (Foundation) - Establish migration workflow and testing process.
-Phase 3+ (Every Phase) - Test migrations in staging before every production deployment.
+# 3. Run agent conversation suite
+npm run test:agent:e2e -- --reporter json > baseline/agent-e2e.json
 
-**Sources:**
-- [Database Migrations | Supabase Docs](https://supabase.com/docs/guides/deployment/database-migrations) - HIGH confidence
-- [Migration History Mismatch - Cannot Create Baseline](https://github.com/orgs/supabase/discussions/40721) - MEDIUM confidence
-- [Upgrading | Supabase Docs](https://supabase.com/docs/guides/platform/upgrading) - HIGH confidence
-
----
-
-### Pitfall 13: WebSocket Alert System Scalability Failures
-
-**What goes wrong:**
-Notification systems work perfectly in development but fail silently in production. Background job workers die without alerts or retries. Connection failures due to network issues, timeouts, or server restarts cause alerts to disappear. Message delivery issues from congestion, queuing problems, or server overload create blind spots. Scaling WebSockets requires managing connection state carefully, unlike stateless HTTP APIs.
-
-**Why it happens:**
-Lack of monitoring and alerting for the notification system itself. No supervisor processes to keep workers alive. Absence of retry mechanisms for failed notifications. WebSocket architecture requires operational foresight that developers overlook when prototyping with simple implementations.
-
-**How to avoid:**
-- Implement comprehensive monitoring and alerting:
-  - WebSocket connection health (use Datadog, Prometheus, New Relic)
-  - Track session health, latency trends, connection churn
-  - Alert on: slow message throughput, handshake failures, high error rates
-  - Monitor CPU and memory usage for WebSocket servers
-
-- Use dashboard to visualize notification health
-- Implement supervisor processes to restart failed workers:
-```typescript
-// Worker health check endpoint
-app.get('/health', (req, res) => {
-  if (websocketServer.clients.size > 0) {
-    res.status(200).json({ status: 'healthy' })
-  } else {
-    res.status(500).json({ status: 'unhealthy' })
-  }
-})
+# After migration, compare:
+diff baseline/ current/ || echo "REGRESSION DETECTED"
 ```
 
-- Track notification status in database for retries:
-```sql
-CREATE TABLE notification_queue (
-  id uuid PRIMARY KEY,
-  user_id uuid NOT NULL,
-  message jsonb NOT NULL,
-  status text DEFAULT 'pending', -- pending, sent, failed
-  retry_count int DEFAULT 0,
-  created_at timestamptz DEFAULT now()
-);
-```
+**Phase Addressed:** Phase 6 (Testing), throughout all phases
 
-- Use message broker (Kafka, Redis) for high-throughput processing
-- Implement autoscaling for WebSocket servers based on connection count
-- Test connection recovery scenarios: network failures, server restarts, high load
-
-**Warning signs:**
-- Notifications stop silently without errors
-- No monitoring dashboard for notification system
-- Workers fail and don't restart automatically
-- No database persistence for notification delivery status
-- Alert system has no retries for failures
-- Scaling issues appear when >100 concurrent users
-
-**Phase to address:**
-Phase 2 (Core Features) - Build notification system with monitoring and retries.
-Phase 4 (Performance Optimization) - Load testing, autoscaling, high-availability setup.
-
-**Sources:**
-- [Building a Scalable Notification System with Kafka and WebSockets](https://medium.com/@sandeep.ragampudy/building-a-scalable-notification-system-with-kafka-and-websockets-a90ab8e656b9) - MEDIUM confidence
-- [WebSocket Application Monitoring: An In-Depth Guide](https://www.dotcom-monitor.com/blog/websocket-monitoring/) - MEDIUM confidence
-- [How to scale WebSockets for high-concurrency systems](https://ably.com/topic/the-challenge-of-scaling-websockets) - HIGH confidence
-
----
-
-## Technical Debt Patterns
-
-Shortcuts that seem reasonable but create long-term problems.
-
-| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
-|----------|-------------------|----------------|-----------------|
-| Disabling RLS during prototyping | Faster development, no policy complexity | Security vulnerabilities, difficult to add later, potential data exposure | NEVER for healthcare data; Early development only if data is fake/non-sensitive |
-| Using direct database connections instead of Supavisor | Simpler initial setup, one less thing to configure | Connection pool exhaustion, IPv6 issues, scaling problems | Development only; NEVER in production |
-| Skipping indexes during initial development | Faster schema iterations, no index maintenance | Query performance collapse at scale, expensive to add later with large tables | First 1-2 weeks only; Add before real data volume testing |
-| Hardcoding secrets in Server Actions | Quick prototyping, no env config needed | RCE vulnerability (CVE-2025-55182), source code exposure | NEVER; Always use environment variables |
-| Manual audit logging instead of automated | Seems simpler initially | HIPAA violations, incomplete logs, human error | NEVER for healthcare; Automated from day one |
-| Client-side only authorization checks | Faster development, immediate UI feedback | Security bypass via API, HIPAA violations, unauthorized access | NEVER; Always implement server-side checks |
-| Not implementing subscription cleanup | Works in development, no immediate issues | Memory leaks, browser crashes, production instability | NEVER; Cleanup is mandatory, not optional |
-| Skipping virtualization for tables | Simpler initial implementation | Performance collapse with real data, poor UX at scale | Acceptable for <50 rows; Required for >100 rows |
-| Testing migrations only locally | Faster iteration, no staging environment needed | Production data loss, unexpected downtime, corrupted database | Early prototyping only; Staging required before production |
-| Ignoring Next.js caching complexity | Simpler mental model, fewer configuration decisions | Stale data, confused users, cache invalidation bugs | NEVER; Understand caching from day one |
-| Using global state for server data | Familiar patterns, no new libraries | Race conditions, stale data, complex synchronization | Early prototyping only; Switch to TanStack Query ASAP |
-| Skipping HIPAA compliance in Phase 1 | Faster initial development | Cannot launch legally, expensive refactor, potential liability | NEVER; HIPAA from foundation |
-
----
-
-## Integration Gotchas
-
-Common mistakes when connecting to external services.
-
-| Integration | Common Mistake | Correct Approach |
-|-------------|----------------|------------------|
-| Supabase Realtime | Not cleaning up subscriptions in useEffect | Always return cleanup function: `return () => supabase.removeChannel(channel)` |
-| Supabase Auth | Using `user_metadata` in RLS policies | Use `auth.uid()` and server-validated claims only; Never trust user-modifiable metadata |
-| Next.js Server Actions | Relying on middleware for authorization | Implement authorization checks in every Server Action independently |
-| PostgREST API | Not using connection pooler (Supavisor) | Always use pooled connection string in production |
-| TanStack Query | Mixing server state in Zustand/Redux | Use TanStack Query for ALL server data; Zustand only for UI state |
-| Supabase Storage | Not setting RLS policies on storage buckets | Enable RLS on storage and create explicit access policies |
-| Next.js App Router | Not understanding caching layers | Learn Request/Route/Router/Data cache; Set explicit revalidation strategies |
-| Supabase Migrations | Resetting migrations in production | Never reset; Always create new migration files to roll forward |
-| WebSocket Notifications | No reconnection logic for backgrounded tabs | Implement visibility change handlers and manual resubscription |
-| Database Queries | Missing indexes on filtered/joined columns | Run Index Advisor before production; Create indexes proactively |
-
----
-
-## Performance Traps
-
-Patterns that work at small scale but fail as usage grows.
-
-| Trap | Symptoms | Prevention | When It Breaks |
-|------|----------|------------|----------------|
-| Sequential scans without indexes | Slow queries (>1s response time) | Create indexes on WHERE/JOIN/ORDER BY columns; Use EXPLAIN ANALYZE | >10k rows per table |
-| Rendering entire tables without virtualization | Browser freeze, high memory usage | Implement TanStack Virtual for >50 rows | >100 rows rendered simultaneously |
-| RLS policies with subqueries | 30+ second query times, CPU spikes | Use IN/ANY instead of subqueries; Avoid function calls in policies | >5k rows accessed in single query |
-| Direct database connections at scale | Connection pool exhaustion errors | Use Supavisor pooler from day one | >20 concurrent users |
-| Client-side router cache invalidation issues | Stale data after updates | Disable aggressive caching for dynamic data; Use revalidateTag | Any real-time data requirement |
-| Accumulating realtime subscriptions | Memory leak, browser crash | Implement cleanup in every useEffect | >10 subscriptions without cleanup |
-| N+1 query patterns in Server Components | Page load >5 seconds | Batch queries, use joins, prefetch data | >100 records with relationships |
-| Unoptimized images in dashboard | Slow page loads, high bandwidth | Use Next.js Image component with proper sizing | >10 images per page |
-| Missing database connection timeout config | Hanging requests, zombie connections | Set reasonable timeout (5-10s); Implement retry logic | First production load spike |
-| Expensive RLS policy checks on every row | Database CPU at 100% | Cache policy results; Simplify policy logic; Use materialized views | >1k rows per query |
-
----
-
-## Security Mistakes
-
-Domain-specific security issues beyond general web security.
-
-| Mistake | Risk | Prevention |
-|---------|------|------------|
-| Exposing service_role key in client code | Complete database access bypass, RLS bypass, data theft | NEVER send service_role to client; Use anon key only |
-| Missing RLS on tables with PHI | HIPAA violation, unauthorized patient data access | Enable RLS on ALL tables from day one; Test with multiple user roles |
-| Not validating authorization in Server Actions | Middleware bypass attack (CVE-2025-29927) | Implement authorization in every Server Action independently |
-| Using user_metadata in security policies | Exploitable by authenticated users modifying their own metadata | Only use server-validated claims in RLS; Validate in backend |
-| No audit logging for PHI access | HIPAA violation, breach detection impossible | Log all PHI access with user_id, timestamp, action; Retain 6 years |
-| Hardcoded secrets in Server Actions | RCE vulnerability (CVE-2025-55182), source code exposure | Always use environment variables; Never hardcode credentials |
-| Views without security_invoker = true | RLS bypass through views (Postgres 15+) | Set security_invoker = true on all views; Test RLS enforcement |
-| Missing encryption at rest for PHI | HIPAA violation, data breach liability | Verify Supabase encryption; Sign BAA; Document encryption methods |
-| Client-side only role checks | Direct API access bypasses UI checks | Validate roles on server; Implement RBAC at database/API level |
-| No rate limiting on auth endpoints | Brute force attacks, credential stuffing (1,740% increase in AI-powered attacks) | Implement rate limiting; Use CAPTCHA; Monitor failed attempts |
-| Storing PHI in browser localStorage | XSS vulnerability, HIPAA violation | Store session tokens only; Fetch PHI from server when needed |
-| Missing WAF protection | React2Shell RCE (CVE-2025-55182), zero-day exploits | Deploy WAF; Monitor suspicious patterns; Keep frameworks updated |
-
----
-
-## UX Pitfalls
-
-Common user experience mistakes in this domain.
-
-| Pitfall | User Impact | Better Approach |
-|---------|-------------|-----------------|
-| Showing stale data without indicators | Users make decisions on outdated information | Show "Last updated: 2m ago" timestamps; Add refresh button |
-| Realtime updates that silently stop working | Missed critical alerts, delayed responses | Show connection status indicator; Implement reconnection notifications |
-| Loading states that flash for cached data | Jarring UX, appears slow | Use optimistic UI with TanStack Query; Show cached data immediately |
-| No feedback when data updates fail | Users assume success, data lost | Show error toasts; Implement optimistic updates with rollback |
-| Overwhelming users with all patient data at once | Cognitive overload, slow performance | Implement progressive disclosure; Load data on-demand |
-| No indication of HIPAA audit trail | Users unsure if actions are logged | Show "This action is logged" notices; Provide audit trail access |
-| Tables without sorting/filtering for large datasets | Users can't find information efficiently | Implement server-side filtering; Add column sorting; Search functionality |
-| Alerts that disappear when tab is backgrounded | Missed critical notifications | Implement browser notifications; Show notification history |
-| No offline state handling | Confusion when network fails | Show clear "offline" indicators; Queue actions for retry |
-| Infinite scroll without "jump to top" | Users lost in long lists, can't return to start | Add "Back to top" button; Consider pagination for admin use cases |
-| Generic error messages for security failures | Users don't understand access restrictions | Clear messaging: "You don't have permission to view this patient" |
-| No loading skeletons for slow queries | Appears broken, users unsure if loading | Implement skeleton screens; Set expectations for load times |
-
----
-
-## "Looks Done But Isn't" Checklist
-
-Things that appear complete but are missing critical pieces.
-
-- [ ] **Authentication:** Often missing proper session management, refresh token handling, and logout cleanup — verify active sessions are tracked and cleaned up
-- [ ] **Authorization:** Often missing server-side validation, tested only through UI — verify direct API access fails for unauthorized users
-- [ ] **Realtime Subscriptions:** Often missing cleanup functions — verify no memory leaks after navigation between pages
-- [ ] **Database Queries:** Often missing indexes — verify EXPLAIN ANALYZE shows index scans, not sequential scans
-- [ ] **RLS Policies:** Often missing performance testing — verify policies don't cause >100ms query overhead
-- [ ] **Audit Logging:** Often missing comprehensive coverage — verify every PHI access is logged with user context
-- [ ] **Error Handling:** Often missing user-friendly messages — verify production errors don't expose stack traces
-- [ ] **Table Rendering:** Often missing virtualization for large datasets — verify 1000+ rows render without lag
-- [ ] **Caching Strategy:** Often missing explicit configuration — verify Next.js caching behavior matches expectations
-- [ ] **State Management:** Often mixing server and client state — verify TanStack Query used for all server data
-- [ ] **Connection Pooling:** Often using direct connections — verify Supavisor pooler configured in production
-- [ ] **Migration Testing:** Often tested only locally — verify staging environment exists and is used
-- [ ] **HIPAA Compliance:** Often postponed to later phases — verify BAA signed, encryption enabled, audit logs working
-- [ ] **Security Updates:** Often missed — verify React 19.2.1+, Next.js latest, no CVE-2025-55182 vulnerability
-- [ ] **Monitoring & Alerts:** Often missing for critical systems — verify WebSocket health, database performance, error rates monitored
-
----
-
-## Recovery Strategies
-
-When pitfalls occur despite prevention, how to recover.
-
-| Pitfall | Recovery Cost | Recovery Steps |
-|---------|---------------|----------------|
-| Memory leak from subscriptions | LOW | Add cleanup functions to useEffect hooks; Test with Chrome DevTools Memory profiler; Deploy hotfix |
-| RLS performance collapse | MEDIUM | Add indexes to improve policy performance; Simplify policy logic; Consider materialized views; May require database downtime |
-| Missing indexes causing slow queries | LOW-MEDIUM | Run Index Advisor; Create indexes (may take hours on large tables); Monitor index creation progress |
-| Connection pool exhaustion | LOW | Switch to Supavisor pooler; Update connection string; Redeploy; Immediate improvement |
-| Data exposure from missing RLS | HIGH | Enable RLS immediately; Audit access logs for unauthorized access; Notify affected users; HIPAA breach reporting if PHI exposed |
-| Failed database migration | MEDIUM-HIGH | Stop immediately; Review migration logs; Manual cleanup if partially applied; Restore from backup if corrupted; Fix and retest |
-| Middleware bypass security hole | MEDIUM | Add server-side authorization checks; Test with direct API calls; Deploy urgently; Audit recent access logs |
-| React2Shell RCE vulnerability | CRITICAL | Upgrade React/Next.js immediately; Rotate any hardcoded secrets; Audit server logs for exploitation; Security incident response |
-| Missing audit logs for HIPAA | HIGH | Implement logging retroactively; Document gap period; Legal consultation; May require breach notification |
-| WebSocket notification failures | MEDIUM | Implement retry queue; Add monitoring; Deploy supervisor processes; Backfill failed notifications from database |
-| Stale data from cache issues | LOW | Disable aggressive caching; Use revalidateTag; Add timestamps to UI; Clear guidance for users to refresh |
-| State management chaos | MEDIUM-HIGH | Refactor to TanStack Query; Migrate gradually, route by route; Comprehensive testing; Significant dev time |
-| Large table rendering freeze | LOW | Add virtualization library; Update components to use virtual scrolling; Test with realistic data; Quick improvement |
-
----
-
-## Pitfall-to-Phase Mapping
-
-How roadmap phases should address these pitfalls.
-
-| Pitfall | Prevention Phase | Verification |
-|---------|------------------|--------------|
-| Realtime subscription memory leaks | Phase 1 (Foundation) | Chrome DevTools memory profile shows stable memory after 30 min usage |
-| RLS bypass and performance issues | Phase 1 (Foundation), Phase 2 (HIPAA) | Test unauthorized access fails; EXPLAIN ANALYZE shows <100ms overhead |
-| Middleware authorization bypass | Phase 1 (Foundation) | Direct API calls without middleware fail authorization checks |
-| React2Shell RCE vulnerability | IMMEDIATE (Pre-Phase 1) | Verify React 19.2.1+ and Next.js latest installed |
-| Connection pool exhaustion | Phase 1 (Foundation) | Load test with 50+ concurrent users shows no connection errors |
-| Missing database indexes | Phase 1 (Foundation), Phase 4 (Optimization) | Index Advisor shows no critical missing indexes; Queries <100ms |
-| Large table rendering performance | Phase 2 (Core Features) | Render 10,000 rows without browser freeze or lag |
-| Realtime connection reliability | Phase 2 (Core Features), Phase 3 (Testing) | Test reconnection after tab backgrounding, network loss, laptop sleep |
-| HIPAA audit logging failures | Phase 1 (Foundation), Phase 2 (HIPAA) | All PHI access logged; 6-year retention configured; Regular review process |
-| Next.js cache confusion | Phase 1 (Foundation) | Document caching strategy; Test data freshness matches requirements |
-| State management chaos | Phase 1 (Foundation) | All server state in TanStack Query; UI state in Zustand; No mixing |
-| Database migration disasters | Phase 1 (Foundation), All Phases | Staging environment exists; All migrations tested before production |
-| WebSocket alert scalability | Phase 2 (Core Features), Phase 4 (Optimization) | Monitoring dashboard live; Notifications have retry logic; Load tested |
+**Real-World Evidence:** Theneo API Migration Guide: Deploying with only unit tests misses integration issues. Payment processor case study: skipped staging E2E tests, production checkout failed for 2 hours.
 
 ---
 
 ## Sources
 
-**Critical Vulnerabilities:**
-- [Next.js Security Update: December 11, 2025](https://nextjs.org/blog/security-update-2025-12-11)
-- [Critical Security Vulnerability in React Server Components](https://react.dev/blog/2025/12/03/critical-security-vulnerability-in-react-server-components)
-- [CVE-2025-55182: React2Shell RCE](https://securitylabs.datadoghq.com/articles/cve-2025-55182-react2shell-remote-code-execution-react-server-components/)
-- [Exploitation of Critical Vulnerability in React Server Components](https://unit42.paloaltonetworks.com/cve-2025-55182-react-and-cve-2025-66478-next/)
+### AI Agent Development & Best Practices
+- [Common AI Agent Development Mistakes and How to Avoid Them](https://www.wildnetedge.com/blogs/common-ai-agent-development-mistakes-and-how-to-avoid-them)
+- [12 Reasons AI Agents Still Aren't Ready in 2026](https://research.aimultiple.com/ai-agents-expectations-vs-reality/)
+- [The 2025 AI Agent Report: Why AI Pilots Fail in Production and the 2026 Integration Roadmap](https://composio.dev/blog/why-ai-agent-pilots-fail-2026-integration-roadmap)
+- [Best Practices for AI Agent Implementations: Enterprise Guide 2026](https://onereach.ai/blog/best-practices-for-ai-agent-implementations/)
+- [AI Agents: Reliability Challenges & Proven Solutions [2026]](https://www.edstellar.com/blog/ai-agent-reliability-challenges)
 
-**Supabase Realtime Issues:**
-- [Supabase Realtime Client-Side Memory Leak](https://drdroid.io/stack-diagnosis/supabase-realtime-client-side-memory-leak)
-- [Supabase Realtime Troubleshooting](https://supabase.com/docs/guides/realtime/troubleshooting)
-- [My realtime subscriptions get terminated and I cannot recover them](https://github.com/orgs/supabase/discussions/5312)
-- [Supabase Realtime Data Inconsistency](https://drdroid.io/stack-diagnosis/supabase-realtime-data-inconsistency)
+### MCP Server Security & Implementation
+- [The MCP Security Survival Guide: Best Practices, Pitfalls, and Real-World Lessons](https://towardsdatascience.com/the-mcp-security-survival-guide-best-practices-pitfalls-and-real-world-lessons/)
+- [MCP Server Best Practices for 2026](https://www.cdata.com/blog/mcp-server-best-practices-2026)
+- [Implementing model context protocol (MCP): Tips, tricks and pitfalls](https://nearform.com/digital-community/implementing-model-context-protocol-mcp-tips-tricks-and-pitfalls/)
+- [Model Context Protocol (MCP): Understanding security risks and controls](https://www.redhat.com/en/blog/model-context-protocol-mcp-understanding-security-risks-and-controls)
+- [Three Flaws in Anthropic MCP Git Server Enable File Access and Code Execution](https://thehackernews.com/2026/01/three-flaws-in-anthropic-mcp-git-server.html)
+- [How Not to Write an MCP Server](https://towardsdatascience.com/how-not-to-write-an-mcp-server/)
+- [The MCP Implementation Guide: Solving the 7 Failure Modes that Doom AI Architectures](https://natesnewsletter.substack.com/p/the-mcp-implementation-guide-solving)
+- [Top 6 MCP Vulnerabilities (and How to Fix Them)](https://www.descope.com/blog/post/mcp-vulnerabilities)
 
-**Security and RLS:**
-- [Row-Level Recklessness: Testing Supabase Security](https://www.precursorsecurity.com/security-blog/row-level-recklessness-testing-supabase-security)
-- [RLS Performance and Best Practices](https://supabase.com/docs/guides/troubleshooting/rls-performance-and-best-practices-Z5Jjwv)
-- [Best Practices for Supabase | Security](https://www.leanware.co/insights/supabase-best-practices)
+### N8N Integration Issues
+- [AI Agent node common issues | n8n Docs](https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.agent/common-issues/)
+- [AI Agent: Issues using "HTTP Request" node with "fromAI" parameter · Issue #14274](https://github.com/n8n-io/n8n/issues/14274)
+- [Http request tool does not work with AI Agent - n8n Community](https://community.n8n.io/t/http-request-tool-does-not-work-with-ai-agent/73427)
+- [Getting detailed error messages when AI Agent tools fail - n8n Community](https://community.n8n.io/t/getting-detailed-error-messages-when-ai-agent-tools-fail/223783)
 
-**Next.js Authorization:**
-- [Building a Scalable RBAC System in Next.js](https://medium.com/@muhebollah.diu/building-a-scalable-role-based-access-control-rbac-system-in-next-js-b67b9ecfe5fa)
-- [Implement RBAC Authorization in Next.js - 2024 Guide](https://www.permit.io/blog/how-to-add-rbac-in-nextjs)
-- [Auth.js | Role Based Access Control](https://authjs.dev/guides/role-based-access-control)
+### Function Calling & Schema Design
+- [Function Calling in AI Agents | Prompt Engineering Guide](https://www.promptingguide.ai/agents/function-calling)
+- [Function calling | OpenAI API](https://platform.openai.com/docs/guides/function-calling)
+- [Tool Calling Explained: The Core of AI Agents (2026 Guide)](https://composio.dev/blog/ai-agent-tool-calling-guide)
+- [Introduction to function calling | Google Cloud Documentation](https://docs.cloud.google.com/vertex-ai/generative-ai/docs/multimodal/function-calling)
 
-**Database Performance:**
-- [Connection management | Supabase Docs](https://supabase.com/docs/guides/database/connection-management)
-- [Supavisor FAQ](https://supabase.com/docs/guides/troubleshooting/supavisor-faq-YyP5tI)
-- [Debugging performance issues | Supabase Docs](https://supabase.com/docs/guides/database/debugging-performance)
-- [Steps to improve query performance with indexes](https://supabase.com/docs/guides/troubleshooting/steps-to-improve-query-performance-with-indexes-q8PoC9)
+### API Migration Strategies
+- [Managing API Changes: 8 Strategies That Reduce Disruption by 70% (2026 Guide)](https://www.theneo.io/blog/managing-api-changes-strategies)
+- [Sustainable API migration with the S*T*A*R pattern](https://blogs.mulesoft.com/dev-guides/api-migration-star-pattern/)
+- [The hidden cost of API migrations](https://madewithlove.com/blog/the-hidden-dangers-of-a-big-bang-release/)
+- [Final Steps and Key Learnings from Our Public API Migration](https://www.getyourguide.careers/posts/final-steps-and-key-learnings-from-our-public-api-migration)
 
-**Performance and State Management:**
-- [Build Tables in React: Data Grid Performance Guide](https://strapi.io/blog/table-in-react-performance-guide)
-- [Optimizing Large Data Sets with Virtualized Columns and Rows in React TanStack Table](https://borstch.com/blog/development/optimizing-large-data-sets-with-virtualized-columns-and-rows-in-react-tanstack-table)
-- [Mastering React State Management at Scale in 2025](https://dev.to/ash_dubai/mastering-react-state-management-at-scale-in-2025-52e8)
-- [React State Management in 2025: What You Actually Need](https://www.developerway.com/posts/react-state-management-2025)
-- [Seamless Server State Management in Next.js with TanStack Query](https://leapcell.io/blog/seamless-server-state-management-in-next-js-with-tanstack-query)
+### Zero Downtime Deployment
+- [Zero Downtime Database Migration: Blue-Green & Canary for E-commerce](https://www.devopsschool.com/blog/zero-downtime-database-migration-blue-green-canary-for-e-commerce/)
+- [Blue-Green and Canary Deployments Explained](https://www.harness.io/blog/blue-green-canary-deployment-strategies)
+- [Canary vs blue-green deployment to reduce downtime](https://circleci.com/blog/canary-vs-blue-green-downtime/)
+- [Zero-Downtime Migration Strategies for global API endpoints](https://umatechnology.org/zero-downtime-migration-strategies-for-global-api-endpoints-observed-under-real-world-load/)
 
-**Caching and Migrations:**
-- [Deep Dive: Caching and Revalidating](https://github.com/vercel/next.js/discussions/54075)
-- [Finally Master Next.js's Most Complex Feature - Caching](https://blog.webdevsimplified.com/2024-01/next-js-app-router-cache/)
-- [Database Migrations | Supabase Docs](https://supabase.com/docs/guides/deployment/database-migrations)
-- [Upgrading | Supabase Docs](https://supabase.com/docs/guides/platform/upgrading)
+### AI Agent Security & Authentication
+- [What is AI Agent Security Plan 2026? Threats and Strategies Explained](https://www.uscsinstitute.org/cybersecurity-insights/blog/what-is-ai-agent-security-plan-2026-threats-and-strategies-explained)
+- [8 API Security Best Practices For AI Agents](https://curity.io/resources/learn/api-security-best-practice-for-ai-agents/)
+- [AI agents and identity risks: How security will shift in 2026](https://www.cyberark.com/resources/blog/ai-agents-and-identity-risks-how-security-will-shift-in-2026)
+- [5 Best Practices for AI Agent Access Control](https://prefactor.tech/blog/5-best-practices-for-ai-agent-access-control)
+- [Securing AI agents: A guide to authentication, authorization, and defense](https://workos.com/blog/securing-ai-agents)
 
-**HIPAA Compliance:**
-- [HIPAA Audit Logs: Complete Requirements for Healthcare Compliance in 2025](https://www.kiteworks.com/hipaa-compliance/hipaa-audit-log-requirements/)
-- [HIPAA-compliant observability and security](https://www.datadoghq.com/blog/hipaa-compliant-log-management/)
-- [Understanding the HIPAA Audit Trail Requirements](https://auditboard.com/blog/hipaa-audit-trail-requirements)
-- [What Are HIPAA Audit Trail and Audit Log Requirements?](https://compliancy-group.com/hipaa-audit-log-requirements/)
+### Structured Outputs & JSON Schema
+- [The guide to structured outputs and function calling with LLMs](https://agenta.ai/blog/the-guide-to-structured-outputs-and-function-calling-with-llms)
+- [Structured model outputs | OpenAI API](https://platform.openai.com/docs/guides/structured-outputs)
+- [Introducing Structured Outputs in the API | OpenAI](https://openai.com/index/introducing-structured-outputs-in-the-api/)
+- [From Chaos to Structure: Building Production-Ready AI Agents with Guaranteed JSON Responses](https://medium.com/@v31u/from-chaos-to-structure-building-production-ready-ai-agents-with-guaranteed-json-responses-dfd925bad7ea)
 
-**WebSocket and Notifications:**
-- [Building a Scalable Notification System with Kafka and WebSockets](https://medium.com/@sandeep.ragampudy/building-a-scalable-notification-system-with-kafka-and-websockets-a90ab8e656b9)
-- [WebSocket Application Monitoring: An In-Depth Guide](https://www.dotcom-monitor.com/blog/websocket-monitoring/)
-- [How to scale WebSockets for high-concurrency systems](https://ably.com/topic/the-challenge-of-scaling-websockets)
+### LLM Hallucination Prevention
+- [How to Prevent LLM Hallucinations: 5 Proven Strategies](https://www.voiceflow.com/blog/prevent-llm-hallucinations)
+- [Detecting Hallucinations in LLM Function Calling with Entropy](https://www.archgw.com/blogs/detecting-hallucinations-in-llm-function-calling-with-entropy-and-varentropy)
+- [Stop LLM Hallucinations: Reduce Errors by 60–80%](https://masterofcode.com/blog/hallucinations-in-llms-what-you-need-to-know-before-integration)
+- [Reducing LLM Hallucinations: A Developer's Guide](https://www.getzep.com/ai-agents/reducing-llm-hallucinations/)
 
 ---
 
-*Pitfalls research for: Admin Dashboard / Operations Console (Healthcare SaaS)*
-*Researched: 2026-01-15*
-*Total pitfalls identified: 13 critical, covering realtime subscriptions, security, performance, HIPAA compliance, and production operations*
+*Pitfalls research for: Agent API + MCP Migration (v2.0)*
+*Researched: 2026-01-24*
+*Total pitfalls identified: 15 critical, covering migration strategy, API design, security, N8N integration, and testing*

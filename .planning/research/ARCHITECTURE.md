@@ -1,971 +1,794 @@
-# Architecture Research
+# Architecture Research: Agent API + MCP Migration
 
-**Domain:** Admin Dashboard / Operations Console (Healthcare SaaS)
-**Researched:** 2025-01-15
+**Project:** Botfy ClinicOps Console Administrativo
+**Researched:** 2026-01-24
 **Confidence:** HIGH
 
-## Standard Architecture
+## Executive Summary
 
-### System Overview
+The migration from N8N sub-workflows to Next.js API routes + MCP Server follows a **dual-track architecture**. Agent tools become standard REST API endpoints at `/api/agent/*` with N8N calling them directly via HTTP Request nodes. MCP Server acts as an optional wrapper that can be added later for Claude Desktop integration, but N8N agents call the HTTP APIs directly. This approach maximizes code reuse, enables testing, and maintains security through existing RBAC middleware while avoiding MCP complexity for the primary N8N use case.
+
+**Key finding:** MCP and REST APIs are complementary, not competitive. Use REST APIs for N8N agent tool calls, optionally add MCP wrapper later for Claude Desktop integration.
+
+## Current Architecture (v1.2)
+
+### Directory Structure
+```
+src/
+├── app/
+│   ├── (auth)/                    # Protected route group
+│   ├── (dashboard)/               # Dashboard pages
+│   └── api/                       # API Routes (35 endpoints)
+│       ├── agendamentos/
+│       ├── pacientes/
+│       ├── pre-checkin/
+│       └── [other resources]/
+├── components/                    # React components (shadcn/ui)
+├── lib/
+│   ├── supabase/                  # Client factories
+│   │   ├── server.ts              # Server-side client (RLS)
+│   │   ├── admin.ts               # Admin client (bypass RLS)
+│   │   └── client.ts              # Browser client
+│   ├── auth/                      # Authentication & session
+│   │   ├── session.ts             # getCurrentUserWithRole()
+│   │   └── actions.ts
+│   ├── rbac/                      # Role-based access control
+│   │   ├── permissions.ts         # Permission definitions
+│   │   └── middleware.ts          # Defense-in-depth
+│   ├── calendar/                  # Calendar utilities
+│   │   ├── availability-calculator.ts
+│   │   ├── conflict-detection.ts
+│   │   ├── time-zone-utils.ts     # TZDate DST handling
+│   │   └── n8n-sync.ts            # N8N webhook triggers
+│   ├── analytics/                 # Business logic
+│   │   ├── kpi-calculator.ts
+│   │   ├── no-show-predictor.ts
+│   │   ├── pattern-detector.ts
+│   │   └── risk-calculator.ts
+│   ├── validations/               # Zod schemas (12 resources)
+│   │   ├── appointment.ts
+│   │   ├── patient.ts
+│   │   └── [others]/
+│   └── audit/                     # HIPAA audit logging
+│       └── logger.ts
+├── hooks/                         # Custom React hooks
+└── prisma/                        # Prisma schema
+```
+
+### Existing API Route Pattern
+
+All API routes follow this structure:
+
+```typescript
+// src/app/api/agendamentos/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { getCurrentUserWithRole } from '@/lib/auth/session'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { createAppointmentSchema } from '@/lib/validations/appointment'
+import { logAudit, AuditAction } from '@/lib/audit/logger'
+
+export async function POST(req: NextRequest) {
+  try {
+    // 1. Authentication
+    const user = await getCurrentUserWithRole()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // 2. Authorization (RBAC)
+    if (!['ADMIN', 'ATENDENTE'].includes(user.role)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    // 3. Validation (Zod)
+    const body = await req.json()
+    const validatedData = createAppointmentSchema.parse(body)
+
+    // 4. Business Logic
+    const supabase = await createServerSupabaseClient()
+    // ... conflict detection, data transformation
+
+    // 5. Database Operation
+    const { data, error } = await supabase
+      .from('agendamentos')
+      .insert(validatedData)
+      .single()
+
+    if (error) throw error
+
+    // 6. Audit Logging
+    await logAudit({
+      userId: user.id,
+      action: AuditAction.CREATE_APPOINTMENT,
+      resource: 'agendamentos',
+      resourceId: data.id,
+      details: { ... }
+    })
+
+    // 7. N8N Webhook (async, non-blocking)
+    notifyN8NAppointmentCreated(data).catch(err =>
+      console.error('N8N sync failed:', err)
+    )
+
+    return NextResponse.json(data, { status: 201 })
+  } catch (error) {
+    console.error('Error:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Internal error' },
+      { status: 500 }
+    )
+  }
+}
+```
+
+### Supabase Client Strategy
+
+**Three client types for different use cases:**
+
+1. **Server Client (with RLS)**: `createServerSupabaseClient()`
+   - Uses cookies for user session
+   - Respects Row Level Security policies
+   - Default for authenticated user operations
+
+2. **Admin Client (bypass RLS)**: `createAdminSupabaseClient()`
+   - Uses service role key
+   - Bypasses RLS
+   - Used for N8N tables (`n8n_chat_histories`, `lembretes_enviados`)
+   - **Important:** Handle authorization in application code
+
+3. **Browser Client**: `createBrowserSupabaseClient()`
+   - Singleton pattern (avoids SSR hydration mismatch)
+   - Client-side operations only
+
+### N8N Integration Pattern
+
+**Current flow (Console → N8N):**
+```
+Console → Supabase → N8N Webhook (async)
+```
+
+**Example:**
+```typescript
+// src/lib/calendar/n8n-sync.ts
+export async function notifyN8NAppointmentCreated(
+  payload: AppointmentWebhookPayload
+): Promise<void> {
+  const webhookUrl = process.env.N8N_WEBHOOK_APPOINTMENT_CREATED
+
+  if (!webhookUrl) {
+    console.warn('N8N webhook not configured, skipping')
+    return
+  }
+
+  try {
+    await fetch(webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+  } catch (error) {
+    console.error('N8N notification failed:', error)
+    // Don't throw - webhook failure shouldn't block operation
+  }
+}
+```
+
+---
+
+## Target Architecture: Agent API + MCP
+
+### High-Level Data Flow
+
+**Dual-track approach:**
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────────┐
-│                          PRESENTATION LAYER (Client)                             │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
-│  │  Dashboard   │  │  Scheduling  │  │  Patients    │  │  Settings    │         │
-│  │  (Server)    │  │  (Client)    │  │  (Server)    │  │  (Client)    │         │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘         │
-│         │                 │                 │                 │                 │
-│         │      ┌──────────┴─────────────────┴─────────┐       │                 │
-│         │      │   Real-time Subscriptions (Client)   │       │                 │
-│         │      │   useEffect + Supabase Channels       │       │                 │
-│         │      └──────────┬─────────────────────────────┘      │                 │
-├─────────┴────────────────┴─────────────────────────────────────┴─────────────────┤
-│                          APPLICATION LAYER (Server)                              │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│  ┌─────────────────────────────────────────────────────────────────────┐        │
-│  │                      Next.js Middleware                              │        │
-│  │  - Auth Verification (Supabase Session Refresh)                      │        │
-│  │  - Route Protection (Role-based Guards)                              │        │
-│  │  - Cookie Management (createServerClient)                            │        │
-│  └─────────────────────────┬───────────────────────────────────────────┘        │
-│                            │                                                     │
-│  ┌─────────────────────────┴───────────────────────────────────────────┐        │
-│  │                      API Routes (Route Handlers)                     │        │
-│  │  /api/auth/*         - Authentication endpoints                      │        │
-│  │  /api/agendamentos/* - Scheduling operations                         │        │
-│  │  /api/pacientes/*    - Patient management                            │        │
-│  │  /api/alerts/*       - Real-time alerts                              │        │
-│  └─────────────────────────┬───────────────────────────────────────────┘        │
-│                            │                                                     │
-│  ┌─────────────────────────┴───────────────────────────────────────────┐        │
-│  │                     Business Logic Layer                             │        │
-│  │  /lib/services/     - Domain services (pure functions)               │        │
-│  │  /lib/queries/      - Database queries (reusable)                    │        │
-│  │  /lib/mutations/    - Data mutations (reusable)                      │        │
-│  └─────────────────────────┬───────────────────────────────────────────┘        │
-├────────────────────────────┴─────────────────────────────────────────────────────┤
-│                          DATA LAYER                                              │
-├─────────────────────────────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
-│  │  Supabase    │  │  Supabase    │  │  Supabase    │  │  Supabase    │         │
-│  │  Auth        │  │  Database    │  │  Realtime    │  │  Storage     │         │
-│  │  (Session)   │  │  (Postgres)  │  │  (Channels)  │  │  (Files)     │         │
-│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘         │
-└─────────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                        N8N AI Agent (Marília)                    │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │ AI Agent Node → HTTP Request Tool → Next.js API          │   │
+│  └──────────────────────────────────────────────────────────┘   │
+└────────────────────────────────┬────────────────────────────────┘
+                                 │
+                                 ▼ (HTTP POST with API key)
+┌─────────────────────────────────────────────────────────────────┐
+│                   Next.js API Routes (/api/agent/*)              │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │ 1. Auth (API key → userId)                               │   │
+│  │ 2. Authorization (RBAC for agents)                       │   │
+│  │ 3. Validation (Zod schema)                               │   │
+│  │ 4. Business Logic (reuse existing lib/)                  │   │
+│  │ 5. Database (Supabase with RLS/admin)                    │   │
+│  │ 6. Audit Log (track agent actions)                       │   │
+│  │ 7. Response (JSON)                                       │   │
+│  └──────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+                                 │
+                                 ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    MCP Server (Optional Future)                  │
+│  Wraps /api/agent/* endpoints for Claude Desktop integration    │
+│  - Tool discovery (list available tools)                         │
+│  - Schema introspection (describe inputs/outputs)                │
+│  - Standard MCP protocol compliance                              │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Component Responsibilities
+**Key insight:** N8N agents call REST APIs directly, not MCP. MCP is a future enhancement for Claude Desktop integration.
 
-| Component | Responsibility | Typical Implementation |
-|-----------|----------------|------------------------|
-| **Server Components** | Data fetching, initial render, SEO | `async` functions, direct DB queries, no interactivity |
-| **Client Components** | Interactivity, real-time updates, state | `'use client'`, hooks, event handlers |
-| **Middleware** | Auth verification, session refresh, route protection | `createServerClient` with cookie handlers |
-| **API Routes** | Server-side mutations, external integrations | Route Handlers in `app/api/*` |
-| **Business Logic** | Pure domain functions, reusable operations | `lib/services/*`, exported functions |
-| **Supabase Clients** | Database access, auth, real-time | Singleton pattern for browser, factory for server |
+---
 
-## Recommended Project Structure
+## Directory Structure (New)
 
 ```
 src/
-├── app/                          # Next.js App Router
-│   ├── (auth)/                   # Route group - Auth pages (public)
-│   │   ├── login/
-│   │   │   ├── page.tsx          # Login page (Server Component)
-│   │   │   └── _components/      # Login-specific UI components
-│   │   ├── register/
-│   │   └── layout.tsx            # Auth layout (centered, no sidebar)
-│   │
-│   ├── (dashboard)/              # Route group - Protected admin area
-│   │   ├── dashboard/
-│   │   │   ├── page.tsx          # Dashboard home (Server Component)
-│   │   │   └── _components/      # Dashboard widgets
-│   │   │       ├── stats-card.tsx
-│   │   │       ├── alerts-panel.tsx  # Real-time alerts (Client)
-│   │   │       └── recent-activity.tsx
-│   │   │
-│   │   ├── agendamentos/         # Scheduling feature
-│   │   │   ├── page.tsx          # List view (Server Component)
-│   │   │   ├── [id]/
-│   │   │   │   └── page.tsx      # Detail view
-│   │   │   └── _components/
-│   │   │       ├── calendar.tsx       # Calendar UI (Client)
-│   │   │       ├── appointment-form.tsx
-│   │   │       └── status-badge.tsx
-│   │   │
-│   │   ├── pacientes/            # Patients feature
-│   │   │   ├── page.tsx
-│   │   │   ├── [id]/
-│   │   │   │   └── page.tsx
-│   │   │   └── _components/
-│   │   │
-│   │   └── layout.tsx            # Dashboard layout (sidebar, header)
-│   │
-│   ├── api/                      # API Route Handlers
-│   │   ├── auth/
-│   │   │   ├── callback/
-│   │   │   │   └── route.ts      # OAuth callback
-│   │   │   └── signout/
-│   │   │       └── route.ts      # Sign out handler
-│   │   │
-│   │   ├── agendamentos/
-│   │   │   ├── route.ts          # POST /api/agendamentos
-│   │   │   └── [id]/
-│   │   │       └── route.ts      # PATCH/DELETE /api/agendamentos/:id
-│   │   │
-│   │   └── webhooks/
-│   │       └── n8n/
-│   │           └── route.ts      # N8N webhook endpoint
-│   │
-│   ├── layout.tsx                # Root layout (html, body, providers)
-│   └── middleware.ts             # Auth middleware (sibling to app/)
+├── app/
+│   └── api/
+│       ├── agent/                      # NEW: Agent tool endpoints
+│       │   ├── auth/                   # Agent authentication
+│       │   │   └── route.ts            # API key validation
+│       │   ├── slots/
+│       │   │   └── route.ts            # GET /api/agent/slots
+│       │   ├── appointments/
+│       │   │   ├── route.ts            # POST /api/agent/appointments
+│       │   │   └── [id]/
+│       │   │       └── route.ts        # PUT/DELETE /api/agent/appointments/:id
+│       │   ├── patients/
+│       │   │   ├── route.ts            # GET/POST /api/agent/patients
+│       │   │   └── [id]/
+│       │   │       └── route.ts        # GET/PUT /api/agent/patients/:id
+│       │   ├── pre-checkin/
+│       │   │   └── status/
+│       │   │       └── route.ts        # GET /api/agent/pre-checkin/status
+│       │   ├── instructions/
+│       │   │   └── search/
+│       │   │       └── route.ts        # POST /api/agent/instructions/search
+│       │   └── documents/
+│       │       └── route.ts            # POST /api/agent/documents
+│       ├── agendamentos/               # Existing endpoints
+│       ├── pacientes/
+│       └── [others]/
 │
-├── components/                   # Shared UI components
-│   ├── ui/                       # shadcn/ui components
-│   │   ├── button.tsx
-│   │   ├── card.tsx
-│   │   ├── dialog.tsx
-│   │   └── ...
-│   │
-│   └── shared/                   # Custom shared components
-│       ├── data-table.tsx
-│       ├── page-header.tsx
-│       └── loading-spinner.tsx
+├── lib/
+│   ├── agent/                          # NEW: Agent-specific utilities
+│   │   ├── auth.ts                     # API key authentication
+│   │   ├── middleware.ts               # Agent auth middleware
+│   │   └── audit.ts                    # Agent audit logging wrapper
+│   ├── services/                       # NEW: Business logic layer
+│   │   ├── appointments.ts             # Extracted from API routes
+│   │   ├── patients.ts
+│   │   ├── slots.ts
+│   │   └── pre-checkin.ts
+│   ├── supabase/                       # Existing (no changes)
+│   ├── auth/                           # Existing + agent auth
+│   ├── rbac/                           # Existing + agent permissions
+│   ├── calendar/                       # Existing (reuse)
+│   ├── analytics/                      # Existing (reuse)
+│   └── validations/                    # Existing + agent schemas
 │
-├── lib/                          # Core utilities and configuration
-│   ├── supabase/
-│   │   ├── client.ts             # Browser client (singleton)
-│   │   ├── server.ts             # Server client factory
-│   │   └── middleware.ts         # Middleware client factory
-│   │
-│   ├── services/                 # Business logic (pure functions)
-│   │   ├── agendamentos.ts       # Scheduling domain logic
-│   │   ├── pacientes.ts          # Patient management
-│   │   └── notifications.ts      # Notification logic
-│   │
-│   ├── queries/                  # Reusable database queries
-│   │   ├── agendamentos.ts
-│   │   └── pacientes.ts
-│   │
-│   ├── mutations/                # Reusable data mutations
-│   │   ├── agendamentos.ts
-│   │   └── pacientes.ts
-│   │
-│   ├── validations/              # Zod schemas
-│   │   ├── agendamento.ts
-│   │   └── paciente.ts
-│   │
-│   └── utils/                    # Generic utilities
-│       ├── date.ts
-│       ├── format.ts
-│       └── cn.ts                 # Class name utility
-│
-├── hooks/                        # Custom React hooks
-│   ├── use-realtime-agendamentos.ts  # Real-time subscription hook
-│   ├── use-user.ts               # Auth user hook
-│   └── use-toast.ts              # Toast notifications
-│
-├── types/                        # TypeScript definitions
-│   ├── database.ts               # Supabase generated types
-│   ├── api.ts                    # API response types
-│   └── domain.ts                 # Domain models
-│
-└── config/                       # Configuration files
-    ├── site.ts                   # Site metadata
-    └── constants.ts              # App constants
+└── mcp-server/                         # NEW: Optional MCP wrapper
+    ├── index.ts                        # MCP server entry point
+    ├── tools.ts                        # Tool definitions
+    └── package.json                    # Separate deployment
 ```
 
-### Structure Rationale
+---
 
-- **Route groups `(auth)` and `(dashboard)`**: Organize routes without affecting URLs. Allows different layouts for public vs protected areas.
-- **`_components/` folders**: Colocated components specific to a route. Underscore prefix prevents routing.
-- **`lib/supabase/`**: Centralized Supabase client creation. Browser client is singleton, server clients are per-request.
-- **`lib/services/`**: Pure business logic separate from framework. Testable, reusable across Server Actions and API Routes.
-- **`lib/queries/` and `lib/mutations/`**: Separation between reads and writes. Query functions can be used in Server Components, mutations in Server Actions/API Routes.
-- **Feature-based `_components/`**: Keeps route-specific UI close to where it's used. Only truly shared components go in top-level `components/`.
+## API Routes Structure
 
-## Architectural Patterns
+### Agent Authentication
 
-### Pattern 1: Supabase Client Creation (SSR-Safe)
-
-**What:** Factory pattern for creating Supabase clients with proper cookie handling based on execution context.
-
-**When to use:** Every time you need to interact with Supabase from server-side code (middleware, Server Components, Server Actions, Route Handlers).
-
-**Trade-offs:**
-- **Pros**: Automatic session refresh, type-safe, framework-agnostic cookie handling
-- **Cons**: Must create new client per request (can't cache), cookie handlers vary by context
-
-**Example:**
+**New middleware for API key authentication:**
 
 ```typescript
-// lib/supabase/middleware.ts
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+// src/lib/agent/auth.ts
+import { NextRequest } from 'next/server'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 
-export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({ request })
+export interface AgentAuthResult {
+  agentUserId: string
+  agentName: string
+}
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+export async function authenticateAgent(
+  req: NextRequest
+): Promise<AgentAuthResult | null> {
+  // Extract API key from Authorization header
+  const authHeader = req.headers.get('authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
+    return null
+  }
+
+  const apiKey = authHeader.substring(7)
+
+  // Validate API key against agents table
+  const supabase = await createServerSupabaseClient()
+  const { data: agent, error } = await supabase
+    .from('agents')
+    .select('id, name, user_id, active')
+    .eq('api_key_hash', hashApiKey(apiKey))
+    .eq('active', true)
+    .single()
+
+  if (error || !agent) {
+    return null
+  }
+
+  return {
+    agentUserId: agent.user_id,
+    agentName: agent.name
+  }
+}
+
+function hashApiKey(apiKey: string): string {
+  // Use bcrypt or similar for production
+  // For now, store hashed keys in database
+  return apiKey // PLACEHOLDER - implement hashing
+}
+```
+
+### Agent Endpoint Pattern
+
+**Example: Buscar Slots Disponíveis**
+
+```typescript
+// src/app/api/agent/slots/route.ts
+import { NextRequest, NextResponse } from 'next/server'
+import { withAgentAuth } from '@/lib/agent/middleware'
+import { logAgentAudit } from '@/lib/agent/audit'
+import { buscarSlotsDisponiveisSchema } from '@/lib/validations/agent/slots'
+import { findAvailableSlots } from '@/lib/services/slots'
+
+async function handler(req: NextRequest, agent: AgentAuthResult) {
+  try {
+    // 1. Parse query params
+    const { searchParams } = new URL(req.url)
+    const data = {
+      data: searchParams.get('data'),
+      periodo: searchParams.get('periodo'),
+      servicoId: searchParams.get('servicoId')
+    }
+
+    // 2. Validate input
+    const validated = buscarSlotsDisponiveisSchema.parse(data)
+
+    // 3. Call service layer
+    const slots = await findAvailableSlots(validated)
+
+    // 4. Audit log
+    await logAgentAudit({
+      agentUserId: agent.agentUserId,
+      agentName: agent.agentName,
+      action: 'BUSCAR_SLOTS',
+      details: { data: validated.data, periodo: validated.periodo }
+    })
+
+    // 5. Return response
+    return NextResponse.json({ slots })
+  } catch (error) {
+    console.error('Error finding slots:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Internal error' },
+      { status: 500 }
+    )
+  }
+}
+
+export const GET = withAgentAuth(handler)
+```
+
+---
+
+## Service Layer Reuse
+
+**Which existing services can be reused:**
+
+| Utility | Current Use | Agent API Reuse |
+|---------|-------------|-----------------|
+| `lib/calendar/conflict-detection.ts` | Console appointment creation | `POST /api/agent/appointments` |
+| `lib/calendar/availability-calculator.ts` | Calendar view | `GET /api/agent/slots` |
+| `lib/calendar/time-zone-utils.ts` | All date handling | All agent endpoints |
+| `lib/validations/*.ts` | API route validation | Agent endpoint validation |
+| `lib/supabase/server.ts` | Console APIs | Agent APIs (with RLS) |
+| `lib/supabase/admin.ts` | N8N table access | Agent APIs (for N8N tables) |
+| `lib/audit/logger.ts` | Console actions | Agent actions (new action types) |
+| `lib/rbac/permissions.ts` | Console RBAC | Agent RBAC (new AGENT role) |
+| `lib/analytics/risk-calculator.ts` | Dashboard KPIs | Pre-checkin status API |
+
+**New utilities needed:**
+
+| Utility | Purpose |
+|---------|---------|
+| `lib/agent/auth.ts` | API key authentication |
+| `lib/agent/middleware.ts` | Agent auth wrapper |
+| `lib/agent/audit.ts` | Agent-specific audit logging |
+| `lib/services/appointments.ts` | Extracted business logic |
+| `lib/services/patients.ts` | Extracted business logic |
+| `lib/services/slots.ts` | Extracted business logic |
+| `lib/validations/agent/*.ts` | Agent-specific schemas (if different) |
+
+---
+
+## MCP Server Integration
+
+### Option 1: Integrated (Next.js Route)
+
+**Use Vercel's `@vercel/mcp-handler` for in-process MCP:**
+
+```typescript
+// src/app/api/mcp/route.ts
+import { createMcpHandler } from '@vercel/mcp-handler'
+import { agentTools } from '@/lib/mcp/tools'
+
+export const { GET, POST } = createMcpHandler({
+  name: 'botfy-clinicops',
+  version: '1.0.0',
+  tools: agentTools
+})
+```
+
+**Pros:**
+- No separate deployment
+- Shares Next.js infrastructure
+- Easy development workflow
+
+**Cons:**
+- Tied to Next.js lifecycle
+- Cannot be used independently
+- Less flexible for non-Next.js clients
+
+---
+
+### Option 2: Standalone (Separate Process)
+
+**Use `@modelcontextprotocol/sdk` for independent MCP server:**
+
+```typescript
+// mcp-server/index.ts
+import { Server } from '@modelcontextprotocol/sdk/server/index.js'
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+
+const server = new Server({
+  name: 'botfy-clinicops',
+  version: '1.0.0'
+}, {
+  capabilities: {
+    tools: {}
+  }
+})
+
+// Register tools
+server.setRequestHandler('tools/list', async () => ({
+  tools: [
     {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
+      name: 'buscar_slots_disponiveis',
+      description: 'Busca horários livres para agendamento',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          data: { type: 'string', pattern: '^\\d{4}-\\d{2}-\\d{2}$' },
+          periodo: { type: 'string', enum: ['manha', 'tarde', 'qualquer'] },
+          servicoId: { type: 'string', format: 'uuid' }
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          response = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          )
-        },
-      },
+        required: ['data', 'periodo']
+      }
     }
-  )
-
-  // Automatically refreshes session if expired
-  const { data: { user } } = await supabase.auth.getUser()
-
-  return { response, user }
-}
-
-// lib/supabase/server.ts
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-
-export function createClient() {
-  const cookieStore = cookies()
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
-}
-
-// lib/supabase/client.ts (Browser - Singleton)
-import { createBrowserClient } from '@supabase/ssr'
-
-let client: ReturnType<typeof createBrowserClient> | undefined
-
-export function createClient() {
-  if (client) return client
-
-  client = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-
-  return client
-}
-```
-
-**Source:** [Supabase SSR Documentation](https://github.com/supabase/ssr) (HIGH confidence)
-
----
-
-### Pattern 2: Authentication Middleware (Route Protection)
-
-**What:** Next.js middleware that verifies Supabase session and enforces role-based access control before rendering pages.
-
-**When to use:** Protect admin dashboard routes, redirect unauthenticated users, refresh sessions automatically.
-
-**Trade-offs:**
-- **Pros**: Runs before page render, automatic session refresh, single source of truth for auth
-- **Cons**: Adds latency to every request, limited to edge runtime (no Node.js APIs)
-
-**Example:**
-
-```typescript
-// middleware.ts
-import { type NextRequest } from 'next/server'
-import { updateSession } from '@/lib/supabase/middleware'
-
-export async function middleware(request: NextRequest) {
-  const { response, user } = await updateSession(request)
-
-  // Redirect unauthenticated users to login
-  if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  // Redirect authenticated users away from auth pages
-  if (user && request.nextUrl.pathname.startsWith('/login')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
-
-  return response
-}
-
-export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
-}
-```
-
-**Source:** [Next.js Middleware Docs](https://nextjs.org/docs/app/guides/authentication) + Supabase SSR (HIGH confidence)
-
----
-
-### Pattern 3: Real-time Subscriptions (Client Component)
-
-**What:** Custom React hook that subscribes to Supabase Realtime channels and automatically cleans up on unmount.
-
-**When to use:** Dashboard alerts, live appointment updates, collaborative features, any data that changes server-side and needs to reflect instantly.
-
-**Trade-offs:**
-- **Pros**: Instant updates without polling, low latency, automatic reconnection
-- **Cons**: Must enable Realtime on Supabase table, requires Client Component, can cause unnecessary re-renders if not optimized
-
-**Example:**
-
-```typescript
-// hooks/use-realtime-agendamentos.ts
-'use client'
-
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import type { Agendamento } from '@/types/database'
-
-export function useRealtimeAgendamentos(initialData: Agendamento[]) {
-  const [agendamentos, setAgendamentos] = useState(initialData)
-  const supabase = createClient()
-
-  useEffect(() => {
-    // Create channel for real-time updates
-    const channel = supabase
-      .channel('agendamentos-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*', // Listen to INSERT, UPDATE, DELETE
-          schema: 'public',
-          table: 'agendamentos',
-        },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setAgendamentos((current) => [...current, payload.new as Agendamento])
-          } else if (payload.eventType === 'UPDATE') {
-            setAgendamentos((current) =>
-              current.map((item) =>
-                item.id === payload.new.id ? (payload.new as Agendamento) : item
-              )
-            )
-          } else if (payload.eventType === 'DELETE') {
-            setAgendamentos((current) =>
-              current.filter((item) => item.id !== payload.old.id)
-            )
-          }
-        }
-      )
-      .subscribe()
-
-    // Cleanup subscription on unmount
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [supabase])
-
-  return agendamentos
-}
-
-// Usage in component:
-// app/(dashboard)/dashboard/_components/alerts-panel.tsx
-'use client'
-
-import { useRealtimeAgendamentos } from '@/hooks/use-realtime-agendamentos'
-
-export function AlertsPanel({ initialAgendamentos }: { initialAgendamentos: Agendamento[] }) {
-  const agendamentos = useRealtimeAgendamentos(initialAgendamentos)
-
-  return (
-    <div>
-      {agendamentos.map((agendamento) => (
-        <AlertCard key={agendamento.id} agendamento={agendamento} />
-      ))}
-    </div>
-  )
-}
-```
-
-**Source:** [Supabase Realtime with Next.js](https://supabase.com/docs/guides/realtime/realtime-with-nextjs) + React Docs (HIGH confidence)
-
----
-
-### Pattern 4: Server Component Data Fetching with Reusable Queries
-
-**What:** Separate data fetching logic into reusable query functions, called from Server Components or Server Actions.
-
-**When to use:** Initial page loads, data that doesn't need real-time updates, SEO-critical content.
-
-**Trade-offs:**
-- **Pros**: Excellent performance (no client JS), SEO-friendly, type-safe, reusable across routes
-- **Cons**: No interactivity without Client Components, requires async Server Components
-
-**Example:**
-
-```typescript
-// lib/queries/agendamentos.ts
-import { createClient } from '@/lib/supabase/server'
-import type { Agendamento } from '@/types/database'
-
-export async function getAgendamentos(filters?: {
-  date?: string
-  status?: string
-}): Promise<Agendamento[]> {
-  const supabase = createClient()
-
-  let query = supabase
-    .from('agendamentos')
-    .select('*, paciente:pacientes(*), servico:servicos(*)')
-    .order('data_hora', { ascending: true })
-
-  if (filters?.date) {
-    query = query.gte('data_hora', `${filters.date}T00:00:00`)
-                 .lt('data_hora', `${filters.date}T23:59:59`)
-  }
-
-  if (filters?.status) {
-    query = query.eq('status', filters.status)
-  }
-
-  const { data, error } = await query
-
-  if (error) throw error
-  return data || []
-}
-
-// app/(dashboard)/agendamentos/page.tsx
-import { getAgendamentos } from '@/lib/queries/agendamentos'
-import { AgendamentosList } from './_components/agendamentos-list'
-
-export default async function AgendamentosPage() {
-  const agendamentos = await getAgendamentos()
-
-  return (
-    <div>
-      <h1>Agendamentos</h1>
-      {/* Pass data to Client Component for interactivity */}
-      <AgendamentosList initialData={agendamentos} />
-    </div>
-  )
-}
-```
-
-**Source:** [Next.js Data Fetching](https://nextjs.org/docs/app/guides/migrating/app-router-migration) (HIGH confidence)
-
----
-
-### Pattern 5: State Management - Server State vs UI State
-
-**What:** Separate server state (data from Supabase) from UI state (modals, sidebars, forms) using appropriate tools.
-
-**When to use:**
-- **Server state**: Use React Query (TanStack Query) or SWR for data from API/database
-- **UI state**: Use Zustand or Context API for client-only state
-
-**Trade-offs:**
-- **Pros**: Clear separation of concerns, automatic caching/revalidation (React Query), minimal boilerplate (Zustand)
-- **Cons**: Additional dependency, learning curve, can be overkill for simple apps
-
-**Example:**
-
-```typescript
-// lib/stores/ui-store.ts (Zustand for UI state)
-import { create } from 'zustand'
-
-interface UIStore {
-  sidebarOpen: boolean
-  toggleSidebar: () => void
-  currentModal: string | null
-  openModal: (modalId: string) => void
-  closeModal: () => void
-}
-
-export const useUIStore = create<UIStore>((set) => ({
-  sidebarOpen: true,
-  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
-  currentModal: null,
-  openModal: (modalId) => set({ currentModal: modalId }),
-  closeModal: () => set({ currentModal: null }),
+  ]
 }))
 
-// For server state, prefer real-time subscriptions or Server Components
-// Only use React Query if you need advanced caching/refetching logic
-```
+server.setRequestHandler('tools/call', async (request) => {
+  const { name, arguments: args } = request.params
 
-**Source:** [React Query vs Zustand](https://geekyants.com/blog/react-query-as-a-state-manager-in-nextjs-do-you-still-need-redux-or-zustand) + [State Management Guide](https://www.pronextjs.dev/tutorials/state-management) (HIGH confidence)
-
----
-
-### Pattern 6: Row Level Security (RLS) for Multi-Tenant Data Isolation
-
-**What:** Postgres policies that automatically filter data based on authenticated user's role or tenant ID.
-
-**When to use:** Multi-tenant admin dashboard where different clinics/organizations share the same database but must never see each other's data.
-
-**Trade-offs:**
-- **Pros**: Database-level security, impossible to bypass from client, works with all Supabase clients
-- **Cons**: Can impact performance on large datasets, complex policies are hard to debug, requires careful testing
-
-**Example:**
-
-```sql
--- Enable RLS on table
-ALTER TABLE agendamentos ENABLE ROW LEVEL SECURITY;
-
--- Policy: Admin users see all appointments
-CREATE POLICY "Admins can view all agendamentos"
-  ON agendamentos
-  FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM user_roles
-      WHERE user_id = auth.uid()
-      AND role = 'admin'
+  if (name === 'buscar_slots_disponiveis') {
+    // Call Next.js API with API key
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_URL}/api/agent/slots?` + new URLSearchParams(args),
+      {
+        headers: {
+          'Authorization': `Bearer ${process.env.AGENT_API_KEY}`
+        }
+      }
     )
-  );
-
--- Policy: Clinic staff see only their clinic's appointments
-CREATE POLICY "Staff can view clinic agendamentos"
-  ON agendamentos
-  FOR SELECT
-  TO authenticated
-  USING (
-    clinica_id = (
-      SELECT clinica_id FROM user_profiles
-      WHERE user_id = auth.uid()
-    )
-  );
-
--- Policy: Patients see only their own appointments
-CREATE POLICY "Patients can view own agendamentos"
-  ON agendamentos
-  FOR SELECT
-  TO authenticated
-  USING (
-    paciente_id = auth.uid()
-  );
-```
-
-**Best Practices:**
-- Enable RLS from day one - retrofitting is painful
-- Use JWT custom claims (`auth.jwt()`) to store role/tenant_id for faster policies
-- Add indexes on columns used in policies (e.g., `clinica_id`, `user_id`)
-- Never use `service_role` key in client code - it bypasses RLS
-- Test policies thoroughly - use `EXPLAIN ANALYZE` to check performance
-
-**Source:** [Supabase RLS Best Practices](https://www.leanware.co/insights/supabase-best-practices) + [Multi-Tenant RLS](https://dev.to/blackie360/-enforcing-row-level-security-in-supabase-a-deep-dive-into-lockins-multi-tenant-architecture-4hd2) (HIGH confidence)
-
-## Data Flow
-
-### Request Flow (Server-Side Rendering)
-
-```
-[User Request]
-    ↓
-[Next.js Middleware] → [Supabase Auth] → Verify Session
-    ↓                                      ↓
-[Protected Route]                     [Refresh if expired]
-    ↓
-[Server Component] → [lib/queries/*] → [Supabase Database]
-    ↓                                      ↓
-[Render HTML] ← [Data] ← [RLS Filter] ← [Query Results]
-    ↓
-[Send to Browser]
-```
-
-### State Management (Client-Side Interactivity)
-
-```
-[Server Component] → Initial Data → [Client Component Props]
-                                           ↓
-                                    [useRealtimeSubscription]
-                                           ↓
-                        ┌──────────────────┴──────────────────┐
-                        ↓                                     ↓
-              [Supabase Realtime]                    [Local State]
-                        ↓                                     ↓
-              [Postgres Changes]                      [useState/Zustand]
-                        ↓                                     ↓
-              [Channel Broadcast] ──────────────────> [Re-render UI]
-```
-
-### Mutation Flow (User Actions)
-
-```
-[User Action (Click/Submit)]
-    ↓
-[Client Component] → onSubmit() → [Server Action / API Route]
-                                           ↓
-                                  [lib/validations/*] → Validate Input
-                                           ↓
-                                  [lib/mutations/*] → Supabase Mutation
-                                           ↓
-                                  [Database Update] → RLS Check
-                                           ↓
-                                  [Realtime Broadcast] → All Subscribers
-                                           ↓
-                                  [Return Result] → Client
-                                           ↓
-                                  [UI Update / Toast]
-```
-
-### Key Data Flows
-
-1. **Initial page load**: Middleware verifies auth → Server Component fetches data → HTML sent to browser with embedded data → Client Component hydrates → Real-time subscription starts
-
-2. **Real-time update**: Database change occurs → Postgres triggers Realtime → Supabase broadcasts to channel → Client component receives event → Local state updates → UI re-renders
-
-3. **User mutation**: Form submit → Server Action validates → Mutation executes → Database updates → Realtime broadcasts change → All connected clients update simultaneously
-
-## Scaling Considerations
-
-| Scale | Architecture Adjustments |
-|-------|--------------------------|
-| **0-1k users** | Monolith Next.js app on Vercel + Supabase free tier. No optimization needed. |
-| **1k-10k users** | Enable Supabase Pro for better connection pooling. Add database indexes on frequently queried columns. Consider React Query for client-side caching. |
-| **10k-100k users** | Add CDN caching for static assets. Enable Supabase connection pooling (Supavisor). Use read replicas for analytics queries. Optimize real-time subscriptions (reduce channel count). |
-| **100k+ users** | Consider database sharding by clinic/tenant. Move heavy background jobs to separate workers (N8N can handle this). Use Supabase Edge Functions for compute-heavy operations. Implement proper caching strategy (Redis). |
-
-### Scaling Priorities
-
-1. **First bottleneck: Database connections**
-   - Supabase has connection limits on free tier (60 connections)
-   - **Fix**: Enable connection pooling (Supavisor), upgrade to Pro tier, use read replicas for read-heavy queries
-
-2. **Second bottleneck: Real-time subscriptions**
-   - Too many channels per user causes memory issues
-   - **Fix**: Consolidate channels (one channel per page, not per row), use filters in subscriptions, unsubscribe when components unmount
-
-3. **Third bottleneck: Server Component performance**
-   - Slow database queries block HTML rendering
-   - **Fix**: Add database indexes, use `Suspense` boundaries to stream UI, cache expensive queries with `unstable_cache`
-
-## Anti-Patterns
-
-### Anti-Pattern 1: Using Client Components for Everything
-
-**What people do:** Mark all components with `'use client'` to avoid errors
-
-**Why it's wrong:**
-- Loses benefits of Server Components (better performance, smaller bundle)
-- Can't use async/await for data fetching
-- Increases client-side JavaScript bundle size
-
-**Do this instead:**
-- Start with Server Components by default
-- Only use `'use client'` when you need:
-  - Event handlers (onClick, onChange)
-  - React hooks (useState, useEffect)
-  - Browser APIs (localStorage, window)
-- Pass fetched data from Server Components to Client Components as props
-
-**Example:**
-
-```typescript
-// ❌ WRONG - Fetching in Client Component
-'use client'
-import { useEffect, useState } from 'react'
-
-export function Dashboard() {
-  const [data, setData] = useState([])
-
-  useEffect(() => {
-    fetch('/api/agendamentos')
-      .then(res => res.json())
-      .then(setData)
-  }, [])
-
-  return <div>{data.map(...)}</div>
-}
-
-// ✅ CORRECT - Server Component fetches, Client Component renders
-// page.tsx (Server Component)
-import { getAgendamentos } from '@/lib/queries/agendamentos'
-import { DashboardClient } from './_components/dashboard-client'
-
-export default async function Dashboard() {
-  const agendamentos = await getAgendamentos()
-  return <DashboardClient initialData={agendamentos} />
-}
-
-// _components/dashboard-client.tsx
-'use client'
-export function DashboardClient({ initialData }) {
-  const [data, setData] = useState(initialData)
-  // Use real-time subscriptions to update data
-  return <div>{data.map(...)}</div>
-}
-```
-
----
-
-### Anti-Pattern 2: Creating Supabase Client on Every Render
-
-**What people do:** Call `createClient()` inside component body without memoization
-
-**Why it's wrong:**
-- Browser client should be singleton (created once)
-- Server client should be created per request (in Server Component/Action)
-- Creating multiple clients causes memory leaks and breaks session consistency
-
-**Do this instead:**
-- Browser: Import singleton client from `lib/supabase/client.ts`
-- Server: Create fresh client per request in Server Components/Actions
-- Never create client in Client Component body without `useMemo`
-
-**Example:**
-
-```typescript
-// ❌ WRONG - New client on every render
-'use client'
-import { createBrowserClient } from '@supabase/ssr'
-
-export function MyComponent() {
-  const supabase = createBrowserClient(...) // RECREATED ON EVERY RENDER!
-  // ...
-}
-
-// ✅ CORRECT - Use singleton pattern
-'use client'
-import { createClient } from '@/lib/supabase/client'
-
-export function MyComponent() {
-  const supabase = createClient() // Returns same instance every time
-  // ...
-}
-```
-
----
-
-### Anti-Pattern 3: Not Cleaning Up Real-time Subscriptions
-
-**What people do:** Subscribe to Realtime channels without cleanup function in useEffect
-
-**Why it's wrong:**
-- Memory leaks - channels stay open after component unmounts
-- Multiple subscriptions to same channel if component remounts
-- Can hit Supabase connection limits
-
-**Do this instead:** Always return cleanup function from useEffect that removes channel
-
-**Example:**
-
-```typescript
-// ❌ WRONG - No cleanup
-useEffect(() => {
-  const channel = supabase
-    .channel('changes')
-    .on('postgres_changes', { ... }, (payload) => {
-      console.log(payload)
-    })
-    .subscribe()
-  // Missing cleanup!
-}, [])
-
-// ✅ CORRECT - Cleanup on unmount
-useEffect(() => {
-  const channel = supabase
-    .channel('changes')
-    .on('postgres_changes', { ... }, (payload) => {
-      console.log(payload)
-    })
-    .subscribe()
-
-  return () => {
-    supabase.removeChannel(channel)
-  }
-}, [supabase])
-```
-
----
-
-### Anti-Pattern 4: Putting Business Logic in API Routes
-
-**What people do:** Write all domain logic directly in API Route Handlers
-
-**Why it's wrong:**
-- Hard to test (requires mocking Next.js Request/Response)
-- Can't reuse logic in Server Actions or other routes
-- Tight coupling to framework
-
-**Do this instead:** Extract business logic to pure functions in `lib/services/`, call from API Routes
-
-**Example:**
-
-```typescript
-// ❌ WRONG - Logic in Route Handler
-// app/api/agendamentos/route.ts
-export async function POST(request: Request) {
-  const data = await request.json()
-  const supabase = createClient()
-
-  // Business logic mixed with HTTP handling
-  const { data: paciente } = await supabase
-    .from('pacientes')
-    .select()
-    .eq('telefone', data.telefone)
-    .single()
-
-  if (!paciente) {
-    const { data: newPaciente } = await supabase
-      .from('pacientes')
-      .insert({ nome: data.nome, telefone: data.telefone })
-      .select()
-      .single()
+    const data = await response.json()
+    return { content: [{ type: 'text', text: JSON.stringify(data) }] }
   }
 
-  const { data: agendamento } = await supabase
-    .from('agendamentos')
-    .insert({ paciente_id: paciente.id, ... })
+  throw new Error(`Unknown tool: ${name}`)
+})
 
-  return Response.json(agendamento)
-}
+// Start server
+const transport = new StdioServerTransport()
+await server.connect(transport)
+```
 
-// ✅ CORRECT - Business logic separated
-// lib/services/agendamentos.ts
-export async function criarAgendamento(input: CreateAgendamentoInput) {
-  const supabase = createClient()
+**Pros:**
+- Independent lifecycle
+- Can be used by any MCP client (Claude Desktop, Cursor, etc.)
+- Easier to test in isolation
+- Flexible deployment (local, Docker, serverless)
 
-  const paciente = await findOrCreatePaciente(input.paciente)
-  const agendamento = await supabase
-    .from('agendamentos')
-    .insert({
-      paciente_id: paciente.id,
-      data_hora: input.data_hora,
-      servico_id: input.servico_id,
-    })
-    .select()
-    .single()
+**Cons:**
+- Requires separate deployment
+- More complex infrastructure
+- Needs its own API key management
 
-  return agendamento
-}
+---
 
-// app/api/agendamentos/route.ts
-import { criarAgendamento } from '@/lib/services/agendamentos'
+### Recommendation: Start with Option 2 (Standalone)
 
-export async function POST(request: Request) {
-  const data = await request.json()
-  const result = await criarAgendamento(data) // Reusable, testable
-  return Response.json(result)
-}
+**Rationale:**
+1. **Flexibility**: MCP server can evolve independently of Next.js app
+2. **Future-proof**: Easier to add non-N8N clients (Claude Desktop, Cursor)
+3. **Testing**: Standalone server is easier to test in isolation
+4. **Deployment**: Can deploy to different environments (local for dev, cloud for prod)
+
+**Migration path:**
+1. **Phase 1**: Build `/api/agent/*` REST endpoints (N8N calls these)
+2. **Phase 2**: Build standalone MCP server (wraps REST endpoints)
+3. **Phase 3**: Integrate with Claude Desktop (optional)
+
+---
+
+## Authentication Flow
+
+### Agent Authentication
+
+**Two authentication paths:**
+
+1. **Console Users** (existing): Supabase Auth + cookies
+2. **N8N Agents** (new): API key in Authorization header
+
+```typescript
+// New table: agents
+CREATE TABLE agents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,                    -- 'Marília', 'AgendamentoBot', etc.
+  api_key_hash TEXT NOT NULL UNIQUE,     -- bcrypt hash of API key
+  user_id UUID NOT NULL,                 -- Links to users table for audit
+  role TEXT NOT NULL DEFAULT 'AGENT',    -- 'AGENT' role for RBAC
+  active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  last_used_at TIMESTAMPTZ
+);
+
+-- RLS policies
+ALTER TABLE agents ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Only admins can manage agents"
+  ON agents FOR ALL
+  USING (auth.jwt() ->> 'role' = 'ADMIN');
+```
+
+**N8N configuration:**
+
+```
+N8N Credential: "Botfy API Key"
+Type: Header Auth
+Header Name: Authorization
+Header Value: Bearer botfy_abc123...
 ```
 
 ---
 
-### Anti-Pattern 5: Exposing Service Role Key on Client
+## Data Flow Diagrams
 
-**What people do:** Use `SUPABASE_SERVICE_ROLE_KEY` in client-side code for "admin" operations
+### Before (Current N8N Sub-workflows)
 
-**Why it's wrong:**
-- **CRITICAL SECURITY ISSUE**: Service role bypasses RLS and grants full database access
-- Exposed in browser = anyone can read/modify/delete any data
-- No way to revoke without rotating key for entire project
-
-**Do this instead:**
-- Only use service role key in server-side code (API Routes, Server Actions)
-- Use RLS policies to grant admin users elevated permissions
-- For admin operations, use anon key with proper RLS policies that check user role
-
-**Example:**
-
-```typescript
-// ❌ WRONG - Service key on client
-'use client'
-import { createBrowserClient } from '@supabase/ssr'
-
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // EXPOSED TO BROWSER!
-)
-
-// ✅ CORRECT - Use RLS for admin access
-// Database policy (runs server-side):
-CREATE POLICY "Admins can delete any agendamento"
-  ON agendamentos
-  FOR DELETE
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM user_roles
-      WHERE user_id = auth.uid() AND role = 'admin'
-    )
-  );
-
-// Client code uses normal anon key:
-'use client'
-import { createClient } from '@/lib/supabase/client'
-
-const supabase = createClient() // Uses ANON key
-await supabase.from('agendamentos').delete().eq('id', id)
-// RLS policy automatically checks if user is admin
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        N8N AI Agent Workflow                     │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │ AI Agent Node                                            │   │
+│  │   ↓ (toolWorkflow: Execute Workflow)                     │   │
+│  │ Tool: Buscar Slots (9 nodes)                             │   │
+│  │   - Parse input                                          │   │
+│  │   - Supabase query (slots, agendamentos)                 │   │
+│  │   - Business logic (conflict detection, filtering)       │   │
+│  │   - Format response                                      │   │
+│  │   - Return string to AI Agent                            │   │
+│  └──────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+                                 │
+                                 ▼
+                            Supabase
+                         (direct queries)
 ```
 
-## Integration Points
+**Problems:**
+- No code review (visual nodes)
+- No type safety (JSON everywhere)
+- Hard to test (manual N8N execution)
+- No reuse (Console has separate logic)
+- No versioning (workflows overwrite)
+- Debugging via N8N UI only
 
-### External Services
+---
 
-| Service | Integration Pattern | Notes |
-|---------|---------------------|-------|
-| **Supabase Auth** | OAuth providers via `signInWithOAuth()` | Configure redirect URLs in Supabase dashboard. Use `/api/auth/callback` route. |
-| **Supabase Realtime** | Subscribe in Client Components via `supabase.channel()` | Must enable Realtime on tables in dashboard. Clean up subscriptions on unmount. |
-| **N8N Workflows** | Webhook endpoints in `/api/webhooks/n8n/*` | Verify webhook signature. Use server-side Supabase client with RLS. |
-| **WhatsApp (Evolution API)** | External webhook → N8N → Supabase | N8N handles Evolution API integration. Frontend displays data via Supabase. |
-| **OpenAI** | Server Actions or API Routes only | Never expose API key on client. Use streaming for better UX. |
+### After (Agent APIs + MCP)
 
-### Internal Boundaries
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        N8N AI Agent Workflow                     │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │ AI Agent Node                                            │   │
+│  │   ↓ (HTTP Request Tool)                                  │   │
+│  │ POST /api/agent/slots?data=2026-01-20&periodo=manha      │   │
+│  │   Headers: { Authorization: Bearer botfy_abc123... }     │   │
+│  └──────────────────────────────────────────────────────────┘   │
+└────────────────────────────────┬────────────────────────────────┘
+                                 │
+                                 ▼ (HTTP POST)
+┌─────────────────────────────────────────────────────────────────┐
+│                   Next.js API Route                              │
+│  src/app/api/agent/slots/route.ts                               │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │ 1. Agent Auth (API key validation)                       │   │
+│  │ 2. Validation (Zod schema)                               │   │
+│  │ 3. Service Call (findAvailableSlots)                     │   │
+│  │ 4. Audit Log                                             │   │
+│  │ 5. JSON Response                                         │   │
+│  └──────────────────────────────────────────────────────────┘   │
+└────────────────────────────────┬────────────────────────────────┘
+                                 │
+                                 ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Service Layer                               │
+│  src/lib/services/slots.ts                                      │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │ - Reused by Console APIs (/api/agendamentos)            │   │
+│  │ - Reused by Agent APIs (/api/agent/slots)               │   │
+│  │ - Business logic (conflict detection, availability)      │   │
+│  │ - Supabase queries (RLS-aware)                           │   │
+│  │ - Type-safe (TypeScript + Zod)                           │   │
+│  └──────────────────────────────────────────────────────────┘   │
+└────────────────────────────────┬────────────────────────────────┘
+                                 │
+                                 ▼
+                            Supabase
+                        (via server client)
+```
 
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| **Server ↔ Client** | Props (initial data), API Routes (mutations), Realtime (updates) | Server Components pass initial data as props. Mutations go through Server Actions or API Routes. Real-time for live updates. |
-| **App Router ↔ Supabase** | Typed client (`lib/supabase/*`) | Always use appropriate client (browser vs server). Never share server client across requests. |
-| **Business Logic ↔ Framework** | Pure functions in `lib/services/*` | Keep domain logic framework-agnostic. Easy to test and reuse. |
-| **UI Components ↔ Data Layer** | Custom hooks (`hooks/*`) for real-time, direct queries in Server Components | Encapsulate subscription logic in hooks. Query functions for Server Components. |
+**Benefits:**
+- ✅ Code review (Git/PR workflow)
+- ✅ Type safety (TypeScript + Zod)
+- ✅ Testable (Jest/Vitest)
+- ✅ DRY (services reused by Console + Agents)
+- ✅ Versioned (Git history)
+- ✅ Debuggable (VS Code breakpoints, logs)
+- ✅ Auditable (HIPAA compliance)
+
+---
+
+## Build Order
+
+**Suggested phase sequence (dependencies considered):**
+
+### Phase 1: Foundation (No blocking dependencies)
+1. **Agent Authentication Infrastructure**
+   - Create `agents` table (Prisma migration)
+   - Implement API key generation endpoint (`/api/admin/agents`)
+   - Build `lib/agent/auth.ts` and `lib/agent/middleware.ts`
+   - Test API key validation
+
+2. **Service Layer Extraction**
+   - Extract `lib/services/slots.ts` from `/api/agendamentos`
+   - Extract `lib/services/appointments.ts`
+   - Extract `lib/services/patients.ts`
+   - Add unit tests for services
+
+### Phase 2: Simple Tools (Low complexity)
+3. **Buscar Slots Disponíveis** (`GET /api/agent/slots`)
+   - Reuses `calculateAvailableSlots` from `lib/calendar/availability-calculator.ts`
+   - No write operations (safest to start)
+   - Test with N8N HTTP Request node
+
+4. **Buscar Paciente** (`GET /api/agent/patients/:id`)
+   - Simple read operation
+   - Reuses patient queries
+
+5. **Buscar Agendamentos** (`GET /api/agent/appointments`)
+   - Read-only endpoint
+   - Query parameter filtering
+
+### Phase 3: Write Operations (Higher complexity)
+6. **Criar Agendamento** (`POST /api/agent/appointments`)
+   - Reuses `createAppointment` service
+   - Conflict detection
+   - N8N webhook trigger
+
+7. **Reagendar Agendamento** (`PUT /api/agent/appointments/:id`)
+   - Update operation
+   - Conflict detection
+   - Audit logging
+
+8. **Cancelar Agendamento** (`DELETE /api/agent/appointments/:id`)
+   - Soft delete (status update)
+   - Waitlist notification
+
+9. **Atualizar Dados Paciente** (`PUT /api/agent/patients/:id`)
+   - Partial updates
+   - CPF uniqueness validation
+
+10. **Confirmar Presença** (`POST /api/agent/appointments/:id/confirm`)
+    - Status update to 'confirmado'
+    - Updates `lembretes_enviados` table
+
+### Phase 4: Complex Tools (Embeddings, file handling)
+11. **Buscar Instruções** (`POST /api/agent/instructions/search`)
+    - Vector similarity search (pgvector)
+    - Embedding generation (OpenAI)
+
+12. **Processar Documento** (`POST /api/agent/documents`)
+    - File upload (multipart/form-data)
+    - Storage (Supabase Storage)
+    - Document parsing
+
+13. **Consultar Status Pre Check-In** (`GET /api/agent/pre-checkin/status`)
+    - Multi-table join
+    - Status aggregation
+
+### Phase 5: N8N Integration
+14. **Update N8N AI Agent Workflow**
+    - Replace Execute Workflow nodes with HTTP Request nodes
+    - Configure API key credential
+    - Test each tool endpoint
+    - Deploy to production N8N
+
+### Phase 6: MCP Server (Optional future)
+15. **Standalone MCP Server**
+    - Set up `mcp-server/` directory
+    - Implement tool definitions
+    - Proxy to `/api/agent/*` endpoints
+    - Test with Claude Desktop
+
+**Dependencies:**
+- Phase 2 depends on Phase 1 (auth infrastructure)
+- Phase 3 depends on Phase 2 (services working)
+- Phase 5 depends on Phases 1-4 (all tools ready)
+- Phase 6 is independent (optional enhancement)
+
+---
+
+## Confidence Assessment
+
+| Area | Confidence | Notes |
+|------|------------|-------|
+| API Routes Structure | **HIGH** | Follows existing patterns, well-documented |
+| Service Layer Reuse | **HIGH** | Clear extraction points identified |
+| Agent Authentication | **MEDIUM** | Standard API key pattern, needs security review |
+| MCP Server Integration | **MEDIUM** | MCP is new (2025), but well-documented |
+| N8N HTTP Request Tool | **HIGH** | N8N has robust HTTP Request node |
+| Performance | **MEDIUM** | Needs load testing to validate targets |
+
+---
 
 ## Sources
 
-**Official Documentation (HIGH confidence):**
-- [Next.js App Router Documentation](https://nextjs.org/docs/app/building-your-application) - Official Next.js docs
-- [Supabase SSR Guide](https://supabase.com/docs/guides/auth/server-side/creating-a-client) - Official Supabase SSR patterns
-- [Supabase Realtime with Next.js](https://supabase.com/docs/guides/realtime/realtime-with-nextjs) - Official real-time integration
-- [React Documentation](https://react.dev/reference/react) - Official React hooks and patterns
+**MCP Integration:**
+- [Next.js MCP Server Guide](https://nextjs.org/docs/app/guides/mcp)
+- [Vercel MCP Templates](https://vercel.com/templates/next.js/model-context-protocol-mcp-with-next-js)
+- [AI SDK MCP Tools Cookbook](https://ai-sdk.dev/cookbook/next/mcp-tools)
+- [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)
+- [Building Remote MCP Server with Next.js](https://medium.com/@kevin.moechel/building-a-remote-mcp-server-with-next-js-and-vercels-mcp-adapter-d078b27a9119)
+- [From REST to MCP: Why Developers Should Embrace MCP](https://bytebridge.medium.com/from-rest-to-mcp-why-developers-should-embrace-the-model-context-protocol-003e3806874a)
 
-**Architecture Best Practices (HIGH confidence):**
-- [Best Practices for Organizing Your Next.js 15 2025](https://dev.to/bajrayejoon/best-practices-for-organizing-your-nextjs-15-2025-53ji)
-- [Modern Full Stack Application Architecture Using Next.js 15+](https://softwaremill.com/modern-full-stack-application-architecture-using-next-js-15/)
-- [Architecture and Folder Structure for Next.js SaaS](https://makerkit.dev/docs/next-supabase/architecture/architecture)
+**N8N Integration:**
+- [N8N AI Agents Guide 2026](https://strapi.io/blog/build-ai-agents-n8n)
+- [N8N HTTP Request Tool Documentation](https://docs.n8n.io/integrations/builtin/cluster-nodes/sub-nodes/n8n-nodes-langchain.toolhttprequest/)
+- [N8N Agent Tools Documentation](https://docs.n8n.io/integrations/builtin/cluster-nodes/root-nodes/n8n-nodes-langchain.agent/tools-agent/)
+- [N8N API Workflow Tool Examples](https://docs.n8n.io/advanced-ai/examples/api-workflow-tool/)
 
-**State Management (HIGH confidence):**
-- [State Management with Next.js App Router](https://www.pronextjs.dev/tutorials/state-management)
-- [React Query as a State Manager in Next.js](https://geekyants.com/blog/react-query-as-a-state-manager-in-nextjs-do-you-still-need-redux-or-zustand)
+**Authentication:**
+- [Azure AI Agent Bearer Token Authentication](https://learn.microsoft.com/en-us/answers/questions/2283465/azure-ai-foundry-ai-agents-api-tool-use-authentica)
+- [Agent-to-Agent OAuth Guide](https://stytch.com/blog/agent-to-agent-oauth-guide/)
+- [Secure AI Agent Infrastructure 2026](https://dev.to/composiodev/from-auth-to-action-the-complete-guide-to-secure-scalable-ai-agent-infrastructure-2026-2ieb)
 
-**Folder Structure (HIGH confidence):**
-- [Next.js Project Organization](https://nextjs.org/docs/14/app/building-your-application/routing/colocation)
-- [The Ultimate Guide to Organizing Your Next.js 15 Project Structure](https://www.wisp.blog/blog/the-ultimate-guide-to-organizing-your-nextjs-15-project-structure)
-
-**Row Level Security (HIGH confidence):**
-- [Supabase RLS Best Practices](https://www.leanware.co/insights/supabase-best-practices)
-- [Multi-Tenant Applications with RLS on Supabase](https://dev.to/blackie360/-enforcing-row-level-security-in-supabase-a-deep-dive-into-lockins-multi-tenant-architecture-4hd2)
+**Official Documentation:**
+- Next.js 16 App Router
+- Supabase SSR
+- Prisma ORM
+- Zod Validation
 
 ---
-*Architecture research for: Admin Dashboard / Operations Console (Healthcare SaaS)*
-*Researched: 2025-01-15*
+
+**Research completed:** 2026-01-24
+**Confidence:** HIGH (backed by existing codebase analysis and current 2026 best practices)
