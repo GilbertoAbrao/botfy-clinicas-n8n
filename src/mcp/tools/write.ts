@@ -13,8 +13,8 @@ export function registerWriteTools(server: McpServer): void {
   // 1. criar_agendamento
   server.tool(
     criarAgendamentoTool.name,
-    criarAgendamentoTool.description,
-    criarAgendamentoTool.inputSchema,
+    criarAgendamentoTool.inputSchema.shape,
+    { title: criarAgendamentoTool.title },
     criarAgendamentoTool.handler
   )
   mcpLog.info(`  ✓ ${criarAgendamentoTool.name}`)
@@ -22,8 +22,8 @@ export function registerWriteTools(server: McpServer): void {
   // 2. reagendar_agendamento
   server.tool(
     reagendarAgendamentoTool.name,
-    reagendarAgendamentoTool.description,
-    reagendarAgendamentoTool.inputSchema,
+    reagendarAgendamentoTool.inputSchema.shape,
+    { title: reagendarAgendamentoTool.title },
     reagendarAgendamentoTool.handler
   )
   mcpLog.info(`  ✓ ${reagendarAgendamentoTool.name}`)
@@ -31,8 +31,8 @@ export function registerWriteTools(server: McpServer): void {
   // 3. cancelar_agendamento
   server.tool(
     cancelarAgendamentoTool.name,
-    cancelarAgendamentoTool.description,
-    cancelarAgendamentoTool.inputSchema,
+    cancelarAgendamentoTool.inputSchema.shape,
+    { title: cancelarAgendamentoTool.title },
     cancelarAgendamentoTool.handler
   )
   mcpLog.info(`  ✓ ${cancelarAgendamentoTool.name}`)
@@ -40,8 +40,8 @@ export function registerWriteTools(server: McpServer): void {
   // 4. atualizar_dados_paciente
   server.tool(
     atualizarDadosPacienteTool.name,
-    atualizarDadosPacienteTool.description,
-    atualizarDadosPacienteTool.inputSchema,
+    atualizarDadosPacienteTool.inputSchema.shape,
+    { title: atualizarDadosPacienteTool.title },
     atualizarDadosPacienteTool.handler
   )
   mcpLog.info(`  ✓ ${atualizarDadosPacienteTool.name}`)
@@ -49,8 +49,8 @@ export function registerWriteTools(server: McpServer): void {
   // 5. confirmar_presenca
   server.tool(
     confirmarPresencaTool.name,
-    confirmarPresencaTool.description,
-    confirmarPresencaTool.inputSchema,
+    confirmarPresencaTool.inputSchema.shape,
+    { title: confirmarPresencaTool.title },
     confirmarPresencaTool.handler
   )
   mcpLog.info(`  ✓ ${confirmarPresencaTool.name}`)

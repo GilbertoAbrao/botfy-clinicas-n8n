@@ -17,17 +17,20 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { validateConfig } from './config.js'
 import { mcpLog } from './logger.js'
 import { startHeartbeat } from './heartbeat.js'
-
-// Tool imports will be added in subsequent plans
-// import { registerQueryTools } from './tools/query.js'
-// import { registerWriteTools } from './tools/write.js'
-// import { registerDocumentTool } from './tools/document.js'
+import { registerQueryTools } from './tools/query.js'
+import { registerWriteTools } from './tools/write.js'
+import { registerDocumentTool } from './tools/document.js'
 
 async function main(): Promise<void> {
   try {
     // 1. Validate configuration
+    mcpLog.info('='.repeat(50))
+    mcpLog.info('Botfy ClinicOps MCP Server v2.0.0')
+    mcpLog.info('='.repeat(50))
+
     mcpLog.info('Validating configuration...')
     validateConfig()
+    mcpLog.info('  ✓ Configuration valid')
 
     // 2. Create MCP server
     mcpLog.info('Creating MCP server...')
@@ -35,23 +38,36 @@ async function main(): Promise<void> {
       name: 'botfy-clinicops',
       version: '2.0.0',
     })
+    mcpLog.info('  ✓ Server created')
 
-    // 3. Register tools (added in plans 22-02, 22-03, 22-04)
+    // 3. Register all 11 tools
     mcpLog.info('Registering tools...')
-    // registerQueryTools(server)
-    // registerWriteTools(server)
-    // registerDocumentTool(server)
-    mcpLog.info('No tools registered yet (will be added in plans 22-02, 22-03, 22-04)')
+
+    // Query tools (5)
+    registerQueryTools(server)
+
+    // Write tools (5)
+    registerWriteTools(server)
+
+    // Document tool (1)
+    registerDocumentTool(server)
+
+    mcpLog.info('-'.repeat(50))
+    mcpLog.info('Total tools registered: 11')
+    mcpLog.info('-'.repeat(50))
 
     // 4. Start heartbeat monitoring
-    startHeartbeat(60000) // Every 60 seconds
+    startHeartbeat(60000) // Log stats every 60 seconds
+    mcpLog.info('  ✓ Heartbeat monitoring started (60s interval)')
 
     // 5. Connect via stdio transport (required for Claude Desktop)
     mcpLog.info('Connecting to stdio transport...')
     const transport = new StdioServerTransport()
     await server.connect(transport)
 
-    mcpLog.info('Botfy ClinicOps MCP Server ready')
+    mcpLog.info('='.repeat(50))
+    mcpLog.info('MCP Server ready and listening on stdio')
+    mcpLog.info('='.repeat(50))
   } catch (error) {
     mcpLog.error(`Fatal error: ${error instanceof Error ? error.message : 'Unknown'}`)
     process.exit(1)
@@ -60,13 +76,24 @@ async function main(): Promise<void> {
 
 // Handle graceful shutdown
 process.on('SIGINT', () => {
-  mcpLog.info('Shutting down (SIGINT)...')
+  mcpLog.info('Received SIGINT, shutting down...')
   process.exit(0)
 })
 
 process.on('SIGTERM', () => {
-  mcpLog.info('Shutting down (SIGTERM)...')
+  mcpLog.info('Received SIGTERM, shutting down...')
   process.exit(0)
+})
+
+// Handle uncaught errors
+process.on('uncaughtException', (error) => {
+  mcpLog.error(`Uncaught exception: ${error.message}`)
+  process.exit(1)
+})
+
+process.on('unhandledRejection', (reason) => {
+  mcpLog.error(`Unhandled rejection: ${reason}`)
+  process.exit(1)
 })
 
 main()

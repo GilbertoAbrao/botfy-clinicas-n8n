@@ -8,8 +8,8 @@ export function registerDocumentTool(server: McpServer): void {
 
   server.tool(
     processarDocumentoTool.name,
-    processarDocumentoTool.description,
-    processarDocumentoTool.inputSchema,
+    processarDocumentoTool.inputSchema.shape,
+    { title: processarDocumentoTool.title },
     processarDocumentoTool.handler
   )
   mcpLog.info(`  ✓ ${processarDocumentoTool.name}`)

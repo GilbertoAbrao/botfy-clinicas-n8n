@@ -26,8 +26,8 @@ export function registerQueryTools(server: McpServer): void {
   // 1. buscar_slots_disponiveis
   server.tool(
     buscarSlotsDisponiveisTool.name,
-    buscarSlotsDisponiveisTool.description,
-    buscarSlotsDisponiveisTool.inputSchema,
+    buscarSlotsDisponiveisTool.inputSchema.shape,
+    { title: buscarSlotsDisponiveisTool.title },
     buscarSlotsDisponiveisTool.handler
   )
   mcpLog.info(`  ✓ ${buscarSlotsDisponiveisTool.name}`)
@@ -35,8 +35,8 @@ export function registerQueryTools(server: McpServer): void {
   // 2. buscar_agendamentos
   server.tool(
     buscarAgendamentosTool.name,
-    buscarAgendamentosTool.description,
-    buscarAgendamentosTool.inputSchema,
+    buscarAgendamentosTool.inputSchema.shape,
+    { title: buscarAgendamentosTool.title },
     buscarAgendamentosTool.handler
   )
   mcpLog.info(`  ✓ ${buscarAgendamentosTool.name}`)
@@ -44,8 +44,8 @@ export function registerQueryTools(server: McpServer): void {
   // 3. buscar_paciente
   server.tool(
     buscarPacienteTool.name,
-    buscarPacienteTool.description,
-    buscarPacienteTool.inputSchema,
+    buscarPacienteTool.inputSchema.shape,
+    { title: buscarPacienteTool.title },
     buscarPacienteTool.handler
   )
   mcpLog.info(`  ✓ ${buscarPacienteTool.name}`)
@@ -53,8 +53,8 @@ export function registerQueryTools(server: McpServer): void {
   // 4. status_pre_checkin
   server.tool(
     statusPreCheckinTool.name,
-    statusPreCheckinTool.description,
-    statusPreCheckinTool.inputSchema,
+    statusPreCheckinTool.inputSchema.shape,
+    { title: statusPreCheckinTool.title },
     statusPreCheckinTool.handler
   )
   mcpLog.info(`  ✓ ${statusPreCheckinTool.name}`)
@@ -62,8 +62,8 @@ export function registerQueryTools(server: McpServer): void {
   // 5. buscar_instrucoes
   server.tool(
     buscarInstrucoesTool.name,
-    buscarInstrucoesTool.description,
-    buscarInstrucoesTool.inputSchema,
+    buscarInstrucoesTool.inputSchema.shape,
+    { title: buscarInstrucoesTool.title },
     buscarInstrucoesTool.handler
   )
   mcpLog.info(`  ✓ ${buscarInstrucoesTool.name}`)
