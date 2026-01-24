@@ -286,10 +286,13 @@ Plans:
   1. MCP Server wraps all 11 agent APIs via stdio transport with tool discovery working in Claude Desktop
   2. Claude Desktop configuration file (`claude_desktop_config.json`) enables local testing of all tools
   3. MCP Server has error handlers and heartbeat logging for production reliability monitoring
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 22-01: TBD during planning
+- [ ] 22-01-PLAN.md — MCP Server foundation (config, http-client, logger, heartbeat, server entry point)
+- [ ] 22-02-PLAN.md — Query tool handlers (5 read-only tools)
+- [ ] 22-03-PLAN.md — Write tool handlers (5 create/update/delete tools)
+- [ ] 22-04-PLAN.md — Document tool, full server integration, and Claude Desktop config
 
 ## Progress
 
@@ -319,7 +322,7 @@ Phases execute in numeric order: 17 → 18 → 19 → 20 → 21 → 22
 | 19. Write Tools | v2.0 | 4/4 | Complete | 2026-01-24 |
 | 20. Complex Tools | v2.0 | 3/3 | Complete | 2026-01-24 |
 | 21. N8N Integration | v2.0 | 4/4 | Complete | 2026-01-24 |
-| 22. MCP Server | v2.0 | 0/? | Not started | - |
+| 22. MCP Server | v2.0 | 0/4 | Not started | - |
 
 ---
 
