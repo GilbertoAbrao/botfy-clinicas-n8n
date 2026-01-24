@@ -9,11 +9,11 @@ Requirements for migrating N8N AI Agent tools to Next.js APIs + MCP Server.
 
 ### API Foundation
 
-- [ ] **FOUND-01**: Agent authentication via API key (Bearer token) in middleware
-- [ ] **FOUND-02**: Shared error handling utility returning `{success, error, details}` format
-- [ ] **FOUND-03**: Agent audit logging with `agentId` and correlation ID for HIPAA compliance
-- [ ] **FOUND-04**: Service layer extraction for business logic reuse across tools
-- [ ] **FOUND-05**: Flexible input validation with Zod accepting multiple date formats
+- [x] **FOUND-01**: Agent authentication via API key (Bearer token) in middleware
+- [x] **FOUND-02**: Shared error handling utility returning `{success, error, details}` format
+- [x] **FOUND-03**: Agent audit logging with `agentId` and correlation ID for HIPAA compliance
+- [ ] **FOUND-04**: Service layer extraction for business logic reuse across tools (deferred to Phase 18+)
+- [x] **FOUND-05**: Flexible input validation with Zod accepting multiple date formats
 
 ### Query Tools (Read Operations)
 
@@ -79,11 +79,11 @@ Requirements for migrating N8N AI Agent tools to Next.js APIs + MCP Server.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | Phase 17 | Pending |
-| FOUND-02 | Phase 17 | Pending |
-| FOUND-03 | Phase 17 | Pending |
-| FOUND-04 | Phase 17 | Pending |
-| FOUND-05 | Phase 17 | Pending |
+| FOUND-01 | Phase 17 | Complete |
+| FOUND-02 | Phase 17 | Complete |
+| FOUND-03 | Phase 17 | Complete |
+| FOUND-04 | Phase 18+ | Deferred |
+| FOUND-05 | Phase 17 | Complete |
 | QUERY-01 | Phase 18 | Pending |
 | QUERY-02 | Phase 18 | Pending |
 | QUERY-03 | Phase 18 | Pending |
@@ -112,4 +112,4 @@ Requirements for migrating N8N AI Agent tools to Next.js APIs + MCP Server.
 
 ---
 *Requirements defined: 2026-01-24*
-*Last updated: 2026-01-24 after v2.0 milestone research*
+*Last updated: 2026-01-24 — Phase 17 requirements complete (except FOUND-04 deferred)*

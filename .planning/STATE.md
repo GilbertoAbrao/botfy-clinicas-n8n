@@ -1,7 +1,7 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-24
-**Status:** v2.0 In Progress — Phase 17 Wave 1 in progress
+**Status:** v2.0 In Progress — Phase 17 complete, ready for Phase 18
 **Current Milestone:** v2.0 Agent API Migration
 
 ---
@@ -11,20 +11,20 @@
 See: `.planning/PROJECT.md` (updated 2026-01-24)
 
 **Core value:** Dashboard de alertas que mostra "at glance" tudo que precisa de atenção
-**Current focus:** Migrating N8N agent tools to Next.js APIs + MCP Server (Phase 17: Foundation)
+**Current focus:** Migrating N8N agent tools to Next.js APIs + MCP Server (Phase 18: Query Tools next)
 
 ---
 
 ## Current Position
 
 **Milestone:** v2.0 Agent API Migration
-**Phase:** Phase 17 of 22 (Agent API Foundation)
-**Plan:** 4 of 4 complete (17-01, 17-02, 17-03, 17-04 completed)
-**Status:** In progress - Wave 1 complete, Wave 2 ready
+**Phase:** Phase 17 of 22 (Agent API Foundation) — COMPLETE
+**Plan:** 4/4 plans complete (17-01 to 17-04)
+**Status:** Ready for Phase 18
 
-**Last activity:** 2026-01-24 — Completed 17-04-PLAN.md (Agent API authentication & middleware)
+**Last activity:** 2026-01-24 — Phase 17 executed (4 plans, 2 waves)
 
-**Progress:** ████████████████░░░░ 79% (64/81 total plans complete across all milestones)
+**Progress:** █████████████████░░░ 78% (63/81 total plans complete across all milestones)
 
 ---
 
@@ -62,7 +62,7 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 ```
 
 **v2.0 Phases:**
-- Phase 17: Foundation (auth, error handling, audit logging, service layer)
+- ✅ Phase 17: Foundation (auth, error handling, audit logging, validation)
 - Phase 18: Query Tools (5 read-only APIs)
 - Phase 19: Write Tools (5 create/update APIs)
 - Phase 20: Complex Tools (2 specialized APIs)
@@ -90,9 +90,9 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 ## Performance Metrics
 
 **Velocity (All Milestones):**
-- Total plans completed: 60
-- Total phases completed: 16
-- Average plans per phase: 3.75
+- Total plans completed: 63
+- Total phases completed: 17
+- Average plans per phase: 3.7
 
 **By Milestone:**
 
@@ -101,29 +101,51 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 | v1.0 | 8 | 32 | 4.0 |
 | v1.1 | 4 | 9 | 2.3 |
 | v1.2 | 4 | 18 | 4.5 |
-| v2.0 | 0 | 4 | - |
+| v2.0 | 1 | 4 | 4.0 |
 
 ---
 
 ## Accumulated Context
 
+### Phase 17 Deliverables
+
+**Agent API Foundation (completed 2026-01-24):**
+
+1. **Type System** (`src/lib/agent/types.ts`)
+   - `AgentContext`: agentId, userId, role, correlationId
+   - `ApiResponse<T>`: success, data?, error?, details?
+   - `AgentHandler<T>`: route handler signature
+
+2. **Database Schema** (`prisma/schema.prisma`)
+   - Agent model with bcrypt-hashed API keys
+   - Maps agents to system users for RBAC
+
+3. **Error Handling** (`src/lib/agent/error-handler.ts`)
+   - `handleApiError()`: ZodError field-level details, known error mapping
+   - `successResponse()`, `errorResponse()`: consistent format
+
+4. **Audit Logging** (`src/lib/audit/logger.ts`)
+   - 11 new AGENT_* actions
+   - agentId and correlationId in details JSON
+
+5. **Date Validation** (`src/lib/validations/agent-schemas.ts`)
+   - `flexibleDateTimeSchema`: 4 ISO 8601 variants → TZDate
+   - 12 agent-specific validation schemas
+
+6. **Authentication** (`src/lib/agent/auth.ts`, `middleware.ts`)
+   - `validateApiKey()`: bcrypt compare against agents table
+   - `withAgentAuth()`: HOF wrapper for route handlers
+   - `scripts/generate-agent-key.ts`: CLI for generating keys
+
 ### Decisions
 
-Recent decisions from PROJECT.md affecting v2.0 work:
+Recent decisions from Phase 17:
 
-- **Service Layer Extraction**: Business logic extracted from existing routes for reuse between Console UI and Agent APIs
-- **API Key Authentication**: Simple Bearer token approach for N8N integration (stateless, N8N-compatible)
-- **Dual-track Architecture**: N8N calls REST APIs directly, MCP Server wraps same APIs for Claude Desktop
-- **Gradual Rollout**: Keep sub-workflows as fallback during migration (10% → 50% → 100%)
-- **Idempotency First**: All write operations must support idempotency keys to prevent duplicates
-
-Phase 17 decisions:
-
-- **bcrypt for API Key Hashing** (17-01): Use bcrypt with 12 salt rounds for secure API key storage (industry standard, prevents brute force)
-- **Correlation IDs for Audit Trail** (17-01): Generate UUID per-request to link all audit logs from a single API call
-- **Generic ApiResponse Type** (17-01): Single response interface with success boolean for consistent N8N parsing
-- **HOF Pattern for Middleware** (17-04): Use Higher-Order Function pattern for withAgentAuth() instead of global Next.js middleware (scoped per-route)
-- **Iterate Through Agents for Auth** (17-04): With <10 agents, iterating through all for bcrypt.compare is acceptable (~100ms per agent)
+- **bcrypt for API Key Hashing**: 12 salt rounds (industry standard, prevents brute force)
+- **Correlation IDs for Audit Trail**: UUID per-request to link audit logs
+- **Generic ApiResponse Type**: Single response interface for consistent N8N parsing
+- **HOF Pattern for Middleware**: Use Higher-Order Function for withAgentAuth()
+- **Service Layer Deferred**: Will be incorporated into Phase 18-20 when building actual API endpoints
 
 ### Open Blockers
 
@@ -134,18 +156,19 @@ None
 - formatPhone/formatCPF utilities duplicated in components
 - Missing VERIFICATION.md for phases 4, 5, 6, 9, 10, 15
 - Missing 15-04-SUMMARY.md (phase 15 page integration)
+- Service layer extraction deferred from Phase 17 to Phase 18+
 
 ---
 
 ## Session Continuity
 
 **Last session:** 2026-01-24
-**Stopped at:** Completed 17-04-PLAN.md
+**Stopped at:** Phase 17 complete
 **Resume file:** None
 
-**Next action:** Continue with Wave 2 plans (17-05 through 17-08) - Service layer extraction and flexible validation
+**Next action:** Run `/gsd:discuss-phase 18` to gather context for Query Tools
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-24 — Completed 17-04-PLAN.md (Agent API authentication & middleware)*
+*Last updated: 2026-01-24 — Phase 17 complete (4 plans executed)*
