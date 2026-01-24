@@ -1,7 +1,7 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-24
-**Status:** v2.0 In Progress — Phase 17 complete, ready for Phase 18
+**Status:** v2.0 In Progress — Phase 18 plan 02 complete
 **Current Milestone:** v2.0 Agent API Migration
 
 ---
@@ -18,13 +18,13 @@ See: `.planning/PROJECT.md` (updated 2026-01-24)
 ## Current Position
 
 **Milestone:** v2.0 Agent API Migration
-**Phase:** Phase 17 of 22 (Agent API Foundation) — COMPLETE
-**Plan:** 4/4 plans complete (17-01 to 17-04)
-**Status:** Ready for Phase 18
+**Phase:** Phase 18 of 22 (Query Tools) — In Progress
+**Plan:** 2/5 plans complete (18-01, 18-02)
+**Status:** Executing Phase 18
 
-**Last activity:** 2026-01-24 — Phase 17 executed (4 plans, 2 waves)
+**Last activity:** 2026-01-24 — Completed 18-02-PLAN.md (Appointments Search API)
 
-**Progress:** █████████████████░░░ 78% (63/81 total plans complete across all milestones)
+**Progress:** █████████████████░░░ 80% (65/81 total plans complete across all milestones)
 
 ---
 
@@ -63,7 +63,7 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 
 **v2.0 Phases:**
 - ✅ Phase 17: Foundation (auth, error handling, audit logging, validation)
-- Phase 18: Query Tools (5 read-only APIs)
+- ▶ Phase 18: Query Tools (5 read-only APIs) — 2/5 plans complete
 - Phase 19: Write Tools (5 create/update APIs)
 - Phase 20: Complex Tools (2 specialized APIs)
 - Phase 21: N8N Integration (production migration with gradual rollout)
@@ -101,7 +101,7 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 | v1.0 | 8 | 32 | 4.0 |
 | v1.1 | 4 | 9 | 2.3 |
 | v1.2 | 4 | 18 | 4.5 |
-| v2.0 | 1 | 4 | 4.0 |
+| v2.0 | 2 | 6 | 3.0 |
 
 ---
 
@@ -139,36 +139,46 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 
 ### Decisions
 
-Recent decisions from Phase 17:
+Recent decisions from Phase 17-18:
 
 - **bcrypt for API Key Hashing**: 12 salt rounds (industry standard, prevents brute force)
 - **Correlation IDs for Audit Trail**: UUID per-request to link audit logs
 - **Generic ApiResponse Type**: Single response interface for consistent N8N parsing
 - **HOF Pattern for Middleware**: Use Higher-Order Function for withAgentAuth()
-- **Service Layer Deferred**: Will be incorporated into Phase 18-20 when building actual API endpoints
+- **Service Layer Pattern**: Business logic in service files, HTTP concerns in routes (established 18-02)
+- **Parallel Prisma Queries**: count + findMany in Promise.all for pagination efficiency (established 18-02)
+- **PHI Masking in Audit**: Sensitive fields like telefone masked with '***' (established 18-02)
 
 ### Open Blockers
 
 None
+
+### Phase 18 Progress
+
+**Query Tools (18-01 to 18-05):**
+- ✅ 18-01: Slots Search API (buscar_slots_disponiveis)
+- ✅ 18-02: Appointments Search API (buscar_agendamentos)
+- ⬜ 18-03: Patient Search API (buscar_paciente)
+- ⬜ 18-04: Instructions Search API (buscar_instrucoes)
+- ⬜ 18-05: Pre-Checkin Status API (status_pre_checkin)
 
 ### Tech Debt (Tracked)
 
 - formatPhone/formatCPF utilities duplicated in components
 - Missing VERIFICATION.md for phases 4, 5, 6, 9, 10, 15
 - Missing 15-04-SUMMARY.md (phase 15 page integration)
-- Service layer extraction deferred from Phase 17 to Phase 18+
 
 ---
 
 ## Session Continuity
 
 **Last session:** 2026-01-24
-**Stopped at:** Phase 17 complete
+**Stopped at:** Completed 18-02-PLAN.md (Appointments Search API)
 **Resume file:** None
 
-**Next action:** Run `/gsd:discuss-phase 18` to gather context for Query Tools
+**Next action:** Execute 18-03-PLAN.md (Patient Search API)
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-24 — Phase 17 complete (4 plans executed)*
+*Last updated: 2026-01-24 — Phase 18 plan 02 complete (Appointments Search API)*
