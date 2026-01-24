@@ -17,11 +17,11 @@ Requirements for migrating N8N AI Agent tools to Next.js APIs + MCP Server.
 
 ### Query Tools (Read Operations)
 
-- [ ] **QUERY-01**: `GET /api/agent/slots` — Returns available appointment slots for date/period
-- [ ] **QUERY-02**: `GET /api/agent/agendamentos` — Returns patient appointments with filters
-- [ ] **QUERY-03**: `GET /api/agent/paciente` — Searches patient by phone or CPF
-- [ ] **QUERY-04**: `GET /api/agent/pre-checkin/status` — Returns pre-checkin document status
-- [ ] **QUERY-05**: `GET /api/agent/instrucoes` — Returns procedure instructions by service/type
+- [x] **QUERY-01**: `GET /api/agent/slots` — Returns available appointment slots for date/period
+- [x] **QUERY-02**: `GET /api/agent/agendamentos` — Returns patient appointments with filters
+- [x] **QUERY-03**: `GET /api/agent/paciente` — Searches patient by phone or CPF
+- [x] **QUERY-04**: `GET /api/agent/pre-checkin/status` — Returns pre-checkin document status
+- [x] **QUERY-05**: `GET /api/agent/instrucoes` — Returns procedure instructions by service/type
 
 ### Write Tools (Create/Update Operations)
 
@@ -84,11 +84,11 @@ Requirements for migrating N8N AI Agent tools to Next.js APIs + MCP Server.
 | FOUND-03 | Phase 17 | Complete |
 | FOUND-04 | Phase 18+ | Deferred |
 | FOUND-05 | Phase 17 | Complete |
-| QUERY-01 | Phase 18 | Pending |
-| QUERY-02 | Phase 18 | Pending |
-| QUERY-03 | Phase 18 | Pending |
-| QUERY-04 | Phase 18 | Pending |
-| QUERY-05 | Phase 18 | Pending |
+| QUERY-01 | Phase 18 | Complete |
+| QUERY-02 | Phase 18 | Complete |
+| QUERY-03 | Phase 18 | Complete |
+| QUERY-04 | Phase 18 | Complete |
+| QUERY-05 | Phase 18 | Complete |
 | WRITE-01 | Phase 19 | Pending |
 | WRITE-02 | Phase 19 | Pending |
 | WRITE-03 | Phase 19 | Pending |
@@ -112,4 +112,4 @@ Requirements for migrating N8N AI Agent tools to Next.js APIs + MCP Server.
 
 ---
 *Requirements defined: 2026-01-24*
-*Last updated: 2026-01-24 — Phase 17 requirements complete (except FOUND-04 deferred)*
+*Last updated: 2026-01-24 — Phase 18 Query Tools complete (QUERY-01 to QUERY-05)*

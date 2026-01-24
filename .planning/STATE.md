@@ -1,7 +1,7 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-24
-**Status:** v2.0 In Progress — Phase 18 plan 03 complete (4/5 plans done)
+**Status:** v2.0 In Progress — Phase 18 complete, ready for Phase 19
 **Current Milestone:** v2.0 Agent API Migration
 
 ---
@@ -11,20 +11,20 @@
 See: `.planning/PROJECT.md` (updated 2026-01-24)
 
 **Core value:** Dashboard de alertas que mostra "at glance" tudo que precisa de atenção
-**Current focus:** Migrating N8N agent tools to Next.js APIs + MCP Server (Phase 18: Query Tools next)
+**Current focus:** Migrating N8N agent tools to Next.js APIs + MCP Server (Phase 19: Write Tools next)
 
 ---
 
 ## Current Position
 
 **Milestone:** v2.0 Agent API Migration
-**Phase:** Phase 18 of 22 (Query Tools) — In Progress
-**Plan:** 4/5 plans complete (18-01, 18-02, 18-03, 18-05)
-**Status:** Executing Phase 18
+**Phase:** Phase 18 of 22 (Query Tools) — COMPLETE
+**Plan:** 5/5 plans complete (18-01 to 18-05)
+**Status:** Ready for Phase 19
 
-**Last activity:** 2026-01-24 — Completed 18-03-PLAN.md (Patient Search API)
+**Last activity:** 2026-01-24 — Phase 18 executed (5 plans, 1 wave)
 
-**Progress:** █████████████████░░░ 82% (67/81 total plans complete across all milestones)
+**Progress:** █████████████████░░░ 84% (68/81 total plans complete across all milestones)
 
 ---
 
@@ -40,16 +40,16 @@ Migrate all 11 N8N AI Agent tools from sub-workflows to Next.js API routes with 
 - DRY (reuse Console services)
 
 **Tools to migrate:**
-1. `buscar_slots_disponiveis` — 9 nodes → API endpoint
+1. ✅ `buscar_slots_disponiveis` — GET /api/agent/slots
 2. `criar_agendamento` — 15 nodes → API endpoint
 3. `reagendar_agendamento` — 4 nodes → API endpoint
 4. `cancelar_agendamento` — 4 nodes → API endpoint
-5. `buscar_agendamentos` — 4 nodes → API endpoint
-6. `buscar_paciente` — 5 nodes → API endpoint
+5. ✅ `buscar_agendamentos` — GET /api/agent/agendamentos
+6. ✅ `buscar_paciente` — GET /api/agent/paciente
 7. `atualizar_dados_paciente` — 9 nodes → API endpoint
 8. `confirmar_presenca` — 1 node (JS) → API endpoint
-9. `status_pre_checkin` — 8 nodes → API endpoint
-10. `buscar_instrucoes` — 6 nodes → API endpoint
+9. ✅ `status_pre_checkin` — GET /api/agent/pre-checkin/status
+10. ✅ `buscar_instrucoes` — GET /api/agent/instrucoes
 11. `processar_documento` — 13 nodes → API endpoint
 
 **Architecture:**
@@ -63,7 +63,7 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 
 **v2.0 Phases:**
 - ✅ Phase 17: Foundation (auth, error handling, audit logging, validation)
-- ▶ Phase 18: Query Tools (5 read-only APIs) — 4/5 plans complete
+- ✅ Phase 18: Query Tools (5 read-only APIs)
 - Phase 19: Write Tools (5 create/update APIs)
 - Phase 20: Complex Tools (2 specialized APIs)
 - Phase 21: N8N Integration (production migration with gradual rollout)
@@ -90,9 +90,9 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 ## Performance Metrics
 
 **Velocity (All Milestones):**
-- Total plans completed: 63
-- Total phases completed: 17
-- Average plans per phase: 3.7
+- Total plans completed: 68
+- Total phases completed: 18
+- Average plans per phase: 3.8
 
 **By Milestone:**
 
@@ -101,11 +101,35 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 | v1.0 | 8 | 32 | 4.0 |
 | v1.1 | 4 | 9 | 2.3 |
 | v1.2 | 4 | 18 | 4.5 |
-| v2.0 | 2 | 8 | 4.0 |
+| v2.0 | 2 | 9 | 4.5 |
 
 ---
 
 ## Accumulated Context
+
+### Phase 18 Deliverables
+
+**Query Tools (completed 2026-01-24):**
+
+1. **Slots API** (`src/lib/services/slot-service.ts`, `src/app/api/agent/slots/route.ts`)
+   - `getAvailableSlots()` reusing Phase 4 `calculateAvailableSlots()`
+   - Slots split by morning/afternoon for N8N filtering
+
+2. **Appointments API** (`src/lib/services/appointment-service.ts`, `src/app/api/agent/agendamentos/route.ts`)
+   - `searchAppointments()` with page-based pagination (default 20, max 100)
+   - Parallel count + findMany for efficiency
+
+3. **Patient API** (`src/lib/services/patient-service.ts`, `src/app/api/agent/paciente/route.ts`)
+   - `searchPatient()` with exact-first-partial-fallback pattern
+   - Includes up to 5 upcoming appointments for context
+
+4. **Pre-Checkin API** (`src/lib/services/pre-checkin-service.ts`, `src/app/api/agent/pre-checkin/status/route.ts`)
+   - `getPreCheckinStatus()` using Supabase admin client (RLS bypass)
+   - Finds next appointment when searching by patient/phone
+
+5. **Instructions API** (`src/lib/services/instruction-service.ts`, `src/app/api/agent/instrucoes/route.ts`)
+   - `searchInstructions()` ordered by priority (descending)
+   - Returns only active instructions
 
 ### Phase 17 Deliverables
 
@@ -114,55 +138,37 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 1. **Type System** (`src/lib/agent/types.ts`)
    - `AgentContext`: agentId, userId, role, correlationId
    - `ApiResponse<T>`: success, data?, error?, details?
-   - `AgentHandler<T>`: route handler signature
 
 2. **Database Schema** (`prisma/schema.prisma`)
    - Agent model with bcrypt-hashed API keys
-   - Maps agents to system users for RBAC
 
 3. **Error Handling** (`src/lib/agent/error-handler.ts`)
-   - `handleApiError()`: ZodError field-level details, known error mapping
-   - `successResponse()`, `errorResponse()`: consistent format
+   - `handleApiError()`, `successResponse()`, `errorResponse()`
 
 4. **Audit Logging** (`src/lib/audit/logger.ts`)
-   - 11 new AGENT_* actions
-   - agentId and correlationId in details JSON
+   - 11 AGENT_* actions with agentId and correlationId
 
 5. **Date Validation** (`src/lib/validations/agent-schemas.ts`)
    - `flexibleDateTimeSchema`: 4 ISO 8601 variants → TZDate
-   - 12 agent-specific validation schemas
 
 6. **Authentication** (`src/lib/agent/auth.ts`, `middleware.ts`)
-   - `validateApiKey()`: bcrypt compare against agents table
-   - `withAgentAuth()`: HOF wrapper for route handlers
-   - `scripts/generate-agent-key.ts`: CLI for generating keys
+   - `validateApiKey()`, `withAgentAuth()` HOF
 
 ### Decisions
 
 Recent decisions from Phase 17-18:
 
-- **bcrypt for API Key Hashing**: 12 salt rounds (industry standard, prevents brute force)
-- **Correlation IDs for Audit Trail**: UUID per-request to link audit logs
-- **Generic ApiResponse Type**: Single response interface for consistent N8N parsing
-- **HOF Pattern for Middleware**: Use Higher-Order Function for withAgentAuth()
-- **Service Layer Pattern**: Business logic in service files, HTTP concerns in routes (established 18-02)
-- **Parallel Prisma Queries**: count + findMany in Promise.all for pagination efficiency (established 18-02)
-- **PHI Masking in Audit**: Sensitive fields like telefone masked with '***' (established 18-02)
-- **Single Partial Match as Exact**: When search returns single result, treat as exact match (established 18-03)
-- **Upcoming Appointments Context**: Include up to 5 future appointments for AI context (established 18-03)
+- **bcrypt for API Key Hashing**: 12 salt rounds
+- **Correlation IDs for Audit Trail**: UUID per-request
+- **Service Layer Pattern**: Business logic in service files, HTTP concerns in routes
+- **Parallel Prisma Queries**: count + findMany in Promise.all for pagination
+- **PHI Masking in Audit**: Sensitive fields masked with '***'
+- **Single Partial Match as Exact**: When search returns single result, treat as exact
+- **Upcoming Appointments Context**: Include up to 5 future appointments
 
 ### Open Blockers
 
 None
-
-### Phase 18 Progress
-
-**Query Tools (18-01 to 18-05):**
-- ✅ 18-01: Slots Search API (buscar_slots_disponiveis)
-- ✅ 18-02: Appointments Search API (buscar_agendamentos)
-- ✅ 18-03: Patient Search API (buscar_paciente)
-- ⬜ 18-04: Pre-Checkin Status API (status_pre_checkin)
-- ✅ 18-05: Instructions Search API (buscar_instrucoes)
 
 ### Tech Debt (Tracked)
 
@@ -175,12 +181,12 @@ None
 ## Session Continuity
 
 **Last session:** 2026-01-24
-**Stopped at:** Completed 18-03-PLAN.md (Patient Search API)
+**Stopped at:** Phase 18 complete
 **Resume file:** None
 
-**Next action:** Execute 18-04-PLAN.md (Pre-Checkin Status API)
+**Next action:** Run `/gsd:discuss-phase 19` to gather context for Write Tools
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-24 — Phase 18 plan 03 complete (Patient Search API)*
+*Last updated: 2026-01-24 — Phase 18 complete (5 plans executed)*
