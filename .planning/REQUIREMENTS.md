@@ -33,8 +33,8 @@ Requirements for migrating N8N AI Agent tools to Next.js APIs + MCP Server.
 
 ### Complex Tools (Specialized Operations)
 
-- [ ] **CMPLX-01**: `POST /api/agent/documentos/processar` — Processes uploaded document with validation
-- [ ] **CMPLX-02**: Document type detection and field extraction from images
+- [x] **CMPLX-01**: `POST /api/agent/documentos/processar` — Processes uploaded document with validation
+- [x] **CMPLX-02**: Document type detection and field extraction from images
 
 ### N8N Integration
 
@@ -94,8 +94,8 @@ Requirements for migrating N8N AI Agent tools to Next.js APIs + MCP Server.
 | WRITE-03 | Phase 19 | Complete |
 | WRITE-04 | Phase 19 | Complete |
 | WRITE-05 | Phase 19 | Complete |
-| CMPLX-01 | Phase 20 | Pending |
-| CMPLX-02 | Phase 20 | Pending |
+| CMPLX-01 | Phase 20 | Complete |
+| CMPLX-02 | Phase 20 | Complete |
 | N8N-01 | Phase 21 | Pending |
 | N8N-02 | Phase 21 | Pending |
 | N8N-03 | Phase 21 | Pending |
