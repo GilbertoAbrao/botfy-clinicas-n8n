@@ -1,7 +1,7 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-24
-**Status:** v2.0 In Progress — Phase 18 complete, ready for Phase 19
+**Status:** v2.0 In Progress — Phase 19 in progress (plan 03 complete)
 **Current Milestone:** v2.0 Agent API Migration
 
 ---
@@ -18,13 +18,13 @@ See: `.planning/PROJECT.md` (updated 2026-01-24)
 ## Current Position
 
 **Milestone:** v2.0 Agent API Migration
-**Phase:** Phase 18 of 22 (Query Tools) — COMPLETE
-**Plan:** 5/5 plans complete (18-01 to 18-05)
-**Status:** Ready for Phase 19
+**Phase:** Phase 19 of 22 (Write Tools) — IN PROGRESS
+**Plan:** 3/5 plans complete (19-01, 19-02, 19-03)
+**Status:** Executing Phase 19
 
-**Last activity:** 2026-01-24 — Phase 18 executed (5 plans, 1 wave)
+**Last activity:** 2026-01-24 — Completed 19-03-PLAN.md (Patient Update API)
 
-**Progress:** █████████████████░░░ 84% (68/81 total plans complete across all milestones)
+**Progress:** █████████████████░░░ 88% (71/81 total plans complete across all milestones)
 
 ---
 
@@ -46,7 +46,7 @@ Migrate all 11 N8N AI Agent tools from sub-workflows to Next.js API routes with 
 4. `cancelar_agendamento` — 4 nodes → API endpoint
 5. ✅ `buscar_agendamentos` — GET /api/agent/agendamentos
 6. ✅ `buscar_paciente` — GET /api/agent/paciente
-7. `atualizar_dados_paciente` — 9 nodes → API endpoint
+7. ✅ `atualizar_dados_paciente` — PATCH /api/agent/paciente/:id
 8. `confirmar_presenca` — 1 node (JS) → API endpoint
 9. ✅ `status_pre_checkin` — GET /api/agent/pre-checkin/status
 10. ✅ `buscar_instrucoes` — GET /api/agent/instrucoes
@@ -64,7 +64,7 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 **v2.0 Phases:**
 - ✅ Phase 17: Foundation (auth, error handling, audit logging, validation)
 - ✅ Phase 18: Query Tools (5 read-only APIs)
-- Phase 19: Write Tools (5 create/update APIs)
+- Phase 19: Write Tools (5 create/update APIs) — IN PROGRESS (3/5 plans)
 - Phase 20: Complex Tools (2 specialized APIs)
 - Phase 21: N8N Integration (production migration with gradual rollout)
 - Phase 22: MCP Server (optional wrapper for Claude Desktop)
@@ -106,6 +106,23 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 ---
 
 ## Accumulated Context
+
+### Phase 19 Deliverables (In Progress)
+
+**Write Tools (3/5 plans complete):**
+
+1. **Appointment Create API** (`src/lib/services/appointment-write-service.ts`, `src/app/api/agent/agendamentos/route.ts POST`)
+   - `createAppointment()` with slot availability check
+   - Idempotency key support for retry safety
+
+2. **Appointment Update/Cancel API** (`src/app/api/agent/agendamentos/[id]/route.ts`)
+   - PATCH for updates, DELETE for cancellations
+   - Status transitions and reason logging
+
+3. **Patient Update API** (`src/lib/services/patient-write-service.ts`, `src/app/api/agent/paciente/[id]/route.ts`)
+   - `updatePatient()` with partial update support
+   - Phone uniqueness validation across patients
+   - PHI-safe audit logging (field names only)
 
 ### Phase 18 Deliverables
 
@@ -165,6 +182,8 @@ Recent decisions from Phase 17-18:
 - **PHI Masking in Audit**: Sensitive fields masked with '***'
 - **Single Partial Match as Exact**: When search returns single result, treat as exact
 - **Upcoming Appointments Context**: Include up to 5 future appointments
+- **Phone/CPF Normalization**: Remove non-digits before storage and comparison
+- **Partial Update Pattern**: Build update object with only defined fields
 
 ### Open Blockers
 
@@ -181,12 +200,12 @@ None
 ## Session Continuity
 
 **Last session:** 2026-01-24
-**Stopped at:** Phase 18 complete
+**Stopped at:** Completed 19-03-PLAN.md (Patient Update API)
 **Resume file:** None
 
-**Next action:** Run `/gsd:discuss-phase 19` to gather context for Write Tools
+**Next action:** Execute 19-04-PLAN.md (Confirm Attendance API) or 19-05-PLAN.md
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-24 — Phase 18 complete (5 plans executed)*
+*Last updated: 2026-01-24 — Completed 19-03 (Patient Update API)*
