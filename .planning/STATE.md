@@ -18,13 +18,13 @@ See: `.planning/PROJECT.md` (updated 2026-01-24)
 ## Current Position
 
 **Milestone:** v2.0 Agent API Migration
-**Phase:** Phase 21 of 22 (N8N Integration) — IN PROGRESS
-**Plan:** 3/4 plans complete (21-01, 21-02, 21-03)
-**Status:** Phase 21 in progress
+**Phase:** Phase 21 of 22 (N8N Integration) — COMPLETE
+**Plan:** 4/4 plans complete (21-01, 21-02, 21-03, 21-04)
+**Status:** Phase 21 complete
 
-**Last activity:** 2026-01-24 — Completed 21-03-PLAN.md (Gradual Rollout Documentation)
+**Last activity:** 2026-01-24 — Completed 21-04-PLAN.md (Rollback & Archive Documentation)
 
-**Progress:** ██████████████████░░ 96% (82/85 total plans complete across all milestones)
+**Progress:** ███████████████████░ 98% (83/85 total plans complete across all milestones)
 
 ---
 
@@ -107,9 +107,9 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 
 ## Accumulated Context
 
-### Phase 21 Deliverables (In Progress)
+### Phase 21 Deliverables (Complete)
 
-**N8N Integration (3/4 plans complete):**
+**N8N Integration (4/4 plans complete):**
 
 1. **Credential Setup Documentation** (`docs/n8n/api-endpoints.md`, `docs/n8n/credential-setup.md`)
    - Complete API reference for all 11 tools (1,195 lines)
@@ -134,6 +134,16 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
    - Architecture diagrams: before (83 nodes) → during (127 nodes) → after (39 nodes)
    - 76% node reduction target after migration complete
    - Sub-workflow inventory with 10 tool IDs
+
+4. **Rollback & Archive Documentation** (`docs/n8n/rollback-runbook.md`, `docs/n8n/archive-procedure.md`, `workflows-backup/README.md`)
+   - Rollback runbook with sub-5-minute procedure (379 lines)
+   - When to rollback (critical and warning triggers)
+   - Step-by-step with time estimates (total: 4.5 minutes)
+   - Archive procedure for sub-workflows after 1+ week stable (343 lines)
+   - DO NOT DELETE policy prominently displayed
+   - Backup directory documentation with export/restore instructions (298 lines)
+   - Sub-workflow inventory with 10 tools and IDs
+   - Disaster recovery procedures
 
 ### Phase 20 Deliverables (Complete)
 
@@ -237,6 +247,10 @@ Recent decisions from Phase 21:
 - **Independent Tool Percentages**: Each tool can have different rollout percentages (read-only tools higher, write operations lower)
 - **Temporary Node Overhead**: Accept 127 nodes during rollout (peak complexity) for safe migration
 - **Cleanup Timing**: Delete rollout nodes and sub-workflows after 7 days at 100% with no issues
+- **Target Rollback Time**: Under 5 minutes for production incident response
+- **Archive Instead of Delete**: Keep sub-workflows archived (not deleted) for rollback option
+- **ROLLOUT_PERCENTAGE Pattern**: Code node constant for flexible percentage control and easy rollback
+- **DO NOT DELETE Policy**: Never delete sub-workflows during migration (only archive after 1+ week stable)
 
 Earlier decisions from Phase 17-20:
 
