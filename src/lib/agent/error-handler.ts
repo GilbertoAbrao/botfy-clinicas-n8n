@@ -16,6 +16,17 @@ const KNOWN_ERROR_STATUS_MAP: Record<string, number> = {
   'Conflict detected': 409,
   'Unauthorized': 401,
   'Forbidden': 403,
+  // Document processing errors (Phase 20)
+  'File size exceeds 5MB limit': 413,
+  'File is empty': 400,
+  'Unable to determine file type from content': 400,
+  'File type not allowed': 415, // Unsupported Media Type
+  'MIME type mismatch': 400,
+  'Failed to extract document fields': 422,
+  'Document extraction refused': 422,
+  'Failed to upload document': 500,
+  'No file provided': 400,
+  'patientId is required': 400,
 }
 
 /**
