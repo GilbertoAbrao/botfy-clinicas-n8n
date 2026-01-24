@@ -1,7 +1,7 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-24
-**Status:** v2.0 In Progress — Phase 20 complete
+**Status:** v2.0 In Progress — Phase 21 in progress
 **Current Milestone:** v2.0 Agent API Migration
 
 ---
@@ -11,20 +11,20 @@
 See: `.planning/PROJECT.md` (updated 2026-01-24)
 
 **Core value:** Dashboard de alertas que mostra "at glance" tudo que precisa de atenção
-**Current focus:** Migrating N8N agent tools to Next.js APIs + MCP Server (Phase 20: Complex Tools in progress)
+**Current focus:** Migrating N8N agent tools to Next.js APIs + MCP Server (Phase 21: N8N Integration in progress)
 
 ---
 
 ## Current Position
 
 **Milestone:** v2.0 Agent API Migration
-**Phase:** Phase 20 of 22 (Complex Tools) — COMPLETE
-**Plan:** 3/3 plans complete (20-03)
-**Status:** Phase 20 complete
+**Phase:** Phase 21 of 22 (N8N Integration) — IN PROGRESS
+**Plan:** 1/4 plans complete (21-02)
+**Status:** Phase 21 in progress
 
-**Last activity:** 2026-01-24 — Completed 20-03-PLAN.md (Document Processing API)
+**Last activity:** 2026-01-24 — Completed 21-02-PLAN.md (Response Transformers & Migration Checklist)
 
-**Progress:** ██████████████████░░ 93% (79/85 total plans complete across all milestones)
+**Progress:** ██████████████████░░ 94% (80/85 total plans complete across all milestones)
 
 ---
 
@@ -64,9 +64,9 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 **v2.0 Phases:**
 - ✅ Phase 17: Foundation (auth, error handling, audit logging, validation)
 - ✅ Phase 18: Query Tools (5 read-only APIs)
-- ✅ Phase 19: Write Tools (4 create/update APIs) — COMPLETE
-- ✅ Phase 20: Complex Tools (document processing) — COMPLETE
-- Phase 21: N8N Integration (production migration with gradual rollout)
+- ✅ Phase 19: Write Tools (4 create/update APIs)
+- ✅ Phase 20: Complex Tools (document processing)
+- 🔄 Phase 21: N8N Integration (production migration with gradual rollout) — IN PROGRESS
 - Phase 22: MCP Server (optional wrapper for Claude Desktop)
 
 ---
@@ -90,7 +90,7 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 ## Performance Metrics
 
 **Velocity (All Milestones):**
-- Total plans completed: 79
+- Total plans completed: 80
 - Total phases completed: 20
 - Average plans per phase: 4.0
 
@@ -101,11 +101,21 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 | v1.0 | 8 | 32 | 4.0 |
 | v1.1 | 4 | 9 | 2.3 |
 | v1.2 | 4 | 18 | 4.5 |
-| v2.0 | 4 | 11 | 2.8 |
+| v2.0 | 4→5 | 11→12 | 2.4 |
 
 ---
 
 ## Accumulated Context
+
+### Phase 21 Deliverables (In Progress)
+
+**N8N Integration (1/4 plans complete):**
+
+1. **Response Transformers & Migration Checklist** (`docs/n8n/response-transformers.md`, `docs/n8n/migration-checklist.md`)
+   - 11 JavaScript templates for N8N Code nodes (transform API JSON → AI Agent STRING)
+   - Migration checklist with tool-by-tool tracking (55+ checkboxes)
+   - Gradual rollout procedures (10% → 50% → 100%)
+   - Troubleshooting guide and rollback procedures
 
 ### Phase 20 Deliverables (Complete)
 
@@ -200,7 +210,13 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 
 ### Decisions
 
-Recent decisions from Phase 17-18:
+Recent decisions from Phase 21:
+
+- **Code Node JavaScript Templates**: Use Code nodes for response transformation (not Set/Edit Fields) for conditional logic support
+- **Preserve Portuguese Characters**: Keep accents in responses (á, ã, é) for natural conversation flow, N8N handles UTF-8 correctly
+- **Gradual Rollout Optional**: Teams can choose direct migration or gradual rollout (10% → 50% → 100%) based on risk tolerance
+
+Earlier decisions from Phase 17-20:
 
 - **bcrypt for API Key Hashing**: 12 salt rounds
 - **Correlation IDs for Audit Trail**: UUID per-request
@@ -239,12 +255,12 @@ None
 ## Session Continuity
 
 **Last session:** 2026-01-24
-**Stopped at:** Completed 20-03-PLAN.md (Document Processing API)
+**Stopped at:** Completed 21-02-PLAN.md (Response Transformers & Migration Checklist)
 **Resume file:** None
 
-**Next action:** Phase 21 (N8N Integration) or Phase 22 (MCP Server)
+**Next action:** Continue Phase 21 (Plans 03-04) or Phase 22 (MCP Server)
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-24 — Phase 20 complete (Complex Tools)*
+*Last updated: 2026-01-24 — Phase 21 in progress (N8N Integration)*
