@@ -2,8 +2,36 @@ import { prisma } from '@/lib/prisma'
 import { TZDate } from '@date-fns/tz'
 import { startOfDay, endOfDay } from 'date-fns'
 import { findConflicts, addBufferTime, type TimeSlot } from '@/lib/calendar/conflict-detection'
-import { notifyN8NAppointmentUpdated, notifyN8NAppointmentCancelled } from '@/lib/calendar/n8n-sync'
+import { notifyN8NAppointmentCreated, notifyN8NAppointmentUpdated, notifyN8NAppointmentCancelled } from '@/lib/calendar/n8n-sync'
 import { notifyWaitlist } from '@/lib/waitlist/auto-fill'
+
+/**
+ * Input for creating an appointment.
+ */
+export interface CreateAppointmentInput {
+  pacienteId: number
+  servicoId?: number
+  tipoConsulta?: string
+  profissional?: string
+  dataHora: TZDate
+  observacoes?: string
+}
+
+/**
+ * Created appointment result with patient context.
+ */
+export interface CreatedAppointment {
+  id: number
+  dataHora: string  // ISO 8601
+  tipoConsulta: string
+  profissional: string | null
+  status: string
+  paciente: {
+    id: number
+    nome: string
+    telefone: string
+  }
+}
 
 /**
  * Input for rescheduling an appointment.
@@ -29,6 +57,151 @@ export interface AppointmentWriteResult {
     telefone: string
   }
   alreadyCancelled?: boolean  // For idempotent cancel
+}
+
+/**
+ * Create a new appointment with conflict detection.
+ *
+ * Uses Prisma transaction for atomicity:
+ * 1. Validate patient exists
+ * 2. Get service duration (default 30 min)
+ * 3. Create time slot with buffer
+ * 4. Check for conflicts in same day/provider
+ * 5. Create appointment
+ * 6. Notify N8N of creation (fire-and-forget)
+ *
+ * @param input - Appointment details
+ * @returns Created appointment with patient info
+ * @throws Error('Patient not found') if patient doesn't exist
+ * @throws Error('Time slot already booked') if conflict detected
+ */
+export async function createAppointment(
+  input: CreateAppointmentInput
+): Promise<CreatedAppointment> {
+  // 1. Validate patient exists
+  const patient = await prisma.patient.findUnique({
+    where: { id: input.pacienteId },
+    select: { id: true, nome: true, telefone: true },
+  })
+
+  if (!patient) {
+    throw new Error('Patient not found')
+  }
+
+  // 2. Get service duration if servicoId provided
+  let duration = 30 // Default 30 minutes
+  if (input.servicoId) {
+    const servico = await prisma.servico.findUnique({
+      where: { id: input.servicoId },
+      select: { duracaoMinutos: true },
+    })
+    if (servico) {
+      duration = servico.duracaoMinutos
+    }
+  }
+
+  // 3. Create proposed time slot with buffer
+  const startTime = new Date(input.dataHora)
+  const endTime = new Date(startTime.getTime() + duration * 60000)
+
+  const proposedSlot: TimeSlot = {
+    providerId: input.profissional || 'default',
+    start: startTime,
+    end: endTime,
+  }
+
+  // Add 15-minute buffer time for transitions
+  const slotWithBuffer = addBufferTime(proposedSlot, 15)
+
+  // 4-5. Check conflicts and create in transaction
+  const result = await prisma.$transaction(async (tx) => {
+    // 4. Fetch existing appointments for same day/provider (non-cancelled)
+    const dayStart = startOfDay(startTime)
+    const dayEnd = endOfDay(startTime)
+
+    const existingAppointments = await tx.appointment.findMany({
+      where: {
+        profissional: input.profissional || null,
+        dataHora: {
+          gte: dayStart,
+          lte: dayEnd,
+        },
+        status: {
+          notIn: ['cancelada', 'faltou'],
+        },
+      },
+    })
+
+    // Convert to TimeSlot array
+    const existingSlots: TimeSlot[] = existingAppointments.map((apt) => {
+      const aptStart = new Date(apt.dataHora)
+      const aptDuration = apt.duracaoMinutos || 30
+      const aptEnd = new Date(aptStart.getTime() + aptDuration * 60000)
+
+      return {
+        id: String(apt.id),
+        providerId: apt.profissional || 'default',
+        start: aptStart,
+        end: aptEnd,
+      }
+    })
+
+    // Check for conflicts
+    const conflicts = findConflicts(slotWithBuffer, existingSlots)
+
+    if (conflicts.length > 0) {
+      throw new Error('Time slot already booked')
+    }
+
+    // 5. Create appointment
+    const appointment = await tx.appointment.create({
+      data: {
+        pacienteId: input.pacienteId,
+        servicoId: input.servicoId,
+        tipoConsulta: input.tipoConsulta || 'Consulta',
+        profissional: input.profissional,
+        dataHora: input.dataHora,
+        duracaoMinutos: duration,
+        status: 'agendada',
+        observacoes: input.observacoes,
+      },
+      include: {
+        paciente: {
+          select: { id: true, nome: true, telefone: true },
+        },
+      },
+    })
+
+    return appointment
+  })
+
+  // 6. Trigger N8N webhook (fire-and-forget)
+  notifyN8NAppointmentCreated({
+    appointmentId: String(result.id),
+    patientId: String(result.pacienteId),
+    serviceId: result.servicoId ? String(result.servicoId) : '',
+    providerId: result.profissional || '',
+    dataHora: result.dataHora.toISOString(),
+    status: result.status || 'agendada',
+    patientName: result.paciente.nome,
+    patientPhone: result.paciente.telefone,
+  }).catch((err) => {
+    console.error('[N8N Webhook] Failed to notify appointment created:', err)
+  })
+
+  // Return formatted result
+  return {
+    id: result.id,
+    dataHora: result.dataHora.toISOString(),
+    tipoConsulta: result.tipoConsulta,
+    profissional: result.profissional,
+    status: result.status || 'agendada',
+    paciente: {
+      id: result.paciente.id,
+      nome: result.paciente.nome,
+      telefone: result.paciente.telefone,
+    },
+  }
 }
 
 /**
