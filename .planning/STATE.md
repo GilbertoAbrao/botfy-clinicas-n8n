@@ -19,12 +19,12 @@ See: `.planning/PROJECT.md` (updated 2026-01-24)
 
 **Milestone:** v2.0 Agent API Migration
 **Phase:** Phase 21 of 22 (N8N Integration) — IN PROGRESS
-**Plan:** 1/4 plans complete (21-01)
+**Plan:** 3/4 plans complete (21-01, 21-02, 21-03)
 **Status:** Phase 21 in progress
 
-**Last activity:** 2026-01-24 — Completed 21-01-PLAN.md (Credential Setup Documentation)
+**Last activity:** 2026-01-24 — Completed 21-03-PLAN.md (Gradual Rollout Documentation)
 
-**Progress:** ██████████████████░░ 94% (80/85 total plans complete across all milestones)
+**Progress:** ██████████████████░░ 96% (82/85 total plans complete across all milestones)
 
 ---
 
@@ -109,7 +109,7 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 
 ### Phase 21 Deliverables (In Progress)
 
-**N8N Integration (1/4 plans complete):**
+**N8N Integration (3/4 plans complete):**
 
 1. **Credential Setup Documentation** (`docs/n8n/api-endpoints.md`, `docs/n8n/credential-setup.md`)
    - Complete API reference for all 11 tools (1,195 lines)
@@ -119,6 +119,21 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
    - Comprehensive troubleshooting (401, connection, timeout, validation errors)
    - Security best practices (key rotation, access control)
    - API key management runbook
+
+2. **Response Transformer Documentation** (`docs/n8n/response-transformers.md`, `docs/n8n/migration-checklist.md`)
+   - HTTP to sub-workflow response transformation patterns (456 lines)
+   - Per-tool transformation templates with N8N Code node examples
+   - Migration checklist with per-tool verification steps (439 lines)
+   - All 11 tools documented with specific transformation needs
+
+3. **Gradual Rollout Documentation** (`docs/n8n/gradual-rollout.md`, `docs/n8n/workflow-structure.md`)
+   - Gradual rollout implementation guide (553 lines)
+   - Math.random() routing pattern with ROLLOUT_PERCENTAGE constant
+   - Rollout phases: 10% canary → 50% beta → 100% GA
+   - Workflow structure documentation (467 lines)
+   - Architecture diagrams: before (83 nodes) → during (127 nodes) → after (39 nodes)
+   - 76% node reduction target after migration complete
+   - Sub-workflow inventory with 10 tool IDs
 
 ### Phase 20 Deliverables (Complete)
 
@@ -218,6 +233,10 @@ Recent decisions from Phase 21:
 - **Header Auth vs Bearer Auth**: Use Header Auth credential type (not Bearer Auth) due to known N8N issues with Bearer Auth not sending headers correctly
 - **Single API Reference File**: Document all 11 tools in one file for easier search and maintenance
 - **Copy-Paste Ready Examples**: Include N8N JSON configuration snippets for reduced configuration errors
+- **Rollout Progression**: 10% canary (24-48h) → 50% beta (48-72h) → 100% GA with validation criteria between phases
+- **Independent Tool Percentages**: Each tool can have different rollout percentages (read-only tools higher, write operations lower)
+- **Temporary Node Overhead**: Accept 127 nodes during rollout (peak complexity) for safe migration
+- **Cleanup Timing**: Delete rollout nodes and sub-workflows after 7 days at 100% with no issues
 
 Earlier decisions from Phase 17-20:
 
@@ -258,10 +277,10 @@ None
 ## Session Continuity
 
 **Last session:** 2026-01-24
-**Stopped at:** Completed 21-01-PLAN.md (Credential Setup Documentation)
+**Stopped at:** Completed 21-03-PLAN.md (Gradual Rollout Documentation)
 **Resume file:** None
 
-**Next action:** Continue Phase 21 (Plans 02-04) or Phase 22 (MCP Server)
+**Next action:** Complete Phase 21 (Plan 04 remaining) then proceed to Phase 22 (MCP Server)
 
 ---
 
