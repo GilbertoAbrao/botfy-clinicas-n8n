@@ -109,7 +109,7 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 
 ### Phase 22 Deliverables (In Progress)
 
-**MCP Server (2/4 plans complete):**
+**MCP Server (3/4 plans complete):**
 
 1. **MCP Server Foundation** (`src/mcp/*.ts`)
    - Configuration management with environment validation
@@ -126,9 +126,21 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
    - buscar_paciente: Patient search by phone/CPF/name with upcoming appointments
    - status_pre_checkin: Pre-checkin status with document tracking
    - buscar_instrucoes: Procedure instructions search
-   - registerQueryTools function for MCP server integration
+   - processar_documento: Document processing with Vision API (multipart form data)
+   - registerQueryTools() and registerDocumentTool() for MCP server integration
    - Zod input schemas matching API route validation
    - MCP-compliant error handling with isError flag
+
+3. **Write Tools** (`src/mcp/tools/write.ts`, `src/mcp/tools/*.ts`)
+   - 5 MCP tool handlers for write operations
+   - criar_agendamento: POST with idempotency key support
+   - reagendar_agendamento: PATCH with partial updates
+   - cancelar_agendamento: DELETE with required cancellation reason
+   - atualizar_dados_paciente: PATCH with partial patient updates
+   - confirmar_presenca: POST with confirmado/presente types
+   - registerWriteTools() for MCP server integration
+   - Specific error messages for conflicts, not found, validation errors
+   - All tools use correct HTTP methods (POST/PATCH/DELETE)
 
 ### Phase 21 Deliverables (Complete)
 
@@ -267,6 +279,9 @@ Recent decisions from Phase 22:
 - **Dual success checking pattern**: Check both HTTP status AND json.success field per Phase 21 research pitfall #3
 - **Heartbeat monitoring integration**: Record all HTTP request outcomes for production visibility
 - **60-second heartbeat interval**: Balance monitoring granularity with log volume
+- **Tool handler pattern consistency**: Same export pattern across all tools (object with name, description, inputSchema, handler) for uniform registration
+- **Exact N8N tool names**: Keep tool names matching N8N for seamless migration (criar_agendamento, reagendar_agendamento, etc)
+- **Specific error messages**: Implement detailed error messages for common cases (conflict, not found, validation) for better UX in Claude Desktop
 
 Decisions from Phase 21:
 
@@ -321,7 +336,7 @@ None
 ## Session Continuity
 
 **Last session:** 2026-01-24
-**Stopped at:** Completed 22-02-PLAN.md (Query Tools)
+**Stopped at:** Completed 22-03-PLAN.md (Write Tools)
 **Resume file:** None
 
 **Next action:** 22-03-PLAN.md (Write Tools registration)
