@@ -19,12 +19,12 @@ See: `.planning/PROJECT.md` (updated 2026-01-24)
 
 **Milestone:** v2.0 Agent API Migration
 **Phase:** Phase 17 of 22 (Agent API Foundation)
-**Plan:** 1 of 4 complete (17-01 completed)
-**Status:** In progress - Wave 1 execution
+**Plan:** 4 of 4 complete (17-01, 17-02, 17-03, 17-04 completed)
+**Status:** In progress - Wave 1 complete, Wave 2 ready
 
-**Last activity:** 2026-01-24 — Completed 17-01-PLAN.md (Agent API type foundations)
+**Last activity:** 2026-01-24 — Completed 17-04-PLAN.md (Agent API authentication & middleware)
 
-**Progress:** ████████████████░░░░ 74% (60/81 total plans complete across all milestones)
+**Progress:** ████████████████░░░░ 79% (64/81 total plans complete across all milestones)
 
 ---
 
@@ -101,7 +101,7 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 | v1.0 | 8 | 32 | 4.0 |
 | v1.1 | 4 | 9 | 2.3 |
 | v1.2 | 4 | 18 | 4.5 |
-| v2.0 | 0 | 1 | - |
+| v2.0 | 0 | 4 | - |
 
 ---
 
@@ -122,6 +122,8 @@ Phase 17 decisions:
 - **bcrypt for API Key Hashing** (17-01): Use bcrypt with 12 salt rounds for secure API key storage (industry standard, prevents brute force)
 - **Correlation IDs for Audit Trail** (17-01): Generate UUID per-request to link all audit logs from a single API call
 - **Generic ApiResponse Type** (17-01): Single response interface with success boolean for consistent N8N parsing
+- **HOF Pattern for Middleware** (17-04): Use Higher-Order Function pattern for withAgentAuth() instead of global Next.js middleware (scoped per-route)
+- **Iterate Through Agents for Auth** (17-04): With <10 agents, iterating through all for bcrypt.compare is acceptable (~100ms per agent)
 
 ### Open Blockers
 
@@ -138,12 +140,12 @@ None
 ## Session Continuity
 
 **Last session:** 2026-01-24
-**Stopped at:** Completed 17-01-PLAN.md
+**Stopped at:** Completed 17-04-PLAN.md
 **Resume file:** None
 
-**Next action:** Continue with 17-02-PLAN.md (Error handling & audit logging) to complete Phase 17 Wave 1
+**Next action:** Continue with Wave 2 plans (17-05 through 17-08) - Service layer extraction and flexible validation
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-24 — Completed 17-01-PLAN.md (Agent API type foundations)*
+*Last updated: 2026-01-24 — Completed 17-04-PLAN.md (Agent API authentication & middleware)*
