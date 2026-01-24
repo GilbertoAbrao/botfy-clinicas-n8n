@@ -1,7 +1,7 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-24
-**Status:** v2.0 In Progress — Phase 18 plan 02 complete
+**Status:** v2.0 In Progress — Phase 18 plan 03 complete (4/5 plans done)
 **Current Milestone:** v2.0 Agent API Migration
 
 ---
@@ -19,12 +19,12 @@ See: `.planning/PROJECT.md` (updated 2026-01-24)
 
 **Milestone:** v2.0 Agent API Migration
 **Phase:** Phase 18 of 22 (Query Tools) — In Progress
-**Plan:** 2/5 plans complete (18-01, 18-02)
+**Plan:** 4/5 plans complete (18-01, 18-02, 18-03, 18-05)
 **Status:** Executing Phase 18
 
-**Last activity:** 2026-01-24 — Completed 18-02-PLAN.md (Appointments Search API)
+**Last activity:** 2026-01-24 — Completed 18-03-PLAN.md (Patient Search API)
 
-**Progress:** █████████████████░░░ 80% (65/81 total plans complete across all milestones)
+**Progress:** █████████████████░░░ 82% (67/81 total plans complete across all milestones)
 
 ---
 
@@ -63,7 +63,7 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 
 **v2.0 Phases:**
 - ✅ Phase 17: Foundation (auth, error handling, audit logging, validation)
-- ▶ Phase 18: Query Tools (5 read-only APIs) — 2/5 plans complete
+- ▶ Phase 18: Query Tools (5 read-only APIs) — 4/5 plans complete
 - Phase 19: Write Tools (5 create/update APIs)
 - Phase 20: Complex Tools (2 specialized APIs)
 - Phase 21: N8N Integration (production migration with gradual rollout)
@@ -101,7 +101,7 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 | v1.0 | 8 | 32 | 4.0 |
 | v1.1 | 4 | 9 | 2.3 |
 | v1.2 | 4 | 18 | 4.5 |
-| v2.0 | 2 | 6 | 3.0 |
+| v2.0 | 2 | 8 | 4.0 |
 
 ---
 
@@ -148,6 +148,8 @@ Recent decisions from Phase 17-18:
 - **Service Layer Pattern**: Business logic in service files, HTTP concerns in routes (established 18-02)
 - **Parallel Prisma Queries**: count + findMany in Promise.all for pagination efficiency (established 18-02)
 - **PHI Masking in Audit**: Sensitive fields like telefone masked with '***' (established 18-02)
+- **Single Partial Match as Exact**: When search returns single result, treat as exact match (established 18-03)
+- **Upcoming Appointments Context**: Include up to 5 future appointments for AI context (established 18-03)
 
 ### Open Blockers
 
@@ -158,9 +160,9 @@ None
 **Query Tools (18-01 to 18-05):**
 - ✅ 18-01: Slots Search API (buscar_slots_disponiveis)
 - ✅ 18-02: Appointments Search API (buscar_agendamentos)
-- ⬜ 18-03: Patient Search API (buscar_paciente)
-- ⬜ 18-04: Instructions Search API (buscar_instrucoes)
-- ⬜ 18-05: Pre-Checkin Status API (status_pre_checkin)
+- ✅ 18-03: Patient Search API (buscar_paciente)
+- ⬜ 18-04: Pre-Checkin Status API (status_pre_checkin)
+- ✅ 18-05: Instructions Search API (buscar_instrucoes)
 
 ### Tech Debt (Tracked)
 
@@ -173,12 +175,12 @@ None
 ## Session Continuity
 
 **Last session:** 2026-01-24
-**Stopped at:** Completed 18-02-PLAN.md (Appointments Search API)
+**Stopped at:** Completed 18-03-PLAN.md (Patient Search API)
 **Resume file:** None
 
-**Next action:** Execute 18-03-PLAN.md (Patient Search API)
+**Next action:** Execute 18-04-PLAN.md (Pre-Checkin Status API)
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-24 — Phase 18 plan 02 complete (Appointments Search API)*
+*Last updated: 2026-01-24 — Phase 18 plan 03 complete (Patient Search API)*
