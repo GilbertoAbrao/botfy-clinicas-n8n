@@ -1,7 +1,7 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-24
-**Status:** v2.0 In Progress — Defining requirements
+**Status:** v2.0 In Progress — Ready to plan Phase 17
 **Current Milestone:** v2.0 Agent API Migration
 
 ---
@@ -11,20 +11,20 @@
 See: `.planning/PROJECT.md` (updated 2026-01-24)
 
 **Core value:** Dashboard de alertas que mostra "at glance" tudo que precisa de atenção
-**Current focus:** Migrating N8N agent tools to Next.js APIs + MCP Server
+**Current focus:** Migrating N8N agent tools to Next.js APIs + MCP Server (Phase 17: Foundation)
 
 ---
 
 ## Current Position
 
 **Milestone:** v2.0 Agent API Migration
-**Phase:** Not started (defining requirements)
-**Plan:** —
-**Status:** Defining requirements
+**Phase:** Phase 17 of 22 (Agent API Foundation)
+**Plan:** Not started
+**Status:** Ready to plan Phase 17
 
-**Last activity:** 2026-01-24 — Milestone v2.0 started
+**Last activity:** 2026-01-24 — v2.0 roadmap created with 6 phases (17-22), 24 requirements
 
-**Progress:** ░░░░░░░░░░░░░░░░░░░░ 0%
+**Progress:** ████████████████░░░░ 73% (59/81 total plans complete across all milestones)
 
 ---
 
@@ -61,37 +61,67 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
                                          Supabase
 ```
 
+**v2.0 Phases:**
+- Phase 17: Foundation (auth, error handling, audit logging, service layer)
+- Phase 18: Query Tools (5 read-only APIs)
+- Phase 19: Write Tools (5 create/update APIs)
+- Phase 20: Complex Tools (2 specialized APIs)
+- Phase 21: N8N Integration (production migration with gradual rollout)
+- Phase 22: MCP Server (optional wrapper for Claude Desktop)
+
 ---
 
 ## Shipped Milestones
 
 **v1.2 Agenda List View + Pre-Checkin Management (Shipped 2026-01-21)**
-- 4 phases, 18 plans, 46 requirements
+- 4 phases (13-16), 18 plans, 46 requirements
 - 70+ files, 9,681 lines added
 
 **v1.1 Anti No-Show Intelligence (Shipped 2026-01-21)**
-- 4 phases, 9 plans, 18 requirements
+- 4 phases (9-12), 9 plans, 18 requirements
 - 56 files, 8,953 lines added
 
 **v1.0 MVP (Shipped 2026-01-17)**
-- 8 phases, 32 plans, 79 requirements
+- 8 phases (1-8), 32 plans, 79 requirements
 - 244 files, 21,654 lines TypeScript
 
 ---
 
-## Archives
+## Performance Metrics
 
-See `.planning/MILESTONES.md` for full milestone history.
+**Velocity (All Milestones):**
+- Total plans completed: 59
+- Total phases completed: 16
+- Average plans per phase: 3.7
+
+**By Milestone:**
+
+| Milestone | Phases | Plans | Avg/Phase |
+|-----------|--------|-------|-----------|
+| v1.0 | 8 | 32 | 4.0 |
+| v1.1 | 4 | 9 | 2.3 |
+| v1.2 | 4 | 18 | 4.5 |
+| v2.0 | 0 | 0 | - |
 
 ---
 
-## Open Blockers
+## Accumulated Context
+
+### Decisions
+
+Recent decisions from PROJECT.md affecting v2.0 work:
+
+- **Service Layer Extraction**: Business logic extracted from existing routes for reuse between Console UI and Agent APIs
+- **API Key Authentication**: Simple Bearer token approach for N8N integration (stateless, N8N-compatible)
+- **Dual-track Architecture**: N8N calls REST APIs directly, MCP Server wraps same APIs for Claude Desktop
+- **Gradual Rollout**: Keep sub-workflows as fallback during migration (10% → 50% → 100%)
+- **Idempotency First**: All write operations must support idempotency keys to prevent duplicates
+
+### Open Blockers
 
 None
 
----
-
-## Tech Debt (Tracked)
+### Tech Debt (Tracked)
 
 - formatPhone/formatCPF utilities duplicated in components
 - Missing VERIFICATION.md for phases 4, 5, 6, 9, 10, 15
@@ -99,17 +129,15 @@ None
 
 ---
 
-## Accumulated Decisions
+## Session Continuity
 
-Key patterns established in previous milestones:
-- TanStack Table for list views with shadcn/ui integration
-- URL-based filter state for shareable/bookmarkable links
-- Floating bulk action bars for multi-select operations
-- 300ms debounce for search inputs
-- Client-side filtering for Supabase nested field limitations
-- Supabase admin client for N8N tables (bypass RLS)
+**Last session:** 2026-01-24
+**Stopped at:** v2.0 roadmap creation complete
+**Resume file:** None
+
+**Next action:** Run `/gsd:plan-phase 17` to create execution plan for Agent API Foundation
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-24 — v2.0 milestone started*
+*Last updated: 2026-01-24 — v2.0 roadmap created*
