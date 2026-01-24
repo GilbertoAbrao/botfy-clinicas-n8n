@@ -270,10 +270,13 @@ Plans:
   3. Gradual rollout mechanism works: 10% traffic → 50% → 100% over 1 week with zero errors
   4. All 11 sub-workflows are archived (not deleted) and marked deprecated with rollback instructions
   5. Rollback procedure is documented and tested: can revert to sub-workflows in under 5 minutes
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 21-01: TBD during planning
+- [ ] 21-01-PLAN.md — Credential setup and API endpoint reference
+- [ ] 21-02-PLAN.md — Response transformer templates and migration checklist
+- [ ] 21-03-PLAN.md — Gradual rollout implementation guide
+- [ ] 21-04-PLAN.md — Rollback runbook and archive procedure
 
 #### Phase 22: MCP Server (Optional Enhancement)
 **Goal**: Standalone MCP Server exposes all 11 tools for Claude Desktop integration
@@ -315,10 +318,10 @@ Phases execute in numeric order: 17 → 18 → 19 → 20 → 21 → 22
 | 18. Query Tools | v2.0 | 5/5 | Complete | 2026-01-24 |
 | 19. Write Tools | v2.0 | 4/4 | Complete | 2026-01-24 |
 | 20. Complex Tools | v2.0 | 3/3 | Complete | 2026-01-24 |
-| 21. N8N Integration | v2.0 | 0/? | Not started | - |
+| 21. N8N Integration | v2.0 | 0/4 | In Progress | - |
 | 22. MCP Server | v2.0 | 0/? | Not started | - |
 
 ---
 
 *Roadmap created: 2026-01-15*
-*Last updated: 2026-01-24 — Phase 20 complete*
+*Last updated: 2026-01-24 — Phase 21 planned (4 plans)*
