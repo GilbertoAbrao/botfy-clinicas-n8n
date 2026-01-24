@@ -1,7 +1,7 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-24
-**Status:** v2.0 In Progress — Phase 17 Wave 1 execution
+**Status:** v2.0 In Progress — Phase 17 Wave 1 in progress
 **Current Milestone:** v2.0 Agent API Migration
 
 ---
@@ -19,12 +19,12 @@ See: `.planning/PROJECT.md` (updated 2026-01-24)
 
 **Milestone:** v2.0 Agent API Migration
 **Phase:** Phase 17 of 22 (Agent API Foundation)
-**Plan:** 3 of 4 complete (17-01, 17-02, 17-03 completed)
+**Plan:** 1 of 4 complete (17-01 completed)
 **Status:** In progress - Wave 1 execution
 
-**Last activity:** 2026-01-24 — Completed 17-02-PLAN.md (Error handling & audit logging)
+**Last activity:** 2026-01-24 — Completed 17-01-PLAN.md (Agent API type foundations)
 
-**Progress:** ████████████████░░░░ 75% (61/81 total plans complete across all milestones)
+**Progress:** ████████████████░░░░ 74% (60/81 total plans complete across all milestones)
 
 ---
 
@@ -90,9 +90,9 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 ## Performance Metrics
 
 **Velocity (All Milestones):**
-- Total plans completed: 61
+- Total plans completed: 60
 - Total phases completed: 16
-- Average plans per phase: 3.8
+- Average plans per phase: 3.75
 
 **By Milestone:**
 
@@ -101,7 +101,7 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 | v1.0 | 8 | 32 | 4.0 |
 | v1.1 | 4 | 9 | 2.3 |
 | v1.2 | 4 | 18 | 4.5 |
-| v2.0 | 0 | 3 | - |
+| v2.0 | 0 | 1 | - |
 
 ---
 
@@ -119,12 +119,9 @@ Recent decisions from PROJECT.md affecting v2.0 work:
 
 Phase 17 decisions:
 
-- **Agent Context in Details JSON** (17-02): Store agentId and correlationId in auditLog.details JSON field (not new columns) for backward compatibility
-- **Known Error Status Map** (17-02): Maintain map of common error messages to HTTP status codes for consistent API responses
-- **Field-level Validation Details** (17-02): ZodError responses include per-field details to help AI agents debug validation failures
-- **Flexible Date Parsing** (17-03): Accept ISO 8601 with offset, UTC (Z), local datetime, and date-only formats; transform to TZDate in America/Sao_Paulo timezone
-- **ID Coercion** (17-03): Use z.coerce.number() for IDs that may arrive as strings from N8N
-- **Comprehensive Schema Coverage** (17-03): Created 12 validation schemas covering all 11 N8N tools before implementing endpoints
+- **bcrypt for API Key Hashing** (17-01): Use bcrypt with 12 salt rounds for secure API key storage (industry standard, prevents brute force)
+- **Correlation IDs for Audit Trail** (17-01): Generate UUID per-request to link all audit logs from a single API call
+- **Generic ApiResponse Type** (17-01): Single response interface with success boolean for consistent N8N parsing
 
 ### Open Blockers
 
@@ -141,12 +138,12 @@ None
 ## Session Continuity
 
 **Last session:** 2026-01-24
-**Stopped at:** Completed 17-02-PLAN.md
+**Stopped at:** Completed 17-01-PLAN.md
 **Resume file:** None
 
-**Next action:** Continue with 17-04-PLAN.md (Service layer extraction) to complete Phase 17 Wave 1
+**Next action:** Continue with 17-02-PLAN.md (Error handling & audit logging) to complete Phase 17 Wave 1
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-24 — Completed 17-02-PLAN.md (Error handling & audit logging)*
+*Last updated: 2026-01-24 — Completed 17-01-PLAN.md (Agent API type foundations)*
