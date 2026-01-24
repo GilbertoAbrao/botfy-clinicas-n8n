@@ -77,6 +77,19 @@ export enum AuditAction {
   CREATE_INSTRUCTION = 'CREATE_INSTRUCTION',
   UPDATE_INSTRUCTION = 'UPDATE_INSTRUCTION',
   DEACTIVATE_INSTRUCTION = 'DEACTIVATE_INSTRUCTION',
+
+  // Agent API actions (Phase 17+)
+  AGENT_SEARCH_SLOTS = 'AGENT_SEARCH_SLOTS',
+  AGENT_VIEW_APPOINTMENTS = 'AGENT_VIEW_APPOINTMENTS',
+  AGENT_CREATE_APPOINTMENT = 'AGENT_CREATE_APPOINTMENT',
+  AGENT_UPDATE_APPOINTMENT = 'AGENT_UPDATE_APPOINTMENT',
+  AGENT_CANCEL_APPOINTMENT = 'AGENT_CANCEL_APPOINTMENT',
+  AGENT_VIEW_PATIENT = 'AGENT_VIEW_PATIENT',
+  AGENT_UPDATE_PATIENT = 'AGENT_UPDATE_PATIENT',
+  AGENT_VIEW_INSTRUCTIONS = 'AGENT_VIEW_INSTRUCTIONS',
+  AGENT_VIEW_PRE_CHECKIN = 'AGENT_VIEW_PRE_CHECKIN',
+  AGENT_CONFIRM_APPOINTMENT = 'AGENT_CONFIRM_APPOINTMENT',
+  AGENT_PROCESS_DOCUMENT = 'AGENT_PROCESS_DOCUMENT',
 }
 
 interface LogAuditParams {
@@ -87,6 +100,8 @@ interface LogAuditParams {
   details?: Record<string, any>
   ipAddress?: string
   userAgent?: string
+  agentId?: string         // NEW: Agent identifier (for AI Agent API calls)
+  correlationId?: string   // NEW: Request chain tracking (for AI Agent API calls)
 }
 
 export async function logAudit(params: LogAuditParams): Promise<void> {
@@ -97,7 +112,11 @@ export async function logAudit(params: LogAuditParams): Promise<void> {
         action: params.action,
         resource: params.resource,
         resourceId: params.resourceId,
-        details: params.details,
+        details: {
+          ...(params.details || {}),
+          ...(params.agentId && { agentId: params.agentId }),
+          ...(params.correlationId && { correlationId: params.correlationId }),
+        },
         ipAddress: params.ipAddress,
         userAgent: params.userAgent,
       },
