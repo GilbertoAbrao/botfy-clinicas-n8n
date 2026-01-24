@@ -1,7 +1,7 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-24
-**Status:** v2.0 In Progress — Phase 20 started
+**Status:** v2.0 In Progress — Phase 20 executing
 **Current Milestone:** v2.0 Agent API Migration
 
 ---
@@ -19,12 +19,12 @@ See: `.planning/PROJECT.md` (updated 2026-01-24)
 
 **Milestone:** v2.0 Agent API Migration
 **Phase:** Phase 20 of 22 (Complex Tools) — In Progress
-**Plan:** 1/3 plans complete (20-01)
-**Status:** Plan 20-01 complete
+**Plan:** 2/3 plans complete (20-02)
+**Status:** Plan 20-02 complete
 
-**Last activity:** 2026-01-24 — Completed 20-01-PLAN.md (Document Types and Validation)
+**Last activity:** 2026-01-24 — Completed 20-02-PLAN.md (Vision API Service)
 
-**Progress:** ██████████████████░░ 91% (77/85 total plans complete across all milestones)
+**Progress:** ██████████████████░░ 92% (78/85 total plans complete across all milestones)
 
 ---
 
@@ -65,7 +65,7 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 - ✅ Phase 17: Foundation (auth, error handling, audit logging, validation)
 - ✅ Phase 18: Query Tools (5 read-only APIs)
 - ✅ Phase 19: Write Tools (4 create/update APIs) — COMPLETE
-- Phase 20: Complex Tools (2 specialized APIs) — IN PROGRESS (1/3 plans)
+- Phase 20: Complex Tools (2 specialized APIs) — IN PROGRESS (2/3 plans)
 - Phase 21: N8N Integration (production migration with gradual rollout)
 - Phase 22: MCP Server (optional wrapper for Claude Desktop)
 
@@ -109,13 +109,19 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 
 ### Phase 20 Deliverables (In Progress)
 
-**Complex Tools (1/3 plans complete):**
+**Complex Tools (2/3 plans complete):**
 
 1. **Document Types and Validation** (`src/lib/document/*`, `src/lib/validations/document-schemas.ts`)
    - `DocumentType`: RG, CPF, CNS, CARTEIRINHA_CONVENIO, UNKNOWN
    - `validateDocumentUpload()`: Magic byte file validation (OWASP-compliant)
    - `BrazilianDocumentSchema`: Zod schemas for GPT-4o Vision structured outputs
    - Installed: openai@6.16.0, file-type@21.3.0
+
+2. **Vision API Service** (`src/lib/document/vision-extractor.ts`, `src/lib/document/storage-service.ts`)
+   - `extractDocumentFields()`: GPT-4o Vision wrapper with structured outputs
+   - `uploadPatientDocument()`: Supabase Storage upload with unique paths
+   - `getDocumentSignedUrl()`: Secure signed URL generation (1h expiry)
+   - `deleteDocument()`: Document removal for compliance
 
 ### Phase 19 Deliverables (Complete)
 
@@ -204,6 +210,10 @@ Recent decisions from Phase 17-18:
 - **Magic bytes via file-type**: OWASP-compliant file validation over MIME type checking
 - **Discriminated unions for documents**: Type-safe document narrowing with documentType field
 - **Zod schemas for Vision API**: Compatible with OpenAI zodResponseFormat for structured extraction
+- **High detail mode for Vision API**: Better document text recognition
+- **Single API call extraction**: Document type detection + field extraction in one call
+- **Storage path format**: {patientId}/{documentType}/{timestamp}-{uuid}.{ext}
+- **1-hour signed URL expiry**: Balance usability and security
 
 ### Open Blockers
 
@@ -220,12 +230,12 @@ None
 ## Session Continuity
 
 **Last session:** 2026-01-24
-**Stopped at:** Completed 20-01-PLAN.md (Document Types and Validation)
+**Stopped at:** Completed 20-02-PLAN.md (Vision API Service)
 **Resume file:** None
 
-**Next action:** Execute 20-02-PLAN.md (Vision API Service)
+**Next action:** Execute 20-03-PLAN.md (Document Processing API)
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-24 — Phase 20 Plan 01 complete (Document Types and Validation)*
+*Last updated: 2026-01-24 — Phase 20 Plan 02 complete (Vision API Service)*
