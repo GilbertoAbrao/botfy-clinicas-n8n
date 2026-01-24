@@ -8,6 +8,16 @@ Console administrativo web para a equipe da clínica gerenciar o sistema Botfy C
 
 Dashboard de alertas que mostra "at glance" tudo que precisa de atenção: conversas travadas, pré check-ins pendentes, agendamentos não confirmados e handoffs para humanos (normais e causados por erros). A equipe precisa saber rapidamente onde intervir.
 
+## Current Milestone: v2.0 Agent API Migration
+
+**Goal:** Migrate N8N AI Agent tools from sub-workflows to Next.js APIs with MCP Server wrapper, bringing business logic into the codebase for better maintainability, type safety, and performance.
+
+**Target features:**
+- Next.js API Routes for all 11 agent tools (`/api/agent/*`)
+- MCP Server wrapper exposing APIs as standardized tools
+- N8N Agent updated to consume APIs instead of sub-workflows
+- Deprecate/archive N8N tool sub-workflows
+
 ## Current State
 
 **v1.2 Agenda List View + Pre-Checkin Management shipped: 2026-01-21**
@@ -46,7 +56,11 @@ Dashboard de alertas que mostra "at glance" tudo que precisa de atenção: conve
 
 ### Active
 
-*No active requirements — run `/gsd:new-milestone` to define v1.3 or v2.0*
+**v2.0 Agent API Migration:**
+- [ ] Next.js APIs replacing N8N sub-workflow tools
+- [ ] MCP Server wrapper for standardized tool interface
+- [ ] N8N Agent migration to consume APIs
+- [ ] Sub-workflow deprecation and cleanup
 
 ### Out of Scope
 
@@ -107,4 +121,4 @@ Dashboard de alertas que mostra "at glance" tudo que precisa de atenção: conve
 | Risk level thresholds | baixo (<40), medio (40-69), alto (≥70) matches UI patterns | ✓ Good |
 
 ---
-*Last updated: 2026-01-21 after v1.2 milestone shipped*
+*Last updated: 2026-01-24 after v2.0 milestone started*
