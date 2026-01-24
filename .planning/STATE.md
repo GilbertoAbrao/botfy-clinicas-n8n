@@ -1,7 +1,7 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-24
-**Status:** v2.0 In Progress — Phase 19 complete
+**Status:** v2.0 In Progress — Phase 20 started
 **Current Milestone:** v2.0 Agent API Migration
 
 ---
@@ -11,20 +11,20 @@
 See: `.planning/PROJECT.md` (updated 2026-01-24)
 
 **Core value:** Dashboard de alertas que mostra "at glance" tudo que precisa de atenção
-**Current focus:** Migrating N8N agent tools to Next.js APIs + MCP Server (Phase 19: Write Tools next)
+**Current focus:** Migrating N8N agent tools to Next.js APIs + MCP Server (Phase 20: Complex Tools in progress)
 
 ---
 
 ## Current Position
 
 **Milestone:** v2.0 Agent API Migration
-**Phase:** Phase 19 of 22 (Write Tools) — COMPLETE
-**Plan:** 4/4 plans complete (19-01 to 19-04)
-**Status:** Phase 19 verified and complete
+**Phase:** Phase 20 of 22 (Complex Tools) — In Progress
+**Plan:** 1/3 plans complete (20-01)
+**Status:** Plan 20-01 complete
 
-**Last activity:** 2026-01-24 — Phase 19 verified and complete
+**Last activity:** 2026-01-24 — Completed 20-01-PLAN.md (Document Types and Validation)
 
-**Progress:** ██████████████████░░ 90% (76/85 total plans complete across all milestones)
+**Progress:** ██████████████████░░ 91% (77/85 total plans complete across all milestones)
 
 ---
 
@@ -65,7 +65,7 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 - ✅ Phase 17: Foundation (auth, error handling, audit logging, validation)
 - ✅ Phase 18: Query Tools (5 read-only APIs)
 - ✅ Phase 19: Write Tools (4 create/update APIs) — COMPLETE
-- Phase 20: Complex Tools (2 specialized APIs)
+- Phase 20: Complex Tools (2 specialized APIs) — IN PROGRESS (1/3 plans)
 - Phase 21: N8N Integration (production migration with gradual rollout)
 - Phase 22: MCP Server (optional wrapper for Claude Desktop)
 
@@ -101,11 +101,21 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 | v1.0 | 8 | 32 | 4.0 |
 | v1.1 | 4 | 9 | 2.3 |
 | v1.2 | 4 | 18 | 4.5 |
-| v2.0 | 2 | 9 | 4.5 |
+| v2.0 | 3 | 10 | 3.3 |
 
 ---
 
 ## Accumulated Context
+
+### Phase 20 Deliverables (In Progress)
+
+**Complex Tools (1/3 plans complete):**
+
+1. **Document Types and Validation** (`src/lib/document/*`, `src/lib/validations/document-schemas.ts`)
+   - `DocumentType`: RG, CPF, CNS, CARTEIRINHA_CONVENIO, UNKNOWN
+   - `validateDocumentUpload()`: Magic byte file validation (OWASP-compliant)
+   - `BrazilianDocumentSchema`: Zod schemas for GPT-4o Vision structured outputs
+   - Installed: openai@6.16.0, file-type@21.3.0
 
 ### Phase 19 Deliverables (Complete)
 
@@ -191,6 +201,9 @@ Recent decisions from Phase 17-18:
 - **Partial Update Pattern**: Build update object with only defined fields
 - **Idempotent Confirmation**: Return success if already in target state (no database update)
 - **State Machine Validation**: presente requires confirmado first, reject terminal states
+- **Magic bytes via file-type**: OWASP-compliant file validation over MIME type checking
+- **Discriminated unions for documents**: Type-safe document narrowing with documentType field
+- **Zod schemas for Vision API**: Compatible with OpenAI zodResponseFormat for structured extraction
 
 ### Open Blockers
 
@@ -207,12 +220,12 @@ None
 ## Session Continuity
 
 **Last session:** 2026-01-24
-**Stopped at:** Phase 19 complete, verified
+**Stopped at:** Completed 20-01-PLAN.md (Document Types and Validation)
 **Resume file:** None
 
-**Next action:** Plan Phase 20 (Complex Tools - Document Processing)
+**Next action:** Execute 20-02-PLAN.md (Vision API Service)
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-24 — Phase 19 Write Tools complete and verified*
+*Last updated: 2026-01-24 — Phase 20 Plan 01 complete (Document Types and Validation)*
