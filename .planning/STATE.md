@@ -19,12 +19,12 @@ See: `.planning/PROJECT.md` (updated 2026-01-24)
 
 **Milestone:** v2.0 Agent API Migration
 **Phase:** Phase 17 of 22 (Agent API Foundation)
-**Plan:** 4 plans created (17-01 to 17-04)
-**Status:** Ready to execute Phase 17
+**Plan:** 3 of 4 complete (17-03 completed)
+**Status:** In progress - Wave 1 execution
 
-**Last activity:** 2026-01-24 — Phase 17 planned with 4 plans in 2 waves
+**Last activity:** 2026-01-24 — Completed 17-03-PLAN.md (Agent API validation schemas)
 
-**Progress:** ████████████████░░░░ 73% (59/81 total plans complete across all milestones)
+**Progress:** ████████████████░░░░ 74% (60/81 total plans complete across all milestones)
 
 ---
 
@@ -101,7 +101,7 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 | v1.0 | 8 | 32 | 4.0 |
 | v1.1 | 4 | 9 | 2.3 |
 | v1.2 | 4 | 18 | 4.5 |
-| v2.0 | 0 | 0 | - |
+| v2.0 | 0 | 1 | - |
 
 ---
 
@@ -116,6 +116,12 @@ Recent decisions from PROJECT.md affecting v2.0 work:
 - **Dual-track Architecture**: N8N calls REST APIs directly, MCP Server wraps same APIs for Claude Desktop
 - **Gradual Rollout**: Keep sub-workflows as fallback during migration (10% → 50% → 100%)
 - **Idempotency First**: All write operations must support idempotency keys to prevent duplicates
+
+Phase 17 decisions:
+
+- **Flexible Date Parsing** (17-03): Accept ISO 8601 with offset, UTC (Z), local datetime, and date-only formats; transform to TZDate in America/Sao_Paulo timezone
+- **ID Coercion** (17-03): Use z.coerce.number() for IDs that may arrive as strings from N8N
+- **Comprehensive Schema Coverage** (17-03): Created 12 validation schemas covering all 11 N8N tools before implementing endpoints
 
 ### Open Blockers
 
@@ -132,12 +138,12 @@ None
 ## Session Continuity
 
 **Last session:** 2026-01-24
-**Stopped at:** Phase 17 planning complete
+**Stopped at:** Completed 17-03-PLAN.md
 **Resume file:** None
 
-**Next action:** Run `/gsd:execute-phase 17` to implement Agent API Foundation
+**Next action:** Continue with 17-04-PLAN.md (Service layer extraction) to complete Phase 17 Wave 1
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-24 — Phase 17 planned (4 plans, 2 waves)*
+*Last updated: 2026-01-24 — Completed 17-03-PLAN.md (Agent API validation schemas)*
