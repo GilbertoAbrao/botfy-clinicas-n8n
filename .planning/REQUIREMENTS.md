@@ -25,11 +25,11 @@ Requirements for migrating N8N AI Agent tools to Next.js APIs + MCP Server.
 
 ### Write Tools (Create/Update Operations)
 
-- [ ] **WRITE-01**: `POST /api/agent/agendamentos` — Creates appointment with conflict detection and idempotency
-- [ ] **WRITE-02**: `PATCH /api/agent/agendamentos/:id` — Reschedules appointment with validation
-- [ ] **WRITE-03**: `DELETE /api/agent/agendamentos/:id` — Cancels appointment with reason
-- [ ] **WRITE-04**: `PATCH /api/agent/paciente/:id` — Updates patient data with partial update support
-- [ ] **WRITE-05**: `POST /api/agent/agendamentos/:id/confirmar` — Confirms appointment attendance
+- [x] **WRITE-01**: `POST /api/agent/agendamentos` — Creates appointment with conflict detection and idempotency
+- [x] **WRITE-02**: `PATCH /api/agent/agendamentos/:id` — Reschedules appointment with validation
+- [x] **WRITE-03**: `DELETE /api/agent/agendamentos/:id` — Cancels appointment with reason
+- [x] **WRITE-04**: `PATCH /api/agent/paciente/:id` — Updates patient data with partial update support
+- [x] **WRITE-05**: `POST /api/agent/agendamentos/:id/confirmar` — Confirms appointment attendance
 
 ### Complex Tools (Specialized Operations)
 
@@ -89,11 +89,11 @@ Requirements for migrating N8N AI Agent tools to Next.js APIs + MCP Server.
 | QUERY-03 | Phase 18 | Complete |
 | QUERY-04 | Phase 18 | Complete |
 | QUERY-05 | Phase 18 | Complete |
-| WRITE-01 | Phase 19 | Pending |
-| WRITE-02 | Phase 19 | Pending |
-| WRITE-03 | Phase 19 | Pending |
-| WRITE-04 | Phase 19 | Pending |
-| WRITE-05 | Phase 19 | Pending |
+| WRITE-01 | Phase 19 | Complete |
+| WRITE-02 | Phase 19 | Complete |
+| WRITE-03 | Phase 19 | Complete |
+| WRITE-04 | Phase 19 | Complete |
+| WRITE-05 | Phase 19 | Complete |
 | CMPLX-01 | Phase 20 | Pending |
 | CMPLX-02 | Phase 20 | Pending |
 | N8N-01 | Phase 21 | Pending |
@@ -112,4 +112,4 @@ Requirements for migrating N8N AI Agent tools to Next.js APIs + MCP Server.
 
 ---
 *Requirements defined: 2026-01-24*
-*Last updated: 2026-01-24 — Phase 18 Query Tools complete (QUERY-01 to QUERY-05)*
+*Last updated: 2026-01-24 — Phase 19 Write Tools complete (WRITE-01 to WRITE-05)*
