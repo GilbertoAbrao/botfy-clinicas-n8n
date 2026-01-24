@@ -1,7 +1,7 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-24
-**Status:** v2.0 In Progress — Phase 20 executing
+**Status:** v2.0 In Progress — Phase 20 complete
 **Current Milestone:** v2.0 Agent API Migration
 
 ---
@@ -18,13 +18,13 @@ See: `.planning/PROJECT.md` (updated 2026-01-24)
 ## Current Position
 
 **Milestone:** v2.0 Agent API Migration
-**Phase:** Phase 20 of 22 (Complex Tools) — In Progress
-**Plan:** 2/3 plans complete (20-02)
-**Status:** Plan 20-02 complete
+**Phase:** Phase 20 of 22 (Complex Tools) — COMPLETE
+**Plan:** 3/3 plans complete (20-03)
+**Status:** Phase 20 complete
 
-**Last activity:** 2026-01-24 — Completed 20-02-PLAN.md (Vision API Service)
+**Last activity:** 2026-01-24 — Completed 20-03-PLAN.md (Document Processing API)
 
-**Progress:** ██████████████████░░ 92% (78/85 total plans complete across all milestones)
+**Progress:** ██████████████████░░ 93% (79/85 total plans complete across all milestones)
 
 ---
 
@@ -50,7 +50,7 @@ Migrate all 11 N8N AI Agent tools from sub-workflows to Next.js API routes with 
 8. ✅ `confirmar_presenca` — POST /api/agent/agendamentos/:id/confirmar
 9. ✅ `status_pre_checkin` — GET /api/agent/pre-checkin/status
 10. ✅ `buscar_instrucoes` — GET /api/agent/instrucoes
-11. `processar_documento` — 13 nodes → API endpoint
+11. ✅ `processar_documento` — POST /api/agent/documentos/processar
 
 **Architecture:**
 ```
@@ -65,7 +65,7 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 - ✅ Phase 17: Foundation (auth, error handling, audit logging, validation)
 - ✅ Phase 18: Query Tools (5 read-only APIs)
 - ✅ Phase 19: Write Tools (4 create/update APIs) — COMPLETE
-- Phase 20: Complex Tools (2 specialized APIs) — IN PROGRESS (2/3 plans)
+- ✅ Phase 20: Complex Tools (document processing) — COMPLETE
 - Phase 21: N8N Integration (production migration with gradual rollout)
 - Phase 22: MCP Server (optional wrapper for Claude Desktop)
 
@@ -90,9 +90,9 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 ## Performance Metrics
 
 **Velocity (All Milestones):**
-- Total plans completed: 68
-- Total phases completed: 18
-- Average plans per phase: 3.8
+- Total plans completed: 79
+- Total phases completed: 20
+- Average plans per phase: 4.0
 
 **By Milestone:**
 
@@ -101,15 +101,15 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 | v1.0 | 8 | 32 | 4.0 |
 | v1.1 | 4 | 9 | 2.3 |
 | v1.2 | 4 | 18 | 4.5 |
-| v2.0 | 3 | 10 | 3.3 |
+| v2.0 | 4 | 11 | 2.8 |
 
 ---
 
 ## Accumulated Context
 
-### Phase 20 Deliverables (In Progress)
+### Phase 20 Deliverables (Complete)
 
-**Complex Tools (2/3 plans complete):**
+**Complex Tools (3/3 plans complete):**
 
 1. **Document Types and Validation** (`src/lib/document/*`, `src/lib/validations/document-schemas.ts`)
    - `DocumentType`: RG, CPF, CNS, CARTEIRINHA_CONVENIO, UNKNOWN
@@ -122,6 +122,12 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
    - `uploadPatientDocument()`: Supabase Storage upload with unique paths
    - `getDocumentSignedUrl()`: Secure signed URL generation (1h expiry)
    - `deleteDocument()`: Document removal for compliance
+
+3. **Document Processing API** (`src/lib/services/document-service.ts`, `src/app/api/agent/documentos/processar/route.ts`)
+   - `processDocument()`: Orchestrates validation -> extraction -> storage
+   - POST /api/agent/documentos/processar with multipart form data
+   - Idempotency support with file metadata hash
+   - PHI-safe audit logging (document type, confidence only)
 
 ### Phase 19 Deliverables (Complete)
 
@@ -214,6 +220,9 @@ Recent decisions from Phase 17-18:
 - **Single API call extraction**: Document type detection + field extraction in one call
 - **Storage path format**: {patientId}/{documentType}/{timestamp}-{uuid}.{ext}
 - **1-hour signed URL expiry**: Balance usability and security
+- **File metadata hash for idempotency**: patientId + filename + size (not content, for performance)
+- **Native req.formData() for multipart**: No formidable/multer dependency
+- **PHI-safe logging**: Only document type, duration, confidence level
 
 ### Open Blockers
 
@@ -230,12 +239,12 @@ None
 ## Session Continuity
 
 **Last session:** 2026-01-24
-**Stopped at:** Completed 20-02-PLAN.md (Vision API Service)
+**Stopped at:** Completed 20-03-PLAN.md (Document Processing API)
 **Resume file:** None
 
-**Next action:** Execute 20-03-PLAN.md (Document Processing API)
+**Next action:** Phase 21 (N8N Integration) or Phase 22 (MCP Server)
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-24 — Phase 20 Plan 02 complete (Vision API Service)*
+*Last updated: 2026-01-24 — Phase 20 complete (Complex Tools)*
