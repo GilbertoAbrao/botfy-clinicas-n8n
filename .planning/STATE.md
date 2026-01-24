@@ -1,7 +1,7 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-24
-**Status:** v2.0 In Progress — Phase 19 in progress (plan 03 complete)
+**Status:** v2.0 In Progress — Phase 19 in progress (plan 04 complete)
 **Current Milestone:** v2.0 Agent API Migration
 
 ---
@@ -19,12 +19,12 @@ See: `.planning/PROJECT.md` (updated 2026-01-24)
 
 **Milestone:** v2.0 Agent API Migration
 **Phase:** Phase 19 of 22 (Write Tools) — IN PROGRESS
-**Plan:** 3/5 plans complete (19-01, 19-02, 19-03)
+**Plan:** 4/5 plans complete (19-01 to 19-04)
 **Status:** Executing Phase 19
 
-**Last activity:** 2026-01-24 — Completed 19-03-PLAN.md (Patient Update API)
+**Last activity:** 2026-01-24 — Completed 19-04-PLAN.md (Appointment Confirmation API)
 
-**Progress:** █████████████████░░░ 88% (71/81 total plans complete across all milestones)
+**Progress:** █████████████████░░░ 89% (72/81 total plans complete across all milestones)
 
 ---
 
@@ -41,13 +41,13 @@ Migrate all 11 N8N AI Agent tools from sub-workflows to Next.js API routes with 
 
 **Tools to migrate:**
 1. ✅ `buscar_slots_disponiveis` — GET /api/agent/slots
-2. `criar_agendamento` — 15 nodes → API endpoint
-3. `reagendar_agendamento` — 4 nodes → API endpoint
-4. `cancelar_agendamento` — 4 nodes → API endpoint
+2. ✅ `criar_agendamento` — POST /api/agent/agendamentos
+3. ✅ `reagendar_agendamento` — PATCH /api/agent/agendamentos/:id
+4. ✅ `cancelar_agendamento` — DELETE /api/agent/agendamentos/:id
 5. ✅ `buscar_agendamentos` — GET /api/agent/agendamentos
 6. ✅ `buscar_paciente` — GET /api/agent/paciente
 7. ✅ `atualizar_dados_paciente` — PATCH /api/agent/paciente/:id
-8. `confirmar_presenca` — 1 node (JS) → API endpoint
+8. ✅ `confirmar_presenca` — POST /api/agent/agendamentos/:id/confirmar
 9. ✅ `status_pre_checkin` — GET /api/agent/pre-checkin/status
 10. ✅ `buscar_instrucoes` — GET /api/agent/instrucoes
 11. `processar_documento` — 13 nodes → API endpoint
@@ -64,7 +64,7 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 **v2.0 Phases:**
 - ✅ Phase 17: Foundation (auth, error handling, audit logging, validation)
 - ✅ Phase 18: Query Tools (5 read-only APIs)
-- Phase 19: Write Tools (5 create/update APIs) — IN PROGRESS (3/5 plans)
+- Phase 19: Write Tools (5 create/update APIs) — IN PROGRESS (4/5 plans)
 - Phase 20: Complex Tools (2 specialized APIs)
 - Phase 21: N8N Integration (production migration with gradual rollout)
 - Phase 22: MCP Server (optional wrapper for Claude Desktop)
@@ -109,7 +109,7 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 
 ### Phase 19 Deliverables (In Progress)
 
-**Write Tools (3/5 plans complete):**
+**Write Tools (4/5 plans complete):**
 
 1. **Appointment Create API** (`src/lib/services/appointment-write-service.ts`, `src/app/api/agent/agendamentos/route.ts POST`)
    - `createAppointment()` with slot availability check
@@ -123,6 +123,11 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
    - `updatePatient()` with partial update support
    - Phone uniqueness validation across patients
    - PHI-safe audit logging (field names only)
+
+4. **Appointment Confirmation API** (`src/app/api/agent/agendamentos/[id]/confirmar/route.ts`)
+   - `confirmAppointment()` with state machine validation
+   - Supports 'confirmado' and 'presente' transitions
+   - Idempotent operation (returns success if already in target state)
 
 ### Phase 18 Deliverables
 
@@ -184,6 +189,8 @@ Recent decisions from Phase 17-18:
 - **Upcoming Appointments Context**: Include up to 5 future appointments
 - **Phone/CPF Normalization**: Remove non-digits before storage and comparison
 - **Partial Update Pattern**: Build update object with only defined fields
+- **Idempotent Confirmation**: Return success if already in target state (no database update)
+- **State Machine Validation**: presente requires confirmado first, reject terminal states
 
 ### Open Blockers
 
@@ -200,12 +207,12 @@ None
 ## Session Continuity
 
 **Last session:** 2026-01-24
-**Stopped at:** Completed 19-03-PLAN.md (Patient Update API)
+**Stopped at:** Completed 19-04-PLAN.md (Appointment Confirmation API)
 **Resume file:** None
 
-**Next action:** Execute 19-04-PLAN.md (Confirm Attendance API) or 19-05-PLAN.md
+**Next action:** Execute 19-05-PLAN.md (Document Processing API)
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-24 — Completed 19-03 (Patient Update API)*
+*Last updated: 2026-01-24 — Completed 19-04 (Appointment Confirmation API)*
