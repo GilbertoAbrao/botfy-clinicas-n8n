@@ -19,10 +19,10 @@ See: `.planning/PROJECT.md` (updated 2026-01-24)
 
 **Milestone:** v2.0 Agent API Migration
 **Phase:** Phase 21 of 22 (N8N Integration) — IN PROGRESS
-**Plan:** 1/4 plans complete (21-02)
+**Plan:** 1/4 plans complete (21-01)
 **Status:** Phase 21 in progress
 
-**Last activity:** 2026-01-24 — Completed 21-02-PLAN.md (Response Transformers & Migration Checklist)
+**Last activity:** 2026-01-24 — Completed 21-01-PLAN.md (Credential Setup Documentation)
 
 **Progress:** ██████████████████░░ 94% (80/85 total plans complete across all milestones)
 
@@ -111,11 +111,14 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 
 **N8N Integration (1/4 plans complete):**
 
-1. **Response Transformers & Migration Checklist** (`docs/n8n/response-transformers.md`, `docs/n8n/migration-checklist.md`)
-   - 11 JavaScript templates for N8N Code nodes (transform API JSON → AI Agent STRING)
-   - Migration checklist with tool-by-tool tracking (55+ checkboxes)
-   - Gradual rollout procedures (10% → 50% → 100%)
-   - Troubleshooting guide and rollback procedures
+1. **Credential Setup Documentation** (`docs/n8n/api-endpoints.md`, `docs/n8n/credential-setup.md`)
+   - Complete API reference for all 11 tools (1,195 lines)
+   - HTTP Request node configuration examples with JSON snippets
+   - Step-by-step credential setup guide (772 lines)
+   - Header Auth credential configuration (not Bearer Auth)
+   - Comprehensive troubleshooting (401, connection, timeout, validation errors)
+   - Security best practices (key rotation, access control)
+   - API key management runbook
 
 ### Phase 20 Deliverables (Complete)
 
@@ -212,9 +215,9 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 
 Recent decisions from Phase 21:
 
-- **Code Node JavaScript Templates**: Use Code nodes for response transformation (not Set/Edit Fields) for conditional logic support
-- **Preserve Portuguese Characters**: Keep accents in responses (á, ã, é) for natural conversation flow, N8N handles UTF-8 correctly
-- **Gradual Rollout Optional**: Teams can choose direct migration or gradual rollout (10% → 50% → 100%) based on risk tolerance
+- **Header Auth vs Bearer Auth**: Use Header Auth credential type (not Bearer Auth) due to known N8N issues with Bearer Auth not sending headers correctly
+- **Single API Reference File**: Document all 11 tools in one file for easier search and maintenance
+- **Copy-Paste Ready Examples**: Include N8N JSON configuration snippets for reduced configuration errors
 
 Earlier decisions from Phase 17-20:
 
@@ -255,10 +258,10 @@ None
 ## Session Continuity
 
 **Last session:** 2026-01-24
-**Stopped at:** Completed 21-02-PLAN.md (Response Transformers & Migration Checklist)
+**Stopped at:** Completed 21-01-PLAN.md (Credential Setup Documentation)
 **Resume file:** None
 
-**Next action:** Continue Phase 21 (Plans 03-04) or Phase 22 (MCP Server)
+**Next action:** Continue Phase 21 (Plans 02-04) or Phase 22 (MCP Server)
 
 ---
 
