@@ -1,0 +1,31 @@
+{
+  "_comment": [
+    "Copy this file to your Claude Desktop config location:",
+    "- macOS: ~/Library/Application Support/Claude/claude_desktop_config.json",
+    "- Windows: %APPDATA%\\Claude\\claude_desktop_config.json",
+    "",
+    "IMPORTANT:",
+    "1. Replace /REPLACE_WITH_FULL_PATH/ with actual project path",
+    "2. Replace AGENT_API_KEY with a valid API key from agents table",
+    "3. Ensure Next.js dev server is running (./start-dev.sh)",
+    "4. Completely quit and restart Claude Desktop (Cmd+Q on macOS)",
+    "",
+    "Alternative: Use compiled version for production:",
+    "  \"command\": \"node\",",
+    "  \"args\": [\"/path/to/dist/mcp/server.js\"]"
+  ],
+  "mcpServers": {
+    "botfy-clinicops": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "tsx",
+        "/REPLACE_WITH_FULL_PATH/src/mcp/server.ts"
+      ],
+      "env": {
+        "AGENT_API_BASE_URL": "http://localhost:3051",
+        "AGENT_API_KEY": "REPLACE_WITH_YOUR_API_KEY"
+      }
+    }
+  }
+}

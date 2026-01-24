@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx prisma/seed.ts",
-    "seed:phase2": "tsx prisma/seed-phase2.ts"
+    "seed:phase2": "tsx prisma/seed-phase2.ts",
+    "mcp": "tsx src/mcp/server.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
