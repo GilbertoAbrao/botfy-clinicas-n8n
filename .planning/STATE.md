@@ -1,7 +1,7 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-24
-**Status:** v2.0 In Progress — Phase 21 in progress
+**Status:** v2.0 In Progress — Phase 22 in progress
 **Current Milestone:** v2.0 Agent API Migration
 
 ---
@@ -11,20 +11,20 @@
 See: `.planning/PROJECT.md` (updated 2026-01-24)
 
 **Core value:** Dashboard de alertas que mostra "at glance" tudo que precisa de atenção
-**Current focus:** Migrating N8N agent tools to Next.js APIs + MCP Server (Phase 21: N8N Integration in progress)
+**Current focus:** Migrating N8N agent tools to Next.js APIs + MCP Server (Phase 22: MCP Server in progress)
 
 ---
 
 ## Current Position
 
 **Milestone:** v2.0 Agent API Migration
-**Phase:** Phase 21 of 22 (N8N Integration) — COMPLETE
-**Plan:** 4/4 plans complete (21-01, 21-02, 21-03, 21-04)
-**Status:** Phase 21 complete
+**Phase:** Phase 22 of 22 (MCP Server) — IN PROGRESS
+**Plan:** 1/4 plans complete (22-01)
+**Status:** Phase 22 in progress
 
-**Last activity:** 2026-01-24 — Completed 21-04-PLAN.md (Rollback & Archive Documentation)
+**Last activity:** 2026-01-24 — Completed 22-01-PLAN.md (MCP Server Foundation)
 
-**Progress:** ███████████████████░ 98% (83/85 total plans complete across all milestones)
+**Progress:** ███████████████████░ 99% (84/85 total plans complete across all milestones)
 
 ---
 
@@ -67,7 +67,7 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 - ✅ Phase 19: Write Tools (4 create/update APIs)
 - ✅ Phase 20: Complex Tools (document processing)
 - ✅ Phase 21: N8N Integration (production migration with gradual rollout) — COMPLETE
-- Phase 22: MCP Server (optional wrapper for Claude Desktop)
+- Phase 22: MCP Server (optional wrapper for Claude Desktop) — IN PROGRESS
 
 ---
 
@@ -106,6 +106,18 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 ---
 
 ## Accumulated Context
+
+### Phase 22 Deliverables (In Progress)
+
+**MCP Server (1/4 plans complete):**
+
+1. **MCP Server Foundation** (`src/mcp/*.ts`)
+   - Configuration management with environment validation
+   - stderr-only logging utilities (MCP protocol requirement)
+   - HTTP client with Bearer authentication and dual success checking
+   - Heartbeat monitoring tracking request/error counts
+   - Main server entry point with stdio transport
+   - Installed: @modelcontextprotocol/sdk@1.25.3
 
 ### Phase 21 Deliverables (Complete)
 
@@ -238,7 +250,14 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 
 ### Decisions
 
-Recent decisions from Phase 21:
+Recent decisions from Phase 22:
+
+- **stderr-only logging for MCP protocol**: All logging must use console.error() to avoid corrupting JSON-RPC on stdout
+- **Dual success checking pattern**: Check both HTTP status AND json.success field per Phase 21 research pitfall #3
+- **Heartbeat monitoring integration**: Record all HTTP request outcomes for production visibility
+- **60-second heartbeat interval**: Balance monitoring granularity with log volume
+
+Decisions from Phase 21:
 
 - **Header Auth vs Bearer Auth**: Use Header Auth credential type (not Bearer Auth) due to known N8N issues with Bearer Auth not sending headers correctly
 - **Single API Reference File**: Document all 11 tools in one file for easier search and maintenance
@@ -291,12 +310,12 @@ None
 ## Session Continuity
 
 **Last session:** 2026-01-24
-**Stopped at:** Completed Phase 21 (N8N Integration)
+**Stopped at:** Completed 22-01-PLAN.md (MCP Server Foundation)
 **Resume file:** None
 
-**Next action:** Phase 22 (MCP Server) — Last phase of v2.0 milestone
+**Next action:** 22-02-PLAN.md (Query Tools registration)
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-24 — Phase 21 complete (N8N Integration documentation)*
+*Last updated: 2026-01-24 — Phase 22 in progress (22-01 MCP Server Foundation complete)*
