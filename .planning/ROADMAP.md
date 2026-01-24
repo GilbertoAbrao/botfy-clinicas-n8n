@@ -237,10 +237,13 @@ Plans:
   3. AI Agent can cancel appointments with required reason and trigger waitlist auto-fill notification
   4. AI Agent can update patient data (name, phone, email, address) with partial update support
   5. AI Agent can confirm appointment attendance and update status to "Confirmado" or "Presente"
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 19-01: TBD during planning
+- [ ] 19-01-PLAN.md — Create Appointment API (POST /api/agent/agendamentos with idempotency)
+- [ ] 19-02-PLAN.md — Reschedule and Cancel API (PATCH/DELETE /api/agent/agendamentos/:id)
+- [ ] 19-03-PLAN.md — Update Patient API (PATCH /api/agent/paciente/:id)
+- [ ] 19-04-PLAN.md — Confirm Attendance API (POST /api/agent/agendamentos/:id/confirmar)
 
 #### Phase 20: Complex Tools (Specialized Operations)
 **Goal**: AI Agent can process uploaded documents and extract structured data from images
@@ -308,7 +311,7 @@ Phases execute in numeric order: 17 → 18 → 19 → 20 → 21 → 22
 | 16. Patient Document Validation | v1.2 | 4/4 | Complete | 2026-01-21 |
 | 17. Agent API Foundation | v2.0 | 4/4 | Complete | 2026-01-24 |
 | 18. Query Tools | v2.0 | 5/5 | Complete | 2026-01-24 |
-| 19. Write Tools | v2.0 | 0/? | Not started | - |
+| 19. Write Tools | v2.0 | 0/4 | Planned | - |
 | 20. Complex Tools | v2.0 | 0/? | Not started | - |
 | 21. N8N Integration | v2.0 | 0/? | Not started | - |
 | 22. MCP Server | v2.0 | 0/? | Not started | - |
@@ -316,4 +319,4 @@ Phases execute in numeric order: 17 → 18 → 19 → 20 → 21 → 22
 ---
 
 *Roadmap created: 2026-01-15*
-*Last updated: 2026-01-24 — Phase 18 complete*
+*Last updated: 2026-01-24 — Phase 19 planned*
