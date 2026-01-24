@@ -253,10 +253,12 @@ Plans:
   1. AI Agent can receive uploaded documents (RG, CPF, insurance card) and validate file type/size
   2. AI Agent can detect document type from image content (RG vs CPF vs CNS vs insurance card)
   3. AI Agent can extract key fields from documents (document number, name, date of birth, etc.)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 20-01: TBD during planning
+- [ ] 20-01-PLAN.md — File validation with magic bytes and document type schemas
+- [ ] 20-02-PLAN.md — GPT-4o Vision extractor and Supabase Storage services
+- [ ] 20-03-PLAN.md — Document processing API (POST /api/agent/documentos/processar)
 
 #### Phase 21: N8N Integration (Production Migration)
 **Goal**: N8N AI Agent workflows call Next.js APIs instead of sub-workflows, with gradual rollout
