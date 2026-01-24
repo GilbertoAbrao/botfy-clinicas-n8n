@@ -200,10 +200,13 @@ WhatsApp → N8N Webhook → AI Agent → HTTP Request → Next.js APIs → Supa
   3. Agent tool calls are logged with `agentId` and correlation ID for HIPAA audit trail
   4. Service layer functions are reusable across both Console UI and Agent API routes
   5. API validation accepts multiple date formats (ISO 8601, Brazil locale) via flexible Zod schemas
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 17-01: TBD during planning
+- [ ] 17-01-PLAN.md — Agent types and database schema (bcrypt, Agent model)
+- [ ] 17-02-PLAN.md — Error handling and audit logger extension
+- [ ] 17-03-PLAN.md — Flexible date validation schemas
+- [ ] 17-04-PLAN.md — Authentication middleware and API key generation
 
 #### Phase 18: Query Tools (Read Operations)
 **Goal**: AI Agent can query available slots, appointments, patient data, pre-checkin status, and instructions
@@ -299,7 +302,7 @@ Phases execute in numeric order: 17 → 18 → 19 → 20 → 21 → 22
 | 14. Pre-Checkin Dashboard | v1.2 | 5/5 | Complete | 2026-01-21 |
 | 15. Procedure Instructions | v1.2 | 5/5 | Complete | 2026-01-21 |
 | 16. Patient Document Validation | v1.2 | 4/4 | Complete | 2026-01-21 |
-| 17. Agent API Foundation | v2.0 | 0/? | Not started | - |
+| 17. Agent API Foundation | v2.0 | 0/4 | Planned | - |
 | 18. Query Tools | v2.0 | 0/? | Not started | - |
 | 19. Write Tools | v2.0 | 0/? | Not started | - |
 | 20. Complex Tools | v2.0 | 0/? | Not started | - |
@@ -309,4 +312,4 @@ Phases execute in numeric order: 17 → 18 → 19 → 20 → 21 → 22
 ---
 
 *Roadmap created: 2026-01-15*
-*Last updated: 2026-01-24 — v2.0 phases added*
+*Last updated: 2026-01-24 — Phase 17 plans created*
