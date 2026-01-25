@@ -1,7 +1,7 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-25
-**Status:** Ready to plan
+**Status:** Phase 23 complete
 **Current Milestone:** v2.1 N8N Agent HTTP Tools Migration
 
 ---
@@ -18,13 +18,13 @@ See: `.planning/PROJECT.md` (updated 2026-01-25)
 ## Current Position
 
 **Milestone:** v2.1 N8N Agent HTTP Tools Migration
-**Phase:** Phase 23 of 26 (Query Tools Migration)
-**Plan:** 0 of 5 in current phase
-**Status:** Ready to plan
+**Phase:** Phase 23 of 26 (Query Tools Migration) ✓ COMPLETE
+**Plan:** 5 of 5 in current phase
+**Status:** Ready for Phase 24
 
-**Last activity:** 2026-01-25 — Roadmap created for v2.1
+**Last activity:** 2026-01-25 — Phase 23 complete (5 query tools migrated)
 
-**Progress v2.1:** ░░░░░░░░░░░░░░░░░░░░ 0% (0/12 plans)
+**Progress v2.1:** ████░░░░░░░░░░░░░░░░ 42% (5/12 plans)
 
 ---
 
@@ -63,7 +63,9 @@ See: `.planning/PROJECT.md` (updated 2026-01-25)
 
 ### Decisions (v2.1)
 
-No decisions yet - milestone just started.
+- **Direct MCP execution**: Orchestrator executes N8N MCP operations directly (subagents lack MCP access)
+- **Remove+Add pattern**: Migrate toolWorkflow→toolHttpRequest via remove old node + add new node (updateNode unreliable for type changes)
+- **Credential name**: `Botfy Agent API` httpHeaderAuth credential for Bearer token auth
 
 ### Open Blockers
 
@@ -80,12 +82,12 @@ None
 ## Session Continuity
 
 **Last session:** 2026-01-25
-**Stopped at:** Roadmap created for v2.1 milestone
+**Stopped at:** Phase 23 complete
 **Resume file:** None
 
-**Next action:** `/gsd:plan-phase 23`
+**Next action:** `/gsd:plan-phase 24` or `/gsd:execute-phase 24`
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-25 — v2.1 roadmap created*
+*Last updated: 2026-01-25 — Phase 23 Query Tools Migration complete*

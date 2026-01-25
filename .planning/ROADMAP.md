@@ -18,7 +18,7 @@ Migrate 10 `toolWorkflow` nodes in the N8N AI Agent workflow to `toolHttpRequest
 - Continues from v2.0 (phases 17-22)
 - v2.1 starts at phase 23
 
-- [ ] **Phase 23: Query Tools Migration** - Replace 5 read-only toolWorkflow nodes with toolHttpRequest
+- [x] **Phase 23: Query Tools Migration** - Replace 5 read-only toolWorkflow nodes with toolHttpRequest ✓
 - [ ] **Phase 24: Write Tools Migration** - Replace 4 create/update/delete toolWorkflow nodes with toolHttpRequest
 - [ ] **Phase 25: Document Tool Migration** - Replace complex multipart document processing tool
 - [ ] **Phase 26: Validation & Archive** - Test all migrated tools and archive replaced sub-workflows
@@ -38,11 +38,11 @@ Migrate 10 `toolWorkflow` nodes in the N8N AI Agent workflow to `toolHttpRequest
 **Plans**: 5 plans (Wave 1: 1 plan, Wave 2: 4 parallel plans)
 
 Plans:
-- [ ] 23-01-PLAN.md — Setup credential + migrate buscar_slots_disponiveis (Wave 1)
-- [ ] 23-02-PLAN.md — Migrate buscar_agendamentos (Wave 2)
-- [ ] 23-03-PLAN.md — Migrate buscar_paciente (Wave 2)
-- [ ] 23-04-PLAN.md — Migrate status_pre_checkin (Wave 2)
-- [ ] 23-05-PLAN.md — Migrate buscar_instrucoes (Wave 2)
+- [x] 23-01-PLAN.md — Setup credential + migrate buscar_slots_disponiveis (Wave 1) ✓
+- [x] 23-02-PLAN.md — Migrate buscar_agendamentos (Wave 2) ✓
+- [x] 23-03-PLAN.md — Migrate buscar_paciente (Wave 2) ✓
+- [x] 23-04-PLAN.md — Migrate status_pre_checkin (Wave 2) ✓
+- [x] 23-05-PLAN.md — Migrate buscar_instrucoes (Wave 2) ✓
 
 ### Phase 24: Write Tools Migration
 **Goal**: AI Agent can create, update, and delete data via HTTP requests instead of sub-workflows
@@ -97,7 +97,7 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 23. Query Tools Migration | v2.1 | 0/5 | Planned | - |
+| 23. Query Tools Migration | v2.1 | 5/5 | Complete ✓ | 2026-01-25 |
 | 24. Write Tools Migration | v2.1 | 0/4 | Not started | - |
 | 25. Document Tool Migration | v2.1 | 0/1 | Not started | - |
 | 26. Validation & Archive | v2.1 | 0/2 | Not started | - |
@@ -105,4 +105,4 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26
 ---
 
 *Roadmap created: 2026-01-25*
-*Last updated: 2026-01-25 — Phase 23 plans created*
+*Last updated: 2026-01-25 — Phase 23 complete*
