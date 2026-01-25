@@ -1,7 +1,7 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-25
-**Status:** Phase 24 complete
+**Status:** Phase 25 in progress
 **Current Milestone:** v2.1 N8N Agent HTTP Tools Migration
 
 ---
@@ -11,20 +11,20 @@
 See: `.planning/PROJECT.md` (updated 2026-01-25)
 
 **Core value:** Dashboard de alertas que mostra "at glance" tudo que precisa de atenção
-**Current focus:** Phase 24 - Write Tools Migration (complete)
+**Current focus:** Phase 25 - Document Tool Migration (in progress)
 
 ---
 
 ## Current Position
 
 **Milestone:** v2.1 N8N Agent HTTP Tools Migration
-**Phase:** Phase 24 of 26 (Write Tools Migration) ✓ COMPLETE
-**Plan:** 4 of 4 in current phase
-**Status:** Ready for Phase 25
+**Phase:** Phase 25 of 26 (Document Tool Migration)
+**Plan:** 1 of 2 in current phase
+**Status:** In progress
 
-**Last activity:** 2026-01-25 — Phase 24 complete (4 write tools migrated)
+**Last activity:** 2026-01-25 — Completed 25-01-PLAN.md (URL-based document processing)
 
-**Progress v2.1:** ████████████░░░░░░░░ 75% (9/12 plans)
+**Progress v2.1:** █████████████░░░░░░░ 83% (10/12 plans)
 
 ---
 
@@ -53,9 +53,9 @@ See: `.planning/PROJECT.md` (updated 2026-01-25)
 ## Performance Metrics
 
 **All Milestones:**
-- Total plans completed: 87
+- Total plans completed: 88
 - Total phases completed: 22
-- Total lines of code: 42,505 TypeScript
+- Total lines of code: ~42,800 TypeScript
 
 ---
 
@@ -66,6 +66,8 @@ See: `.planning/PROJECT.md` (updated 2026-01-25)
 - **Direct MCP execution**: Orchestrator executes N8N MCP operations directly (subagents lack MCP access)
 - **Remove+Add pattern**: Migrate toolWorkflow→toolHttpRequest via remove old node + add new node (updateNode unreliable for type changes)
 - **Credential name**: `Botfy Agent API` httpHeaderAuth credential for Bearer token auth
+- **URL-based document input**: Accept JSON with imageUrl for N8N toolHttpRequest compatibility (Phase 25-01)
+- **Native fetch for URL fetching**: Use native fetch + AbortController (no external deps) (Phase 25-01)
 
 ### Open Blockers
 
@@ -82,12 +84,12 @@ None
 ## Session Continuity
 
 **Last session:** 2026-01-25
-**Stopped at:** Phase 24 complete
+**Stopped at:** Completed 25-01-PLAN.md
 **Resume file:** None
 
-**Next action:** `/gsd:plan-phase 25` or `/gsd:execute-phase 25`
+**Next action:** Continue Phase 25 (Plan 02) or verify completion
 
 ---
 
 *State tracking started: 2026-01-15*
-*Last updated: 2026-01-25 — Phase 24 Write Tools Migration complete*
+*Last updated: 2026-01-25 — Phase 25 Plan 01 complete (URL-based document processing)*
