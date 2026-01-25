@@ -86,11 +86,11 @@ Plans:
   3. Bearer token authentication validates correctly for all tools
   4. Old sub-workflows are exported to workflows-backup/ directory
   5. Old sub-workflows are deactivated but not deleted
-**Plans**: TBD
+**Plans**: 2 plans (Wave 1: 1 plan, Wave 2: 1 plan)
 
 Plans:
-- [ ] 26-01: End-to-end testing of all migrated tools
-- [ ] 26-02: Archive and deactivate replaced sub-workflows
+- [ ] 26-01-PLAN.md — Validate all 10 migrated tools (static + API tests) (Wave 1)
+- [ ] 26-02-PLAN.md — Archive and deactivate replaced sub-workflows (Wave 2)
 
 ## Progress
 
@@ -107,4 +107,4 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26
 ---
 
 *Roadmap created: 2026-01-25*
-*Last updated: 2026-01-25 — Phase 25 complete*
+*Last updated: 2026-01-25 — Phase 26 planned*
