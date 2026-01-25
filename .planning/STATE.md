@@ -1,8 +1,8 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-24
-**Status:** v2.0 In Progress — Phase 22 in progress
-**Current Milestone:** v2.0 Agent API Migration
+**Status:** v2.0 Complete — All milestones shipped
+**Current Milestone:** All milestones complete (v1.0, v1.1, v1.2, v2.0)
 
 ---
 
@@ -11,20 +11,20 @@
 See: `.planning/PROJECT.md` (updated 2026-01-24)
 
 **Core value:** Dashboard de alertas que mostra "at glance" tudo que precisa de atenção
-**Current focus:** Migrating N8N agent tools to Next.js APIs + MCP Server (Phase 22: MCP Server in progress)
+**Current focus:** v2.0 Agent API Migration COMPLETE - All 11 N8N tools migrated to Next.js APIs with MCP Server wrapper
 
 ---
 
 ## Current Position
 
 **Milestone:** v2.0 Agent API Migration
-**Phase:** Phase 22 of 22 (MCP Server) — IN PROGRESS
-**Plan:** 3/4 plans complete (22-01, 22-02, 22-03)
-**Status:** Phase 22 in progress
+**Phase:** Phase 22 of 22 (MCP Server) — COMPLETE
+**Plan:** 4/4 plans complete (22-01, 22-02, 22-03, 22-04)
+**Status:** Phase 22 complete, v2.0 milestone complete
 
-**Last activity:** 2026-01-24 — Completed 22-03-PLAN.md (Write Tools)
+**Last activity:** 2026-01-24 — Completed 22-04-PLAN.md (MCP Server Completion)
 
-**Progress:** ████████████████████ 100% (86/86 total plans complete across all milestones)
+**Progress:** ████████████████████ 100% (87/87 total plans complete across all milestones)
 
 ---
 
@@ -66,12 +66,21 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 - ✅ Phase 18: Query Tools (5 read-only APIs)
 - ✅ Phase 19: Write Tools (4 create/update APIs)
 - ✅ Phase 20: Complex Tools (document processing)
-- ✅ Phase 21: N8N Integration (production migration with gradual rollout) — COMPLETE
-- Phase 22: MCP Server (optional wrapper for Claude Desktop) — IN PROGRESS
+- ✅ Phase 21: N8N Integration (production migration with gradual rollout)
+- ✅ Phase 22: MCP Server (optional wrapper for Claude Desktop) — COMPLETE
 
 ---
 
 ## Shipped Milestones
+
+**v2.0 Agent API Migration (Shipped 2026-01-24)**
+- 5 phases (17-18-19-20-21-22), 22 plans
+- Agent API Foundation (Phase 17): Auth, error handling, audit logging, validation
+- Query Tools (Phase 18): 5 read-only APIs
+- Write Tools (Phase 19): 4 create/update APIs
+- Complex Tools (Phase 20): Document processing with Vision API
+- N8N Integration (Phase 21): Migration documentation, gradual rollout, rollback procedures
+- MCP Server (Phase 22): Model Context Protocol wrapper for Claude Desktop (11 tools)
 
 **v1.2 Agenda List View + Pre-Checkin Management (Shipped 2026-01-21)**
 - 4 phases (13-16), 18 plans, 46 requirements
@@ -90,8 +99,8 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 ## Performance Metrics
 
 **Velocity (All Milestones):**
-- Total plans completed: 80
-- Total phases completed: 20
+- Total plans completed: 87
+- Total phases completed: 22
 - Average plans per phase: 4.0
 
 **By Milestone:**
@@ -101,15 +110,15 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 | v1.0 | 8 | 32 | 4.0 |
 | v1.1 | 4 | 9 | 2.3 |
 | v1.2 | 4 | 18 | 4.5 |
-| v2.0 | 4→5 | 11→12 | 2.4 |
+| v2.0 | 5 | 22 | 4.4 |
 
 ---
 
 ## Accumulated Context
 
-### Phase 22 Deliverables (In Progress)
+### Phase 22 Deliverables (Complete)
 
-**MCP Server (3/4 plans complete):**
+**MCP Server (4/4 plans complete):**
 
 1. **MCP Server Foundation** (`src/mcp/*.ts`)
    - Configuration management with environment validation
@@ -141,6 +150,14 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
    - registerWriteTools() for MCP server integration
    - Specific error messages for conflicts, not found, validation errors
    - All tools use correct HTTP methods (POST/PATCH/DELETE)
+
+4. **MCP Server Completion** (`src/mcp/tools/processar-documento.ts`, `src/mcp/tools/document.ts`, `claude_desktop_config.example.json`)
+   - Document processing tool with base64 input → multipart FormData conversion
+   - Automatic MIME type detection from file extension
+   - Complete server registration of all 11 tools (query + write + document)
+   - Claude Desktop configuration example with detailed setup instructions
+   - npm run mcp script for local testing
+   - Successful server startup verification with all tools operational
 
 ### Phase 21 Deliverables (Complete)
 
@@ -273,7 +290,7 @@ WhatsApp → N8N Webhook Handler → AI Agent → HTTP Request → Next.js APIs
 
 ### Decisions
 
-Recent decisions from Phase 22:
+Decisions from Phase 22 (Complete):
 
 - **stderr-only logging for MCP protocol**: All logging must use console.error() to avoid corrupting JSON-RPC on stdout
 - **Dual success checking pattern**: Check both HTTP status AND json.success field per Phase 21 research pitfall #3
@@ -282,6 +299,10 @@ Recent decisions from Phase 22:
 - **Tool handler pattern consistency**: Same export pattern across all tools (object with name, description, inputSchema, handler) for uniform registration
 - **Exact N8N tool names**: Keep tool names matching N8N for seamless migration (criar_agendamento, reagendar_agendamento, etc)
 - **Specific error messages**: Implement detailed error messages for common cases (conflict, not found, validation) for better UX in Claude Desktop
+- **Base64 document input**: Accept base64-encoded files in MCP tool for JSON compatibility, convert to FormData internally
+- **Automatic MIME type detection**: Optional mimeType parameter with extension-based fallback for user convenience
+- **Complete tool registration**: Single server startup registers all 11 tools from modular index files
+- **Claude Desktop configuration template**: Example file with inline documentation for self-service setup
 
 Decisions from Phase 21:
 
@@ -336,10 +357,10 @@ None
 ## Session Continuity
 
 **Last session:** 2026-01-24
-**Stopped at:** Completed 22-03-PLAN.md (Write Tools)
+**Stopped at:** Completed 22-04-PLAN.md (MCP Server Completion) - Phase 22 complete
 **Resume file:** None
 
-**Next action:** 22-03-PLAN.md (Write Tools registration)
+**Next action:** Phase 22 complete. All v2.0 Agent API Migration work finished.
 
 ---
 
