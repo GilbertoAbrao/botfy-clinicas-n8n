@@ -10,7 +10,7 @@ Migrate 10 `toolWorkflow` nodes in the N8N AI Agent workflow to `toolHttpRequest
 - v1.1 Anti No-Show Intelligence - Phases 9-12 (shipped 2026-01-21)
 - v1.2 Agenda List View + Pre-Checkin Management - Phases 13-16 (shipped 2026-01-21)
 - v2.0 Agent API Migration - Phases 17-22 (shipped 2026-01-25)
-- **v2.1 N8N HTTP Tools Migration** - Phases 23-26 (in progress)
+- **v2.1 N8N HTTP Tools Migration** - Phases 23-26 (shipped 2026-01-25)
 
 ## Phases
 
@@ -21,7 +21,7 @@ Migrate 10 `toolWorkflow` nodes in the N8N AI Agent workflow to `toolHttpRequest
 - [x] **Phase 23: Query Tools Migration** - Replace 5 read-only toolWorkflow nodes with toolHttpRequest ✓
 - [x] **Phase 24: Write Tools Migration** - Replace 4 create/update/delete toolWorkflow nodes with toolHttpRequest ✓
 - [x] **Phase 25: Document Tool Migration** - Replace complex multipart document processing tool ✓
-- [ ] **Phase 26: Validation & Archive** - Test all migrated tools and archive replaced sub-workflows
+- [x] **Phase 26: Validation & Archive** - Test all migrated tools and archive replaced sub-workflows ✓
 
 ## Phase Details
 
@@ -89,8 +89,8 @@ Plans:
 **Plans**: 2 plans (Wave 1: 1 plan, Wave 2: 1 plan)
 
 Plans:
-- [ ] 26-01-PLAN.md — Validate all 10 migrated tools (static + API tests) (Wave 1)
-- [ ] 26-02-PLAN.md — Archive and deactivate replaced sub-workflows (Wave 2)
+- [x] 26-01-PLAN.md — Validate all 10 migrated tools (static + API tests) (Wave 1) ✓
+- [x] 26-02-PLAN.md — Archive and deactivate replaced sub-workflows (Wave 2) ✓
 
 ## Progress
 
@@ -102,9 +102,9 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26
 | 23. Query Tools Migration | v2.1 | 5/5 | Complete ✓ | 2026-01-25 |
 | 24. Write Tools Migration | v2.1 | 4/4 | Complete ✓ | 2026-01-25 |
 | 25. Document Tool Migration | v2.1 | 2/2 | Complete ✓ | 2026-01-25 |
-| 26. Validation & Archive | v2.1 | 0/2 | Not started | - |
+| 26. Validation & Archive | v2.1 | 2/2 | Complete ✓ | 2026-01-25 |
 
 ---
 
 *Roadmap created: 2026-01-25*
-*Last updated: 2026-01-25 — Phase 26 planned*
+*Last updated: 2026-01-25 — v2.1 Milestone complete*
