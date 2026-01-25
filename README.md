@@ -2,28 +2,44 @@
 
 Console administrativo web para gerenciar o sistema Botfy ClinicOps. Permite visualizar agenda, pacientes, conversas WhatsApp e identificar problemas que precisam de intervenção humana através de um dashboard de alertas centralizado.
 
-**Versão atual:** v1.2 (Shipped 2026-01-21)
+**Versão atual:** v2.0 (Shipped 2026-01-25)
 
 ## Arquitetura
 
 ```
 ┌─────────────┐     ┌──────────────┐     ┌─────────────┐     ┌─────────────┐
 │  WhatsApp   │────>│ Evolution API│────>│ N8N Workflow│────>│  Supabase   │
-│  (Paciente) │     │  (Gateway)   │     │  (Backend)  │     │ (PostgreSQL)│
+│  (Paciente) │     │  (Gateway)   │     │  (AI Agent) │     │ (PostgreSQL)│
 └─────────────┘     └──────────────┘     └──────┬──────┘     └──────┬──────┘
-                                               │                    │
-                                               │                    │
-                                               ▼                    ▼
+                                                │                    │
+                                                │ HTTP Request       │
+                                                ▼                    │
+                                         ┌──────────────┐            │
+                                         │ Agent APIs   │────────────┤
+                                         │ /api/agent/* │            │
+                                         │ (11 tools)   │            │
+                                         └──────┬───────┘            │
+                                                │                    │
+                                                ▼                    ▼
                                          ┌──────────────────────────────┐
                                          │   Console Administrativo     │
-                                         │   (Next.js Frontend)         │
+                                         │   (Next.js Full-Stack)       │
                                          │   - Dashboard de Alertas     │
                                          │   - Gestão de Pacientes      │
                                          │   - Calendário/Agenda        │
                                          │   - Conversas WhatsApp       │
                                          │   - Pre-Checkin Management   │
                                          │   - Document Validation      │
+                                         │   - Agent API Routes         │
                                          └──────────────────────────────┘
+                                                │
+                                                │ (optional)
+                                                ▼
+                                         ┌──────────────┐
+                                         │  MCP Server  │
+                                         │ (11 tools)   │
+                                         │ Claude Desktop│
+                                         └──────────────┘
 ```
 
 ## Stack Tecnológico
@@ -131,6 +147,66 @@ Acesse: http://localhost:3051
 - **Pre-Checkin Dashboard**: Analytics, timeline, N8N webhook reminders
 - **Procedure Instructions**: CRUD com preview WhatsApp, 7 tipos
 - **Document Management**: Preview, approve/reject, bulk actions
+
+### v2.0 Agent API Migration ✅
+- **Agent API Foundation**: Bearer token auth, error handling, HIPAA audit logging
+- **Query Tools (5 APIs)**: slots, agendamentos, paciente, pre-checkin, instrucoes
+- **Write Tools (5 APIs)**: criar/reagendar/cancelar agendamento, atualizar paciente, confirmar presença
+- **Complex Tools (1 API)**: Processamento de documentos com GPT-4o Vision
+- **MCP Server**: Wrapper opcional para Claude Desktop (11 tools)
+
+## Agent API (v2.0)
+
+O console expõe 11 APIs para o AI Agent do N8N consumir via HTTP Request (substituindo sub-workflows).
+
+### Autenticação
+
+Todas as rotas `/api/agent/*` requerem Bearer token:
+
+```bash
+curl -H "Authorization: Bearer <API_KEY>" \
+  https://seu-dominio/api/agent/slots?data=2026-01-25
+```
+
+### APIs Disponíveis
+
+| Tool | Método | Endpoint | Descrição |
+|------|--------|----------|-----------|
+| `buscar_slots_disponiveis` | GET | `/api/agent/slots` | Slots disponíveis por data/provider/service |
+| `buscar_agendamentos` | GET | `/api/agent/agendamentos` | Busca agendamentos com filtros |
+| `buscar_paciente` | GET | `/api/agent/paciente` | Busca paciente por telefone/CPF |
+| `status_pre_checkin` | GET | `/api/agent/pre-checkin/status` | Status de pré-checkin |
+| `buscar_instrucoes` | GET | `/api/agent/instrucoes` | Instruções de procedimento |
+| `criar_agendamento` | POST | `/api/agent/agendamentos` | Cria agendamento (idempotente) |
+| `reagendar_agendamento` | PATCH | `/api/agent/agendamentos/:id` | Reagenda consulta |
+| `cancelar_agendamento` | DELETE | `/api/agent/agendamentos/:id` | Cancela com motivo |
+| `atualizar_dados_paciente` | PATCH | `/api/agent/paciente/:id` | Atualiza dados parciais |
+| `confirmar_presenca` | POST | `/api/agent/agendamentos/:id/confirmar` | Confirma/marca presente |
+| `processar_documento` | POST | `/api/agent/documentos/processar` | Processa documento com Vision AI |
+
+### Documentação Completa
+
+Veja `docs/n8n/` para:
+- `api-endpoints.md` - Referência completa das 11 APIs
+- `credential-setup.md` - Configuração de credenciais N8N
+- `migration-checklist.md` - Checklist de migração por tool
+- `gradual-rollout.md` - Guia de rollout gradual (10%→50%→100%)
+- `rollback-runbook.md` - Procedimento de rollback (<5 min)
+
+### MCP Server (Opcional)
+
+Para uso com Claude Desktop, o MCP Server expõe os mesmos 11 tools:
+
+```bash
+# Iniciar servidor MCP
+npm run mcp
+
+# Configurar Claude Desktop
+cp claude_desktop_config.example.json ~/Library/Application\ Support/Claude/claude_desktop_config.json
+# Edite o arquivo com o caminho correto e API_KEY
+```
+
+O servidor usa stdio transport e aparece no Claude Desktop como "botfy-clinicops".
 
 ## Deploy EasyPanel (Docker)
 
@@ -240,7 +316,15 @@ Resposta:
 │   │   │   ├── servicos/       # Configuração de serviços
 │   │   │   ├── usuarios/       # Gestão de usuários
 │   │   │   └── analytics/      # Analytics e relatórios
-│   │   └── api/                # API Routes
+│   │   └── api/
+│   │       ├── agent/          # Agent APIs (v2.0) - 11 tools
+│   │       │   ├── slots/      # buscar_slots_disponiveis
+│   │       │   ├── agendamentos/# CRUD agendamentos
+│   │       │   ├── paciente/   # buscar/atualizar paciente
+│   │       │   ├── pre-checkin/# status_pre_checkin
+│   │       │   ├── instrucoes/ # buscar_instrucoes
+│   │       │   └── documentos/ # processar_documento
+│   │       └── ...             # Outras API routes
 │   ├── components/             # Componentes React
 │   │   ├── ui/                 # shadcn/ui components
 │   │   ├── calendar/           # Componentes de calendário
@@ -249,26 +333,48 @@ Resposta:
 │   │   ├── instructions/       # CRUD instruções
 │   │   ├── documents/          # Gestão documentos
 │   │   └── layout/             # Layouts e navegação
-│   ├── lib/                    # Utilitários e helpers
+│   ├── lib/
 │   │   ├── supabase/           # Cliente Supabase
 │   │   ├── auth/               # Autenticação e RBAC
+│   │   ├── agent/              # Agent auth, types, errors (v2.0)
+│   │   ├── services/           # Business logic services (v2.0)
+│   │   ├── document/           # Vision API, storage (v2.0)
 │   │   ├── calendar/           # Timezone, conflitos, waitlist
-│   │   ├── audit/              # Audit logging
+│   │   ├── audit/              # Audit logging (HIPAA)
 │   │   ├── pre-checkin/        # N8N reminder integration
 │   │   └── validations/        # Schemas Zod
+│   ├── mcp/                    # MCP Server (v2.0)
+│   │   ├── config.ts           # Environment config
+│   │   ├── http-client.ts      # API client with auth
+│   │   ├── heartbeat.ts        # Health monitoring
+│   │   ├── server.ts           # Stdio MCP server
+│   │   └── tools/              # 11 tool handlers
 │   └── hooks/                  # React Hooks customizados
+├── docs/
+│   └── n8n/                    # N8N integration docs (v2.0)
+│       ├── api-endpoints.md    # API reference
+│       ├── credential-setup.md # Auth configuration
+│       ├── migration-checklist.md
+│       ├── gradual-rollout.md
+│       └── rollback-runbook.md
+├── workflows-backup/           # N8N sub-workflow backups (v2.0)
 ├── prisma/                     # Prisma schema e migrations
 ├── public/                     # Assets estáticos
 ├── .planning/                  # GSD framework (planejamento)
 ├── Dockerfile                  # Build Docker para EasyPanel
-├── .dockerignore               # Arquivos excluídos do Docker
+├── claude_desktop_config.example.json # MCP config template (v2.0)
 ├── AGENTS.md                   # Documentação N8N workflows
 └── CLAUDE.md                   # Documentação para Claude AI
 ```
 
 ## Integração N8N
 
-O console se integra com os workflows N8N via webhooks. O N8N é responsável por toda a automação de atendimento via WhatsApp.
+O console se integra com os workflows N8N de duas formas:
+
+1. **Console → N8N (Webhooks)**: Console notifica N8N sobre eventos (agendamentos, cancelamentos, etc.)
+2. **N8N → Console (Agent APIs v2.0)**: AI Agent consome APIs do console via HTTP Request
+
+O N8N é responsável por toda a automação de atendimento via WhatsApp. A partir da v2.0, as 11 ferramentas do AI Agent usam APIs do console ao invés de sub-workflows N8N.
 
 ### Workflows Ativos
 
@@ -326,6 +432,9 @@ npm run dev                 # Next.js dev server (padrão 3000)
 npm run build               # Build de produção (standalone)
 npm run start               # Servidor de produção
 
+# MCP Server (v2.0)
+npm run mcp                 # Inicia MCP Server para Claude Desktop
+
 # Database
 npx prisma generate         # Gera Prisma client
 npx prisma migrate dev      # Aplica migrations
@@ -350,13 +459,21 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 DATABASE_URL=
 
-# N8N Webhooks
+# N8N Webhooks (Console → N8N)
 NEXT_PUBLIC_N8N_URL=
 N8N_WEBHOOK_APPOINTMENT_CREATED=
 N8N_WEBHOOK_APPOINTMENT_UPDATED=
 N8N_WEBHOOK_APPOINTMENT_CANCELLED=
 N8N_WEBHOOK_WAITLIST_NOTIFY=
 N8N_WEBHOOK_PRE_CHECKIN_REMINDER=
+
+# Agent API (N8N → Console) - v2.0
+AGENT_API_KEY=                    # Bearer token para /api/agent/*
+OPENAI_API_KEY=                   # GPT-4o Vision para processar_documento
+
+# MCP Server (opcional) - v2.0
+MCP_API_URL=http://localhost:3051 # URL base para MCP Server
+MCP_API_KEY=                      # Mesmo que AGENT_API_KEY
 
 # Evolution API (opcional)
 EVOLUTION_API_URL=
@@ -370,11 +487,12 @@ EVOLUTION_INSTANCE=
 | v1.0 | MVP | ✅ Shipped | 2026-01-17 |
 | v1.1 | Anti No-Show Intelligence | ✅ Shipped | 2026-01-21 |
 | v1.2 | Agenda List View + Pre-Checkin | ✅ Shipped | 2026-01-21 |
+| v2.0 | Agent API Migration | ✅ Shipped | 2026-01-25 |
 
 **Stats totais:**
-- 16 phases, 59 plans, 143 requirements
-- 36,339 lines of TypeScript
-- 370+ files
+- 22 phases, 87 plans
+- ~42,000 lines of TypeScript
+- 420+ files
 
 Veja `.planning/MILESTONES.md` para detalhes completos.
 
@@ -382,6 +500,7 @@ Veja `.planning/MILESTONES.md` para detalhes completos.
 
 - **AGENTS.md** - Workflows N8N, tabelas, troubleshooting
 - **CLAUDE.md** - Guia para Claude AI trabalhar no projeto
+- **docs/n8n/** - Documentação Agent API (v2.0): endpoints, migração, rollout, rollback
 - **.planning/** - GSD framework, roadmap, requirements
 
 ## Suporte

@@ -1,5 +1,31 @@
 # Project Milestones: Botfy ClinicOps - Console Administrativo
 
+## v2.0 Agent API Migration (Shipped: 2026-01-25)
+
+**Delivered:** Migrated all 11 N8N AI Agent tools from sub-workflows to Next.js API routes with MCP Server wrapper, bringing business logic into the codebase for type safety, testability, and maintainability.
+
+**Phases completed:** 17-22 (24 plans total)
+
+**Key accomplishments:**
+- Agent API Foundation with Bearer token auth, bcrypt API keys, and HIPAA audit logging
+- 5 Query APIs (slots, agendamentos, paciente, pre-checkin, instrucoes) with flexible validation
+- 5 Write APIs (criar/reagendar/cancelar agendamento, atualizar paciente, confirmar presença) with idempotency
+- Document processing API with GPT-4o Vision for Brazilian documents (RG, CPF, CNS, insurance cards)
+- Complete N8N integration documentation (migration, gradual rollout 10%→50%→100%, rollback <5min)
+- MCP Server wrapper exposing all 11 tools for Claude Desktop integration
+
+**Stats:**
+- 118 files created/modified
+- 28,549 lines added (42,505 total TypeScript)
+- 6 phases, 24 plans, 24 requirements (23/24 satisfied, FOUND-04 deferred)
+- 1 day (2026-01-24)
+
+**Git range:** `feat(17-02)` → `feat(22-04)`
+
+**What's next:** v2.1+ for service layer consolidation, rate limiting, or OpenAPI documentation
+
+---
+
 ## v1.2 Agenda List View + Pre-Checkin Management (Shipped: 2026-01-21)
 
 **Delivered:** Comprehensive agenda management with list view toggle and pre-checkin workflow tools including instructions CRUD, document validation, and analytics.
