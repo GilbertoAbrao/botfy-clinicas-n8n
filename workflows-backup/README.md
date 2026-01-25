@@ -45,18 +45,20 @@ This directory contains JSON exports of all 10 AI Agent tool sub-workflows.
 
 | # | Workflow ID | File Name | Export Date | Size | Status |
 |---|-------------|-----------|-------------|------|--------|
-| 1 | `8Bke6sYr7r51aeEq` | `8Bke6sYr7r51aeEq-buscar-slots-disponiveis.json` | TBD | TBD | ⬜ Not Exported |
-| 2 | `eEx2enJk3YpreNUm` | `eEx2enJk3YpreNUm-criar-agendamento.json` | Exists | 8.5 KB | ✅ Exported |
-| 3 | `21EHe24mkMmfBhK6` | `21EHe24mkMmfBhK6-reagendar-agendamento.json` | Exists | 2.4 KB | ✅ Exported |
-| 4 | `gE2rpbLVUlnA5yMk` | `gE2rpbLVUlnA5yMk-cancelar-agendamento.json` | Exists | 2.2 KB | ✅ Exported |
-| 5 | `8Ug0F3KuLov6EeCQ` | `8Ug0F3KuLov6EeCQ-buscar-agendamentos.json` | Exists | 2.6 KB | ✅ Exported |
-| 6 | `igG6sZsStxiDzNRY` | `igG6sZsStxiDzNRY-buscar-paciente.json` | Exists | 3.1 KB | ✅ Exported |
-| 7 | `4DNyXp5fPPfsFOnR` | `4DNyXp5fPPfsFOnR-atualizar-dados-paciente.json` | Exists | 4.8 KB | ✅ Exported |
-| 8 | `NUZv1Gt15LKyiiKz` | `NUZv1Gt15LKyiiKz-buscar-instrucoes.json` | TBD | TBD | ⬜ Not Exported |
-| 9 | `Pc0PyATrZaGefiSJ` | `Pc0PyATrZaGefiSJ-processar-documento.json` | TBD | TBD | ⬜ Not Exported |
-| 10 | `holwGQuksZPsSb19` | `holwGQuksZPsSb19-status-pre-checkin.json` | TBD | TBD | ⬜ Not Exported |
+| 1 | `8Bke6sYr7r51aeEq` | `8Bke6sYr7r51aeEq-buscar-slots-disponiveis.json` | ⚠️ N/A | N/A | ⚠️ Replaced by API |
+| 2 | `eEx2enJk3YpreNUm` | `eEx2enJk3YpreNUm-criar-agendamento.json` | Pre-migration | 8.5 KB | ✅ Archived |
+| 3 | `21EHe24mkMmfBhK6` | `21EHe24mkMmfBhK6-reagendar-agendamento.json` | Pre-migration | 2.4 KB | ✅ Archived |
+| 4 | `gE2rpbLVUlnA5yMk` | `gE2rpbLVUlnA5yMk-cancelar-agendamento.json` | Pre-migration | 2.2 KB | ✅ Archived |
+| 5 | `8Ug0F3KuLov6EeCQ` | `8Ug0F3KuLov6EeCQ-buscar-agendamentos.json` | Pre-migration | 2.6 KB | ✅ Archived |
+| 6 | `igG6sZsStxiDzNRY` | `igG6sZsStxiDzNRY-buscar-paciente.json` | Pre-migration | 3.1 KB | ✅ Archived |
+| 7 | `4DNyXp5fPPfsFOnR` | `4DNyXp5fPPfsFOnR-atualizar-dados-paciente.json` | Pre-migration | 4.8 KB | ✅ Archived |
+| 8 | `NUZv1Gt15LKyiiKz` | `NUZv1Gt15LKyiiKz-buscar-instrucoes.json` | 2026-01-25 | 5.0 KB | ✅ Archived |
+| 9 | `Pc0PyATrZaGefiSJ` | `Pc0PyATrZaGefiSJ-processar-documento.json` | 2026-01-25 | 13 KB | ✅ Archived |
+| 10 | `holwGQuksZPsSb19` | `holwGQuksZPsSb19-status-pre-checkin.json` | 2026-01-25 | 6.5 KB | ✅ Archived |
 
-**Note:** Several sub-workflows already have backups from previous exports. Missing workflows should be exported before migration.
+**Note:**
+- Workflows #1 (`buscar-slots-disponiveis`) was replaced with API endpoints during migration and never existed as an Execute Workflow sub-workflow
+- All other 9 sub-workflows have been successfully exported, archived, and deactivated in N8N
 
 ---
 
@@ -292,7 +294,59 @@ This directory already contains several workflow backups from previous exports:
 
 ---
 
-**Last Backup Date:** `[To be filled after export]`
-**Backed Up By:** `[Name]`
-**Cloud Backup Location:** `[S3/GCS URL]`
-**Verification Status:** `[Pass/Fail]`
+## Archive Completion
+
+**Archive Date:** 2026-01-25
+**Archived By:** Claude (Phase 26 - Validation & Archive)
+**Status:** ✅ COMPLETE
+**Migration Phase:** v2.1 N8N Agent HTTP Tools Migration
+
+### Summary of Archival
+
+**What was archived:**
+- 9 N8N Execute Workflow sub-workflows successfully migrated to Next.js API endpoints
+- All sub-workflows exported as JSON to this directory for disaster recovery
+- All sub-workflows deactivated in N8N production instance (not deleted)
+
+**Archive actions performed:**
+
+1. **Exported missing workflows (2026-01-25):**
+   - `holwGQuksZPsSb19-status-pre-checkin.json` (6.5 KB)
+   - `NUZv1Gt15LKyiiKz-buscar-instrucoes.json` (5.0 KB)
+   - `Pc0PyATrZaGefiSJ-processar-documento.json` (13 KB)
+
+2. **Verified existing exports (Pre-migration):**
+   - `eEx2enJk3YpreNUm-criar-agendamento.json` (8.5 KB)
+   - `21EHe24mkMmfBhK6-reagendar-agendamento.json` (2.4 KB)
+   - `gE2rpbLVUlnA5yMk-cancelar-agendamento.json` (2.2 KB)
+   - `8Ug0F3KuLov6EeCQ-buscar-agendamentos.json` (2.6 KB)
+   - `igG6sZsStxiDzNRY-buscar-paciente.json` (3.1 KB)
+   - `4DNyXp5fPPfsFOnR-atualizar-dados-paciente.json` (4.8 KB)
+
+3. **Deactivated in N8N:**
+   - All 9 sub-workflows confirmed inactive (toggle status: false)
+   - Workflows retained in N8N for emergency rollback capability
+   - No workflows deleted (preserve rollback option)
+
+**Migration outcome:**
+- ✅ All AI Agent tool calls now use `toolHttpRequest` nodes pointing to Next.js API endpoints
+- ✅ All JSON exports validated (valid JSON, >1KB, contains nodes/connections)
+- ✅ All workflows deactivated (inactive but recoverable)
+- ✅ Git commit history preserved
+- ✅ Rollback capability maintained
+
+**Note on `buscar-slots-disponiveis`:**
+This functionality was implemented directly as API endpoints during migration and never existed as an Execute Workflow sub-workflow. There is no workflow to archive for this tool.
+
+**Next steps:**
+- Monitor API endpoint performance in production
+- Keep archived JSON files indefinitely for compliance/audit
+- Delete N8N sub-workflows only after 3+ months of stable API operation
+- Upload to cloud backup (S3/GCS) for off-site recovery
+
+---
+
+**Last Backup Date:** 2026-01-25
+**Backed Up By:** Claude (Phase 26-02)
+**Cloud Backup Location:** `[S3/GCS URL - To be configured]`
+**Verification Status:** ✅ Pass (all JSON files validated)

@@ -1,0 +1,220 @@
+{
+  "id": "Pc0PyATrZaGefiSJ",
+  "name": "Botfy - Tool: Processar Documento",
+  "active": false,
+  "createdAt": "2026-01-14T12:09:45.182Z",
+  "updatedAt": "2026-01-14T12:48:54.165Z",
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "When Executed by Another Workflow",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [-608, 304],
+      "parameters": {"inputSource": "passthrough"}
+    },
+    {
+      "id": "parse-input",
+      "name": "Parse Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [-400, 304],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "pre_checkin_id", "name": "pre_checkin_id", "value": "={{ $json.pre_checkin_id }}", "type": "number"},
+            {"id": "paciente_id", "name": "paciente_id", "value": "={{ $json.paciente_id }}", "type": "number"},
+            {"id": "tipo_documento", "name": "tipo_documento", "value": "={{ $json.tipo_documento || 'outros' }}", "type": "string"},
+            {"id": "imagem_base64", "name": "imagem_base64", "value": "={{ $json.imagem_base64 }}", "type": "string"}
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "switch-tipo",
+      "name": "Tipo de Documento",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [-208, 304],
+      "parameters": {
+        "rules": {
+          "values": [
+            {"conditions": {"options": {"version": 2, "leftValue": "", "caseSensitive": false, "typeValidation": "loose"}, "conditions": [{"id": "cond-rg", "leftValue": "={{ $json.tipo_documento }}", "rightValue": "rg", "operator": {"type": "string", "operation": "equals"}}], "combinator": "and"}, "renameOutput": true, "outputKey": "RG"},
+            {"conditions": {"options": {"version": 2, "leftValue": "", "caseSensitive": false, "typeValidation": "loose"}, "conditions": [{"id": "cond-cnh", "leftValue": "={{ $json.tipo_documento }}", "rightValue": "cnh", "operator": {"type": "string", "operation": "equals"}}], "combinator": "and"}, "renameOutput": true, "outputKey": "CNH"},
+            {"conditions": {"options": {"version": 2, "leftValue": "", "caseSensitive": false, "typeValidation": "loose"}, "conditions": [{"id": "cond-convenio", "leftValue": "={{ $json.tipo_documento }}", "rightValue": "carteirinha_convenio", "operator": {"type": "string", "operation": "equals"}}], "combinator": "and"}, "renameOutput": true, "outputKey": "Convenio"},
+            {"conditions": {"options": {"version": 2, "leftValue": "", "caseSensitive": false, "typeValidation": "loose"}, "conditions": [{"id": "cond-guia", "leftValue": "={{ $json.tipo_documento }}", "rightValue": "guia_autorizacao", "operator": {"type": "string", "operation": "equals"}}], "combinator": "and"}, "renameOutput": true, "outputKey": "Guia"}
+          ]
+        },
+        "options": {"fallbackOutput": "extra", "renameFallbackOutput": "Outros"}
+      }
+    },
+    {
+      "id": "ocr-rg",
+      "name": "OCR RG",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [0, 112],
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {"__rl": true, "value": "gpt-4o", "mode": "list"},
+        "text": "Analise esta imagem de um documento de identidade brasileiro (RG). Extraia os seguintes dados em formato JSON:\n{\n  \"nome_completo\": \"Nome como aparece no documento\",\n  \"numero_rg\": \"Numero do RG\",\n  \"cpf\": \"CPF se visivel\",\n  \"data_nascimento\": \"Data de nascimento no formato YYYY-MM-DD\",\n  \"orgao_emissor\": \"Orgao emissor\",\n  \"data_emissao\": \"Data de emissao se visivel\",\n  \"confianca\": 0.0 a 1.0 indicando confianca na leitura\n}\nSe algum campo nao estiver legivel, use null. Responda APENAS com o JSON, sem explicacoes.",
+        "inputType": "base64",
+        "options": {}
+      },
+      "credentials": {"openAiApi": {"id": "b2f06NWMfx9VK1I2", "name": "OpenAi account"}}
+    },
+    {
+      "id": "ocr-cnh",
+      "name": "OCR CNH",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [0, 256],
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {"__rl": true, "value": "gpt-4o", "mode": "list"},
+        "text": "Analise esta imagem de uma CNH brasileira. Extraia os seguintes dados em formato JSON:\n{\n  \"nome_completo\": \"Nome como aparece no documento\",\n  \"numero_registro\": \"Numero de registro da CNH\",\n  \"cpf\": \"CPF\",\n  \"data_nascimento\": \"Data de nascimento no formato YYYY-MM-DD\",\n  \"validade\": \"Data de validade no formato YYYY-MM-DD\",\n  \"categoria\": \"Categoria da CNH\",\n  \"confianca\": 0.0 a 1.0 indicando confianca na leitura\n}\nSe algum campo nao estiver legivel, use null. Responda APENAS com o JSON.",
+        "inputType": "base64",
+        "options": {}
+      },
+      "credentials": {"openAiApi": {"id": "b2f06NWMfx9VK1I2", "name": "OpenAi account"}}
+    },
+    {
+      "id": "ocr-convenio",
+      "name": "OCR Carteirinha Convenio",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [0, 400],
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {"__rl": true, "value": "gpt-4o", "mode": "list"},
+        "text": "Analise esta imagem de uma carteirinha de plano de saude/convenio brasileiro. Extraia os seguintes dados em formato JSON:\n{\n  \"nome_beneficiario\": \"Nome do beneficiario\",\n  \"numero_carteira\": \"Numero da carteirinha\",\n  \"operadora\": \"Nome da operadora/convenio\",\n  \"plano\": \"Nome do plano se visivel\",\n  \"validade\": \"Data de validade no formato YYYY-MM-DD\",\n  \"codigo_ans\": \"Codigo ANS se visivel\",\n  \"confianca\": 0.0 a 1.0 indicando confianca na leitura\n}\nSe algum campo nao estiver legivel, use null. Responda APENAS com o JSON.",
+        "inputType": "base64",
+        "options": {}
+      },
+      "credentials": {"openAiApi": {"id": "b2f06NWMfx9VK1I2", "name": "OpenAi account"}}
+    },
+    {
+      "id": "ocr-guia",
+      "name": "OCR Guia Autorizacao",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [0, 560],
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {"__rl": true, "value": "gpt-4o", "mode": "list"},
+        "text": "Analise esta imagem de uma guia de autorizacao de procedimento medico. Extraia os seguintes dados em formato JSON:\n{\n  \"numero_guia\": \"Numero da guia\",\n  \"procedimento_autorizado\": \"Descricao do procedimento autorizado\",\n  \"codigo_procedimento\": \"Codigo TUSS/AMB se visivel\",\n  \"data_autorizacao\": \"Data de autorizacao no formato YYYY-MM-DD\",\n  \"validade\": \"Data de validade no formato YYYY-MM-DD\",\n  \"quantidade_autorizada\": \"Quantidade autorizada\",\n  \"confianca\": 0.0 a 1.0 indicando confianca na leitura\n}\nSe algum campo nao estiver legivel, use null. Responda APENAS com o JSON.",
+        "inputType": "base64",
+        "options": {}
+      },
+      "credentials": {"openAiApi": {"id": "b2f06NWMfx9VK1I2", "name": "OpenAi account"}}
+    },
+    {
+      "id": "ocr-outros",
+      "name": "OCR Documento Generico",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [0, 704],
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {"__rl": true, "value": "gpt-4o", "mode": "list"},
+        "text": "Analise esta imagem de documento. Identifique o tipo de documento e extraia todos os dados relevantes em formato JSON estruturado. Inclua um campo 'tipo_identificado' com o tipo de documento e 'confianca' de 0.0 a 1.0. Responda APENAS com o JSON.",
+        "inputType": "base64",
+        "options": {}
+      },
+      "credentials": {"openAiApi": {"id": "b2f06NWMfx9VK1I2", "name": "OpenAi account"}}
+    },
+    {
+      "id": "merge-ocr",
+      "name": "Merge OCR Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [208, 400],
+      "parameters": {"numberInputs": 5}
+    },
+    {
+      "id": "parse-json",
+      "name": "Parse JSON Resultado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [400, 400],
+      "parameters": {
+        "jsCode": "// Parse o resultado do OCR\nconst input = $input.first().json;\nlet dadosExtraidos = {};\nlet confianca = 0;\n\ntry {\n  // Tenta fazer parse do conteudo retornado pela OpenAI\n  const content = input.content || input.message?.content || '';\n  \n  // Remove markdown code blocks se existirem\n  const jsonStr = content.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n  \n  dadosExtraidos = JSON.parse(jsonStr);\n  confianca = dadosExtraidos.confianca || 0.5;\n  delete dadosExtraidos.confianca;\n} catch (e) {\n  dadosExtraidos = { erro: 'Falha ao processar documento', detalhes: e.message };\n  confianca = 0;\n}\n\nreturn [{\n  json: {\n    pre_checkin_id: $('Parse Input').first().json.pre_checkin_id,\n    paciente_id: $('Parse Input').first().json.paciente_id,\n    tipo_documento: $('Parse Input').first().json.tipo_documento,\n    dados_extraidos: dadosExtraidos,\n    confianca_extracao: confianca,\n    validado: confianca >= 0.7,\n    validado_por: 'ia'\n  }\n}];"
+      }
+    },
+    {
+      "id": "salva-documento",
+      "name": "Salva Documento",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [608, 400],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ 'INSERT INTO documentos_paciente (pre_checkin_id, paciente_id, tipo, arquivo_url, dados_extraidos, confianca_extracao) VALUES (' + $json.pre_checkin_id + ', ' + $json.paciente_id + ', \\'' + $json.tipo + '\\', \\'' + $json.arquivo_url + '\\', \\'' + JSON.stringify($json.dados_extraidos).replace(/'/g, \"''\") + '\\', ' + ($json.confianca || 0.8) + ') RETURNING id' }}"
+      },
+      "credentials": {"supabaseApi": {"id": "vjxdwL14zFNscRrD", "name": "Supabase account"}}
+    },
+    {
+      "id": "atualiza-status",
+      "name": "Atualiza Status Pre Check-In",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [800, 400],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "={{ 'UPDATE pre_checkin SET documentos_enviados = true, status = CASE WHEN status = \\'pendente\\' THEN \\'em_andamento\\' ELSE status END WHERE id = ' + $json.pre_checkin_id }}"
+      },
+      "credentials": {"supabaseApi": {"id": "vjxdwL14zFNscRrD", "name": "Supabase account"}}
+    },
+    {
+      "id": "retorna-resultado",
+      "name": "Retorna Resultado",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1008, 400],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {"id": "resultado", "name": "resultado", "value": "=Documento {{ $('Parse Input').first().json.tipo_documento }} processado com {{ Math.round($json.confianca_extracao * 100) }}% de confianca", "type": "string"},
+            {"id": "dados", "name": "dados_extraidos", "value": "={{ $json.dados_extraidos }}", "type": "object"},
+            {"id": "validado", "name": "validado", "value": "={{ $json.validado }}", "type": "boolean"}
+          ]
+        },
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {"main": [[{"node": "Parse Input", "type": "main", "index": 0}]]},
+    "Parse Input": {"main": [[{"node": "Tipo de Documento", "type": "main", "index": 0}]]},
+    "Tipo de Documento": {"main": [
+      [{"node": "OCR RG", "type": "main", "index": 0}],
+      [{"node": "OCR CNH", "type": "main", "index": 0}],
+      [{"node": "OCR Carteirinha Convenio", "type": "main", "index": 0}],
+      [{"node": "OCR Guia Autorizacao", "type": "main", "index": 0}],
+      [{"node": "OCR Documento Generico", "type": "main", "index": 0}]
+    ]},
+    "OCR RG": {"main": [[{"node": "Merge OCR Results", "type": "main", "index": 0}]]},
+    "OCR CNH": {"main": [[{"node": "Merge OCR Results", "type": "main", "index": 1}]]},
+    "OCR Carteirinha Convenio": {"main": [[{"node": "Merge OCR Results", "type": "main", "index": 2}]]},
+    "OCR Guia Autorizacao": {"main": [[{"node": "Merge OCR Results", "type": "main", "index": 3}]]},
+    "OCR Documento Generico": {"main": [[{"node": "Merge OCR Results", "type": "main", "index": 4}]]},
+    "Merge OCR Results": {"main": [[{"node": "Parse JSON Resultado", "type": "main", "index": 0}]]},
+    "Parse JSON Resultado": {"main": [[{"node": "Salva Documento", "type": "main", "index": 0}]]},
+    "Salva Documento": {"main": [[{"node": "Atualiza Status Pre Check-In", "type": "main", "index": 0}]]},
+    "Atualiza Status Pre Check-In": {"main": [[{"node": "Retorna Resultado", "type": "main", "index": 0}]]}
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

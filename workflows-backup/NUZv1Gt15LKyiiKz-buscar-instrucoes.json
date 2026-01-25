@@ -1,0 +1,171 @@
+{
+  "id": "NUZv1Gt15LKyiiKz",
+  "name": "Botfy - Tool: Buscar Instrucoes",
+  "active": false,
+  "createdAt": "2026-01-14T12:11:18.374Z",
+  "updatedAt": "2026-01-20T20:00:46.000Z",
+  "nodes": [
+    {
+      "id": "trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 304],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "buscar-instrucoes",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "8d7dea13-527c-4fcb-81b5-703176075400"
+    },
+    {
+      "id": "extract_params",
+      "name": "Extrair Parametros",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [464, 304],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "query",
+              "name": "query",
+              "type": "string",
+              "value": "={{ $json.body.query || $json.body.pergunta }}"
+            },
+            {
+              "id": "servico_id",
+              "name": "servico_id",
+              "type": "number",
+              "value": "={{ $json.body.servico_id || null }}"
+            },
+            {
+              "id": "limite",
+              "name": "limite",
+              "type": "number",
+              "value": "={{ $json.body.limite || 5 }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "gerar_embedding",
+      "name": "Gerar Embedding Query",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [688, 304],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {"name": "Content-Type", "value": "application/json"}
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'text-embedding-ada-002', input: $json.query }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "b2f06NWMfx9VK1I2",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "id": "buscar_supabase",
+      "name": "Buscar Instrucoes Similares",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [912, 304],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT id, servico_id, tipo_instrucao, titulo, conteudo, 1 - (embedding <=> '{{ JSON.stringify($json.data[0].embedding) }}'::vector) as similaridade FROM instrucoes_procedimentos WHERE ativo = true {{ $('Extrair Parametros').item.json.servico_id ? 'AND servico_id = ' + $('Extrair Parametros').item.json.servico_id : '' }} ORDER BY embedding <=> '{{ JSON.stringify($json.data[0].embedding) }}'::vector LIMIT {{ $('Extrair Parametros').item.json.limite }}",
+        "options": {}
+      },
+      "credentials": {
+        "postgres": {
+          "id": "xwAYczJevSyqr2Is",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "id": "formatar_resposta",
+      "name": "Formatar Resposta",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1120, 304],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "success",
+              "name": "success",
+              "type": "boolean",
+              "value": true
+            },
+            {
+              "id": "instrucoes",
+              "name": "instrucoes",
+              "type": "array",
+              "value": "={{ $json }}"
+            },
+            {
+              "id": "total",
+              "name": "total",
+              "type": "number",
+              "value": "={{ $input.all().length }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "resposta",
+      "name": "Responder Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1344, 304],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [[{"node": "Extrair Parametros", "type": "main", "index": 0}]]
+    },
+    "Extrair Parametros": {
+      "main": [[{"node": "Gerar Embedding Query", "type": "main", "index": 0}]]
+    },
+    "Gerar Embedding Query": {
+      "main": [[{"node": "Buscar Instrucoes Similares", "type": "main", "index": 0}]]
+    },
+    "Buscar Instrucoes Similares": {
+      "main": [[{"node": "Formatar Resposta", "type": "main", "index": 0}]]
+    },
+    "Formatar Resposta": {
+      "main": [[{"node": "Responder Webhook", "type": "main", "index": 0}]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}
