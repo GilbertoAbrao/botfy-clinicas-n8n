@@ -53,13 +53,13 @@ Plans:
   2. AI Agent can reschedule existing appointments via toolHttpRequest
   3. AI Agent can cancel appointments with reason via toolHttpRequest
   4. AI Agent can update patient contact information via toolHttpRequest
-**Plans**: TBD
+**Plans**: 4 plans (Wave 1: 1 plan, Wave 2: 3 parallel plans)
 
 Plans:
-- [ ] 24-01: Migrate criar_agendamento tool
-- [ ] 24-02: Migrate reagendar_agendamento tool
-- [ ] 24-03: Migrate cancelar_agendamento tool
-- [ ] 24-04: Migrate atualizar_dados_paciente tool
+- [ ] 24-01-PLAN.md — Migrate criar_agendamento (Wave 1)
+- [ ] 24-02-PLAN.md — Migrate reagendar_agendamento (Wave 2)
+- [ ] 24-03-PLAN.md — Migrate cancelar_agendamento (Wave 2)
+- [ ] 24-04-PLAN.md — Migrate atualizar_dados_paciente (Wave 2)
 
 ### Phase 25: Document Tool Migration
 **Goal**: AI Agent can process documents via HTTP requests instead of sub-workflows
