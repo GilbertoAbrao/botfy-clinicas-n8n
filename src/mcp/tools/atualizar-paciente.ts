@@ -37,7 +37,7 @@ export const atualizarDadosPacienteTool = {
       if (Object.keys(updateData).length === 0) {
         return {
           content: [{
-            type: 'text',
+            type: 'text' as const,
             text: 'Erro: Pelo menos um campo deve ser informado para atualização',
           }],
           isError: true,
@@ -50,10 +50,13 @@ export const atualizarDadosPacienteTool = {
 
       const updatedFields = Object.keys(updateData).join(', ')
       const summary = `Paciente ${result.id} (${result.nome}) atualizado. Campos: ${updatedFields}`
+      const details = JSON.stringify(result, null, 2)
 
       return {
-        content: [{ type: 'text', text: summary }],
-        structuredContent: result,
+        content: [
+          { type: 'text' as const, text: summary },
+          { type: 'text' as const, text: `\n\nDetalhes:\n${details}` }
+        ],
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido'
@@ -61,7 +64,7 @@ export const atualizarDadosPacienteTool = {
       if (errorMsg.includes('not found') || errorMsg.includes('404')) {
         return {
           content: [{
-            type: 'text',
+            type: 'text' as const,
             text: `Paciente não encontrado. Verifique o ID informado.`,
           }],
           isError: true,
@@ -71,7 +74,7 @@ export const atualizarDadosPacienteTool = {
       if (errorMsg.includes('phone') || errorMsg.includes('telefone')) {
         return {
           content: [{
-            type: 'text',
+            type: 'text' as const,
             text: `Erro: Telefone já cadastrado para outro paciente.`,
           }],
           isError: true,
@@ -80,7 +83,7 @@ export const atualizarDadosPacienteTool = {
 
       return {
         content: [{
-          type: 'text',
+          type: 'text' as const,
           text: `Erro ao atualizar paciente: ${errorMsg}`,
         }],
         isError: true,

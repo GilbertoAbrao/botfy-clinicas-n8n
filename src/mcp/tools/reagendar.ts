@@ -33,10 +33,13 @@ export const reagendarAgendamentoTool = {
       })
 
       const summary = `Agendamento ${result.id} reagendado. Nova data: ${result.dataHora}`
+      const details = JSON.stringify(result, null, 2)
 
       return {
-        content: [{ type: 'text', text: summary }],
-        structuredContent: result,
+        content: [
+          { type: 'text' as const, text: summary },
+          { type: 'text' as const, text: `\n\nDetalhes:\n${details}` }
+        ],
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido'
@@ -44,7 +47,7 @@ export const reagendarAgendamentoTool = {
       if (errorMsg.includes('not found') || errorMsg.includes('404')) {
         return {
           content: [{
-            type: 'text',
+            type: 'text' as const,
             text: `Agendamento não encontrado. Verifique o ID informado.`,
           }],
           isError: true,
@@ -53,7 +56,7 @@ export const reagendarAgendamentoTool = {
 
       return {
         content: [{
-          type: 'text',
+          type: 'text' as const,
           text: `Erro ao reagendar: ${errorMsg}`,
         }],
         isError: true,

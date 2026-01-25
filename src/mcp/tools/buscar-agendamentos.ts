@@ -65,15 +65,18 @@ export const buscarAgendamentosTool = {
       })
 
       const summary = `Encontrados ${result.pagination.total} agendamentos (página ${result.pagination.page}/${result.pagination.totalPages})`
+      const details = JSON.stringify(result, null, 2)
 
       return {
-        content: [{ type: 'text', text: summary }],
-        structuredContent: result,
+        content: [
+          { type: 'text' as const, text: summary },
+          { type: 'text' as const, text: `\n\nDetalhes:\n${details}` }
+        ],
       }
     } catch (error) {
       return {
         content: [{
-          type: 'text',
+          type: 'text' as const,
           text: `Erro ao buscar agendamentos: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         }],
         isError: true,

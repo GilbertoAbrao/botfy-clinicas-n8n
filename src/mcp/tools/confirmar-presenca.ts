@@ -26,10 +26,13 @@ export const confirmarPresencaTool = {
 
       const tipoMsg = result.status === 'presente' ? 'Presença registrada' : 'Agendamento confirmado'
       const summary = `${tipoMsg} para agendamento ${result.id}. Status: ${result.status}`
+      const details = JSON.stringify(result, null, 2)
 
       return {
-        content: [{ type: 'text', text: summary }],
-        structuredContent: result,
+        content: [
+          { type: 'text' as const, text: summary },
+          { type: 'text' as const, text: `\n\nDetalhes:\n${details}` }
+        ],
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido'
@@ -37,7 +40,7 @@ export const confirmarPresencaTool = {
       if (errorMsg.includes('not found') || errorMsg.includes('404')) {
         return {
           content: [{
-            type: 'text',
+            type: 'text' as const,
             text: `Agendamento não encontrado. Verifique o ID informado.`,
           }],
           isError: true,
@@ -47,7 +50,7 @@ export const confirmarPresencaTool = {
       if (errorMsg.includes('terminal') || errorMsg.includes('cancelled')) {
         return {
           content: [{
-            type: 'text',
+            type: 'text' as const,
             text: `Não é possível confirmar: agendamento já está cancelado ou finalizado.`,
           }],
           isError: true,
@@ -56,7 +59,7 @@ export const confirmarPresencaTool = {
 
       return {
         content: [{
-          type: 'text',
+          type: 'text' as const,
           text: `Erro ao confirmar presença: ${errorMsg}`,
         }],
         isError: true,

@@ -10,7 +10,7 @@ export function registerDocumentTool(server: McpServer): void {
     processarDocumentoTool.name,
     processarDocumentoTool.inputSchema.shape,
     { title: processarDocumentoTool.title },
-    processarDocumentoTool.handler
+    (args) => processarDocumentoTool.handler(args as any)
   )
   mcpLog.info(`  ✓ ${processarDocumentoTool.name}`)
 

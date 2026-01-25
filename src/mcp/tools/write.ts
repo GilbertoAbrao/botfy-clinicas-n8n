@@ -15,7 +15,7 @@ export function registerWriteTools(server: McpServer): void {
     criarAgendamentoTool.name,
     criarAgendamentoTool.inputSchema.shape,
     { title: criarAgendamentoTool.title },
-    criarAgendamentoTool.handler
+    (args) => criarAgendamentoTool.handler(args as any)
   )
   mcpLog.info(`  ✓ ${criarAgendamentoTool.name}`)
 
@@ -24,7 +24,7 @@ export function registerWriteTools(server: McpServer): void {
     reagendarAgendamentoTool.name,
     reagendarAgendamentoTool.inputSchema.shape,
     { title: reagendarAgendamentoTool.title },
-    reagendarAgendamentoTool.handler
+    (args) => reagendarAgendamentoTool.handler(args as any)
   )
   mcpLog.info(`  ✓ ${reagendarAgendamentoTool.name}`)
 
@@ -33,7 +33,7 @@ export function registerWriteTools(server: McpServer): void {
     cancelarAgendamentoTool.name,
     cancelarAgendamentoTool.inputSchema.shape,
     { title: cancelarAgendamentoTool.title },
-    cancelarAgendamentoTool.handler
+    (args) => cancelarAgendamentoTool.handler(args as any)
   )
   mcpLog.info(`  ✓ ${cancelarAgendamentoTool.name}`)
 
@@ -42,7 +42,7 @@ export function registerWriteTools(server: McpServer): void {
     atualizarDadosPacienteTool.name,
     atualizarDadosPacienteTool.inputSchema.shape,
     { title: atualizarDadosPacienteTool.title },
-    atualizarDadosPacienteTool.handler
+    (args) => atualizarDadosPacienteTool.handler(args as any)
   )
   mcpLog.info(`  ✓ ${atualizarDadosPacienteTool.name}`)
 
@@ -51,7 +51,7 @@ export function registerWriteTools(server: McpServer): void {
     confirmarPresencaTool.name,
     confirmarPresencaTool.inputSchema.shape,
     { title: confirmarPresencaTool.title },
-    confirmarPresencaTool.handler
+    (args) => confirmarPresencaTool.handler(args as any)
   )
   mcpLog.info(`  ✓ ${confirmarPresencaTool.name}`)
 

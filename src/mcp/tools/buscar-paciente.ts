@@ -49,7 +49,7 @@ export const buscarPacienteTool = {
       if (!input.telefone && !input.cpf && !input.nome) {
         return {
           content: [{
-            type: 'text',
+            type: 'text' as const,
             text: 'Erro: Pelo menos um parâmetro de busca é necessário (telefone, cpf ou nome)',
           }],
           isError: true,
@@ -76,14 +76,18 @@ export const buscarPacienteTool = {
         summary = 'Nenhum paciente encontrado'
       }
 
+      const details = JSON.stringify(result, null, 2)
+
       return {
-        content: [{ type: 'text', text: summary }],
-        structuredContent: result,
+        content: [
+          { type: 'text' as const, text: summary },
+          { type: 'text' as const, text: `\n\nDetalhes:\n${details}` }
+        ],
       }
     } catch (error) {
       return {
         content: [{
-          type: 'text',
+          type: 'text' as const,
           text: `Erro ao buscar paciente: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         }],
         isError: true,

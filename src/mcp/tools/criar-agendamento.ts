@@ -32,7 +32,7 @@ export const criarAgendamentoTool = {
       if (!input.servicoId && !input.tipoConsulta) {
         return {
           content: [{
-            type: 'text',
+            type: 'text' as const,
             text: 'Erro: É necessário informar servicoId ou tipoConsulta',
           }],
           isError: true,
@@ -44,10 +44,13 @@ export const criarAgendamentoTool = {
       })
 
       const summary = `Agendamento criado com sucesso. ID: ${result.id}, Data: ${result.dataHora}, Paciente: ${result.paciente.nome}`
+      const details = JSON.stringify(result, null, 2)
 
       return {
-        content: [{ type: 'text', text: summary }],
-        structuredContent: result,
+        content: [
+          { type: 'text' as const, text: summary },
+          { type: 'text' as const, text: `\n\nDetalhes:\n${details}` }
+        ],
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Erro desconhecido'
@@ -56,7 +59,7 @@ export const criarAgendamentoTool = {
       if (errorMsg.includes('Horario ja ocupado') || errorMsg.includes('conflict')) {
         return {
           content: [{
-            type: 'text',
+            type: 'text' as const,
             text: `Conflito de horário: O horário solicitado já está ocupado. Tente outro horário.`,
           }],
           isError: true,
@@ -65,7 +68,7 @@ export const criarAgendamentoTool = {
 
       return {
         content: [{
-          type: 'text',
+          type: 'text' as const,
           text: `Erro ao criar agendamento: ${errorMsg}`,
         }],
         isError: true,

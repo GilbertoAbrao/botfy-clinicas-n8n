@@ -28,7 +28,7 @@ export function registerQueryTools(server: McpServer): void {
     buscarSlotsDisponiveisTool.name,
     buscarSlotsDisponiveisTool.inputSchema.shape,
     { title: buscarSlotsDisponiveisTool.title },
-    buscarSlotsDisponiveisTool.handler
+    (args) => buscarSlotsDisponiveisTool.handler(args as any)
   )
   mcpLog.info(`  ✓ ${buscarSlotsDisponiveisTool.name}`)
 
@@ -37,7 +37,7 @@ export function registerQueryTools(server: McpServer): void {
     buscarAgendamentosTool.name,
     buscarAgendamentosTool.inputSchema.shape,
     { title: buscarAgendamentosTool.title },
-    buscarAgendamentosTool.handler
+    (args) => buscarAgendamentosTool.handler(args as any)
   )
   mcpLog.info(`  ✓ ${buscarAgendamentosTool.name}`)
 
@@ -46,7 +46,7 @@ export function registerQueryTools(server: McpServer): void {
     buscarPacienteTool.name,
     buscarPacienteTool.inputSchema.shape,
     { title: buscarPacienteTool.title },
-    buscarPacienteTool.handler
+    (args) => buscarPacienteTool.handler(args as any)
   )
   mcpLog.info(`  ✓ ${buscarPacienteTool.name}`)
 
@@ -55,7 +55,7 @@ export function registerQueryTools(server: McpServer): void {
     statusPreCheckinTool.name,
     statusPreCheckinTool.inputSchema.shape,
     { title: statusPreCheckinTool.title },
-    statusPreCheckinTool.handler
+    (args) => statusPreCheckinTool.handler(args as any)
   )
   mcpLog.info(`  ✓ ${statusPreCheckinTool.name}`)
 
@@ -64,7 +64,7 @@ export function registerQueryTools(server: McpServer): void {
     buscarInstrucoesTool.name,
     buscarInstrucoesTool.inputSchema.shape,
     { title: buscarInstrucoesTool.title },
-    buscarInstrucoesTool.handler
+    (args) => buscarInstrucoesTool.handler(args as any)
   )
   mcpLog.info(`  ✓ ${buscarInstrucoesTool.name}`)
 
