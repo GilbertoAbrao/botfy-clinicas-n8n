@@ -1,8 +1,8 @@
 # Project State: Botfy ClinicOps - Console Administrativo
 
 **Last Updated:** 2026-01-25
-**Status:** v2.0 Shipped — Ready for next milestone
-**Current Milestone:** None (v2.0 just completed)
+**Status:** Defining requirements
+**Current Milestone:** v2.1 N8N Agent HTTP Tools Migration
 
 ---
 
@@ -17,12 +17,12 @@ See: `.planning/PROJECT.md` (updated 2026-01-25)
 
 ## Current Position
 
-**Milestone:** Ready for next milestone
-**Phase:** Phase 23+ (next milestone)
-**Plan:** Not started
-**Status:** Ready to plan
+**Milestone:** v2.1 N8N Agent HTTP Tools Migration
+**Phase:** Phase 23 (not started)
+**Plan:** —
+**Status:** Defining requirements
 
-**Last activity:** 2026-01-25 — v2.0 milestone archived and tagged
+**Last activity:** 2026-01-25 — Milestone v2.1 started
 
 **Progress:** ████████████████████ 100% (87/87 plans complete across v1.0-v2.0)
 
@@ -97,7 +97,7 @@ None
 **Stopped at:** v2.0 milestone completed and archived
 **Resume file:** None
 
-**Next action:** Start next milestone with `/gsd:new-milestone`
+**Next action:** Define requirements and create roadmap
 
 ---
 

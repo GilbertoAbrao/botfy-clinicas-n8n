@@ -8,6 +8,18 @@ Console administrativo web para a equipe da clínica gerenciar o sistema Botfy C
 
 Dashboard de alertas que mostra "at glance" tudo que precisa de atenção: conversas travadas, pré check-ins pendentes, agendamentos não confirmados e handoffs para humanos (normais e causados por erros). A equipe precisa saber rapidamente onde intervir.
 
+## Current Milestone: v2.1 N8N Agent HTTP Tools Migration
+
+**Goal:** Migrate N8N AI Agent workflow from `toolWorkflow` sub-workflows to `toolHttpRequest` nodes that call Next.js Agent APIs directly.
+
+**Target features:**
+- Replace 10 `toolWorkflow` nodes with `toolHttpRequest` nodes
+- Configure Bearer token authentication in HTTP Request nodes
+- Validate all 10 tools work correctly with Agent APIs
+- Archive sub-workflows after successful migration
+
+---
+
 ## Current State
 
 **v2.0 Agent API Migration shipped: 2026-01-25**
@@ -53,9 +65,18 @@ Dashboard de alertas que mostra "at glance" tudo que precisa de atenção: conve
 - ✓ **N8N Integration Docs** — Migration checklist, gradual rollout, rollback <5min — v2.0
 - ✓ **MCP Server** — 11 tools wrapper for Claude Desktop via stdio transport — v2.0
 
-### Active
+### Active (v2.1)
 
-(No active requirements — ready for next milestone)
+- **HTTP-01**: Replace `buscar_slots_disponiveis` toolWorkflow with toolHttpRequest calling GET /api/agent/slots
+- **HTTP-02**: Replace `buscar_agendamentos` toolWorkflow with toolHttpRequest calling GET /api/agent/agendamentos
+- **HTTP-03**: Replace `buscar_paciente` toolWorkflow with toolHttpRequest calling GET /api/agent/paciente
+- **HTTP-04**: Replace `status_pre_checkin` toolWorkflow with toolHttpRequest calling GET /api/agent/pre-checkin/status
+- **HTTP-05**: Replace `buscar_instrucoes` toolWorkflow with toolHttpRequest calling GET /api/agent/instrucoes
+- **HTTP-06**: Replace `criar_agendamento` toolWorkflow with toolHttpRequest calling POST /api/agent/agendamentos
+- **HTTP-07**: Replace `reagendar_agendamento` toolWorkflow with toolHttpRequest calling PATCH /api/agent/agendamentos/:id
+- **HTTP-08**: Replace `cancelar_agendamento` toolWorkflow with toolHttpRequest calling DELETE /api/agent/agendamentos/:id
+- **HTTP-09**: Replace `atualizar_dados_paciente` toolWorkflow with toolHttpRequest calling PATCH /api/agent/paciente/:id
+- **HTTP-10**: Replace `processar_documento` toolWorkflow with toolHttpRequest calling POST /api/agent/documentos/processar
 
 ### Out of Scope
 
@@ -135,4 +156,4 @@ Dashboard de alertas que mostra "at glance" tudo que precisa de atenção: conve
 | Create services fresh vs extract | Faster implementation, different use cases | ⚡ Tech debt |
 
 ---
-*Last updated: 2026-01-25 after v2.0 milestone complete*
+*Last updated: 2026-01-25 — v2.1 milestone started*
