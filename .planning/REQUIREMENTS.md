@@ -99,15 +99,15 @@ Migrate 10 `toolWorkflow` nodes in N8N AI Agent workflow "Botfy - Agendamento" (
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HTTP-01 | Phase 23 | Pending |
-| HTTP-02 | Phase 23 | Pending |
-| HTTP-03 | Phase 23 | Pending |
-| HTTP-04 | Phase 23 | Pending |
-| HTTP-05 | Phase 23 | Pending |
-| HTTP-06 | Phase 24 | Pending |
-| HTTP-07 | Phase 24 | Pending |
-| HTTP-08 | Phase 24 | Pending |
-| HTTP-09 | Phase 24 | Pending |
+| HTTP-01 | Phase 23 | Complete |
+| HTTP-02 | Phase 23 | Complete |
+| HTTP-03 | Phase 23 | Complete |
+| HTTP-04 | Phase 23 | Complete |
+| HTTP-05 | Phase 23 | Complete |
+| HTTP-06 | Phase 24 | Complete |
+| HTTP-07 | Phase 24 | Complete |
+| HTTP-08 | Phase 24 | Complete |
+| HTTP-09 | Phase 24 | Complete |
 | HTTP-10 | Phase 25 | Pending |
 | VAL-01 | Phase 26 | Pending |
 | VAL-02 | Phase 26 | Pending |
@@ -115,4 +115,4 @@ Migrate 10 `toolWorkflow` nodes in N8N AI Agent workflow "Botfy - Agendamento" (
 ---
 
 *Created: 2026-01-25*
-*Last updated: 2026-01-25 - Traceability added*
+*Last updated: 2026-01-25 - Phase 24 complete (HTTP-06 to HTTP-09)*
