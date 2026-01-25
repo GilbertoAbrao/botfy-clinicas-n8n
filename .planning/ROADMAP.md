@@ -62,17 +62,19 @@ Plans:
 - [x] 24-04-PLAN.md — Migrate atualizar_dados_paciente (Wave 2) ✓
 
 ### Phase 25: Document Tool Migration
-**Goal**: AI Agent can process documents via HTTP requests instead of sub-workflows
+**Goal**: AI Agent can process documents via URL-based HTTP requests instead of sub-workflows
 **Depends on**: Phase 24
 **Requirements**: HTTP-10
 **Success Criteria** (what must be TRUE):
   1. AI Agent can submit documents for processing via toolHttpRequest
-  2. Document processing handles multipart/base64 correctly
+  2. Document processing accepts URL-based input (imageUrl parameter)
   3. Processing results are returned in expected format
-**Plans**: TBD
+  4. SSRF protection blocks private network URLs
+**Plans**: 2 plans (Wave 1: API enhancement, Wave 2: N8N tool migration)
 
 Plans:
-- [ ] 25-01: Migrate processar_documento tool
+- [ ] 25-01-PLAN.md — Enhance API for URL-based input (Wave 1)
+- [ ] 25-02-PLAN.md — Migrate processar_documento N8N tool (Wave 2)
 
 ### Phase 26: Validation & Archive
 **Goal**: All migrated tools are tested and old sub-workflows are archived
@@ -99,10 +101,10 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26
 |-------|-----------|----------------|--------|-----------|
 | 23. Query Tools Migration | v2.1 | 5/5 | Complete ✓ | 2026-01-25 |
 | 24. Write Tools Migration | v2.1 | 4/4 | Complete ✓ | 2026-01-25 |
-| 25. Document Tool Migration | v2.1 | 0/1 | Not started | - |
+| 25. Document Tool Migration | v2.1 | 0/2 | Planned | - |
 | 26. Validation & Archive | v2.1 | 0/2 | Not started | - |
 
 ---
 
 *Roadmap created: 2026-01-25*
-*Last updated: 2026-01-25 — Phase 24 complete*
+*Last updated: 2026-01-25 — Phase 25 planned*
