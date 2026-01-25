@@ -69,7 +69,9 @@ Migrate 10 `toolWorkflow` nodes in N8N AI Agent workflow "Botfy - Agendamento" (
 
 - [ ] **HTTP-10**: Replace `processar_documento` toolWorkflow with toolHttpRequest
   - Endpoint: `POST /api/agent/documentos/processar`
-  - Body: `agendamento_id`, `tipo_documento`, arquivo (multipart ou base64)
+  - Body (JSON): `patientId` (required), `imageUrl` (required - HTTPS URL to document image)
+  - Note: API also accepts multipart/form-data for direct file uploads
+  - Note: Document type is auto-detected by GPT-4o Vision
   - Auth: Bearer token
 
 ### Validation & Cleanup
@@ -89,7 +91,8 @@ Migrate 10 `toolWorkflow` nodes in N8N AI Agent workflow "Botfy - Agendamento" (
 ## Out of Scope
 
 - `confirmar_presenca` tool (already `toolCode`, not `toolWorkflow`)
-- Changes to Next.js Agent APIs (already complete in v2.0)
+- Major changes to Next.js Agent APIs (already complete in v2.0)
+  - Exception: HTTP-10 requires API enhancement to accept URL-based input for toolHttpRequest compatibility
 - New tool creation (only migrating existing tools)
 - Rate limiting or throttling (deferred to v2.2+)
 
