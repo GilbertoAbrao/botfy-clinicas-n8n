@@ -11,6 +11,11 @@
  * - patientId: string (required) - Patient ID for storage organization
  * - idempotencyKey: string (optional) - UUID for duplicate prevention
  *
+ * Request body (application/json):
+ * - imageUrl: string (required) - HTTPS URL to image/PDF document
+ * - patientId: string (required) - Patient ID for storage organization
+ * - idempotencyKey: string (optional) - UUID for duplicate prevention
+ *
  * Response:
  * {
  *   success: true,
@@ -29,7 +34,7 @@
  * }
  *
  * Errors:
- * - 400: Missing file, missing patientId, validation error
+ * - 400: Missing file/imageUrl, missing patientId, validation error, invalid URL, SSRF blocked
  * - 413: File too large (>5MB)
  * - 415: Unsupported file type
  * - 422: Extraction failed, idempotency key mismatch
@@ -50,6 +55,17 @@ import {
   hashRequestBody,
 } from '@/lib/idempotency/idempotency-service'
 import { logAudit, AuditAction } from '@/lib/audit/logger'
+import { fetchImageFromUrl } from '@/lib/document/url-fetcher'
+
+// =============================================================================
+// Types
+// =============================================================================
+
+interface ProcessDocumentJsonBody {
+  patientId: string
+  imageUrl: string
+  idempotencyKey?: string
+}
 
 // =============================================================================
 // POST Handler
@@ -57,21 +73,78 @@ import { logAudit, AuditAction } from '@/lib/audit/logger'
 
 export const POST = withAgentAuth(async (req: NextRequest, _context, agentContext) => {
   try {
-    // 1. Parse multipart form data (native Next.js)
-    const formData = await req.formData()
+    // 1. Determine Content-Type and parse request
+    const contentType = req.headers.get('Content-Type') || ''
 
-    // 2. Extract fields
-    const file = formData.get('file') as File | null
-    const patientId = formData.get('patientId') as string | null
-    const idempotencyKey = formData.get('idempotencyKey') as string | null
+    let file: File | null = null
+    let patientId: string | null = null
+    let idempotencyKey: string | null = null
 
-    // 3. Validate required fields
-    if (!file) {
-      return errorResponse('No file provided', 400)
-    }
+    if (contentType.includes('application/json')) {
+      // Parse JSON body with imageUrl
+      const body = (await req.json()) as Partial<ProcessDocumentJsonBody>
 
-    if (!patientId) {
-      return errorResponse('patientId is required', 400)
+      patientId = body.patientId || null
+      idempotencyKey = body.idempotencyKey || null
+
+      // Validate required fields for JSON mode
+      if (!patientId) {
+        return errorResponse('patientId is required', 400)
+      }
+
+      if (!body.imageUrl) {
+        return errorResponse('imageUrl is required', 400)
+      }
+
+      // Fetch image from URL
+      try {
+        const { buffer, filename, contentType: fetchedContentType } = await fetchImageFromUrl(body.imageUrl)
+
+        // Create a File object from buffer for the existing pipeline
+        // Convert Buffer to Uint8Array for Blob compatibility
+        const uint8Array = new Uint8Array(buffer)
+        const blob = new Blob([uint8Array], { type: fetchedContentType })
+        file = new File([blob], filename, { type: fetchedContentType })
+      } catch (fetchError) {
+        // Handle fetch-specific errors with appropriate status codes
+        const errorMessage = fetchError instanceof Error ? fetchError.message : 'Failed to fetch image from URL'
+
+        if (errorMessage.includes('Private network')) {
+          return errorResponse(errorMessage, 400)
+        }
+        if (errorMessage.includes('Only HTTPS')) {
+          return errorResponse(errorMessage, 400)
+        }
+        if (errorMessage.includes('timeout')) {
+          return errorResponse(errorMessage, 400)
+        }
+        if (errorMessage.includes('exceeds') && errorMessage.includes('5MB')) {
+          return errorResponse(errorMessage, 413)
+        }
+        if (errorMessage.includes('HTTP')) {
+          return errorResponse(`Failed to fetch image: ${errorMessage}`, 400)
+        }
+
+        // Generic fetch error
+        return errorResponse(`Failed to fetch image from URL: ${errorMessage}`, 400)
+      }
+    } else {
+      // Parse multipart form data (native Next.js)
+      const formData = await req.formData()
+
+      // Extract fields
+      file = formData.get('file') as File | null
+      patientId = formData.get('patientId') as string | null
+      idempotencyKey = formData.get('idempotencyKey') as string | null
+
+      // Validate required fields for multipart mode
+      if (!file) {
+        return errorResponse('No file provided', 400)
+      }
+
+      if (!patientId) {
+        return errorResponse('patientId is required', 400)
+      }
     }
 
     // 4. Handle idempotency
