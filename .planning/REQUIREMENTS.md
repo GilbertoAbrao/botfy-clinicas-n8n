@@ -1,7 +1,7 @@
 # Requirements: v2.1 N8N Agent HTTP Tools Migration
 
 **Milestone:** v2.1
-**Status:** Draft
+**Status:** Active
 **Created:** 2026-01-25
 
 ---
@@ -99,19 +99,20 @@ Migrate 10 `toolWorkflow` nodes in N8N AI Agent workflow "Botfy - Agendamento" (
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| HTTP-01 | TBD | Pending |
-| HTTP-02 | TBD | Pending |
-| HTTP-03 | TBD | Pending |
-| HTTP-04 | TBD | Pending |
-| HTTP-05 | TBD | Pending |
-| HTTP-06 | TBD | Pending |
-| HTTP-07 | TBD | Pending |
-| HTTP-08 | TBD | Pending |
-| HTTP-09 | TBD | Pending |
-| HTTP-10 | TBD | Pending |
-| VAL-01 | TBD | Pending |
-| VAL-02 | TBD | Pending |
+| HTTP-01 | Phase 23 | Pending |
+| HTTP-02 | Phase 23 | Pending |
+| HTTP-03 | Phase 23 | Pending |
+| HTTP-04 | Phase 23 | Pending |
+| HTTP-05 | Phase 23 | Pending |
+| HTTP-06 | Phase 24 | Pending |
+| HTTP-07 | Phase 24 | Pending |
+| HTTP-08 | Phase 24 | Pending |
+| HTTP-09 | Phase 24 | Pending |
+| HTTP-10 | Phase 25 | Pending |
+| VAL-01 | Phase 26 | Pending |
+| VAL-02 | Phase 26 | Pending |
 
 ---
 
 *Created: 2026-01-25*
+*Last updated: 2026-01-25 - Traceability added*
