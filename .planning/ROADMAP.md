@@ -5,7 +5,7 @@
 - ✅ **v1.0 MVP** - Phases 1-8 (shipped 2026-01-17)
 - ✅ **v1.1 Anti No-Show Intelligence** - Phases 9-12 (shipped 2026-01-21)
 - ✅ **v1.2 Agenda List View + Pre-Checkin Management** - Phases 13-16 (shipped 2026-01-21)
-- 🚧 **v2.0 Agent API Migration** - Phases 17-22 (in progress)
+- ✅ **v2.0 Agent API Migration** - Phases 17-22 (shipped 2026-01-24)
 
 ## Phases
 
@@ -179,7 +179,7 @@ Plans:
 
 </details>
 
-### 🚧 v2.0 Agent API Migration (In Progress)
+### ✅ v2.0 Agent API Migration (Complete)
 
 **Milestone Goal:** Migrate 11 N8N AI Agent tools from sub-workflows to Next.js API routes with MCP Server wrapper, bringing business logic into codebase for type safety, testability, and maintainability.
 
@@ -289,10 +289,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 22-01-PLAN.md — MCP Server foundation (config, http-client, logger, heartbeat, server entry point)
-- [ ] 22-02-PLAN.md — Query tool handlers (5 read-only tools)
-- [ ] 22-03-PLAN.md — Write tool handlers (5 create/update/delete tools)
-- [ ] 22-04-PLAN.md — Document tool, full server integration, and Claude Desktop config
+- [x] 22-01-PLAN.md — MCP Server foundation (config, http-client, logger, heartbeat, server entry point)
+- [x] 22-02-PLAN.md — Query tool handlers (5 read-only tools)
+- [x] 22-03-PLAN.md — Write tool handlers (5 create/update/delete tools)
+- [x] 22-04-PLAN.md — Document tool, full server integration, and Claude Desktop config
 
 ## Progress
 
@@ -322,9 +322,9 @@ Phases execute in numeric order: 17 → 18 → 19 → 20 → 21 → 22
 | 19. Write Tools | v2.0 | 4/4 | Complete | 2026-01-24 |
 | 20. Complex Tools | v2.0 | 3/3 | Complete | 2026-01-24 |
 | 21. N8N Integration | v2.0 | 4/4 | Complete | 2026-01-24 |
-| 22. MCP Server | v2.0 | 0/4 | Not started | - |
+| 22. MCP Server | v2.0 | 4/4 | Complete | 2026-01-24 |
 
 ---
 
 *Roadmap created: 2026-01-15*
-*Last updated: 2026-01-24 — Phase 21 complete (N8N Integration documentation)*
+*Last updated: 2026-01-24 — Phase 22 complete (MCP Server) — v2.0 Milestone complete*
