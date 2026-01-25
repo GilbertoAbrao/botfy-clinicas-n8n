@@ -17,12 +17,24 @@ import { BrazilianDocumentSchema } from '@/lib/validations/document-schemas'
 import type { ExtractedDocument } from './document-types'
 
 // =============================================================================
-// OpenAI Client
+// OpenAI Client (Lazy initialization to avoid module load errors)
 // =============================================================================
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+let openaiClient: OpenAI | null = null
+
+function getOpenAIClient(): OpenAI {
+  if (!openaiClient) {
+    const apiKey = process.env.OPENAI_API_KEY
+    if (!apiKey) {
+      throw new Error(
+        'OPENAI_API_KEY environment variable is not set. ' +
+        'Document processing requires OpenAI GPT-4o Vision API access.'
+      )
+    }
+    openaiClient = new OpenAI({ apiKey })
+  }
+  return openaiClient
+}
 
 // =============================================================================
 // System Prompt
@@ -85,6 +97,7 @@ export async function extractDocumentFields(
   }
 
   try {
+    const openai = getOpenAIClient()
     const completion = await openai.chat.completions.parse({
       model: 'gpt-4o-2024-08-06', // Required for structured outputs
       messages: [
