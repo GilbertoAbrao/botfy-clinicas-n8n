@@ -35,14 +35,14 @@ Migrate 10 `toolWorkflow` nodes in the N8N AI Agent workflow to `toolHttpRequest
   3. AI Agent can lookup patient by phone or CPF via toolHttpRequest
   4. AI Agent can check pre-checkin status via toolHttpRequest
   5. AI Agent can retrieve service instructions via toolHttpRequest
-**Plans**: TBD
+**Plans**: 5 plans (Wave 1: 1 plan, Wave 2: 4 parallel plans)
 
 Plans:
-- [ ] 23-01: Migrate buscar_slots_disponiveis tool
-- [ ] 23-02: Migrate buscar_agendamentos tool
-- [ ] 23-03: Migrate buscar_paciente tool
-- [ ] 23-04: Migrate status_pre_checkin tool
-- [ ] 23-05: Migrate buscar_instrucoes tool
+- [ ] 23-01-PLAN.md — Setup credential + migrate buscar_slots_disponiveis (Wave 1)
+- [ ] 23-02-PLAN.md — Migrate buscar_agendamentos (Wave 2)
+- [ ] 23-03-PLAN.md — Migrate buscar_paciente (Wave 2)
+- [ ] 23-04-PLAN.md — Migrate status_pre_checkin (Wave 2)
+- [ ] 23-05-PLAN.md — Migrate buscar_instrucoes (Wave 2)
 
 ### Phase 24: Write Tools Migration
 **Goal**: AI Agent can create, update, and delete data via HTTP requests instead of sub-workflows
@@ -97,7 +97,7 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 23. Query Tools Migration | v2.1 | 0/5 | Not started | - |
+| 23. Query Tools Migration | v2.1 | 0/5 | Planned | - |
 | 24. Write Tools Migration | v2.1 | 0/4 | Not started | - |
 | 25. Document Tool Migration | v2.1 | 0/1 | Not started | - |
 | 26. Validation & Archive | v2.1 | 0/2 | Not started | - |
@@ -105,4 +105,4 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26
 ---
 
 *Roadmap created: 2026-01-25*
-*Last updated: 2026-01-25*
+*Last updated: 2026-01-25 — Phase 23 plans created*
