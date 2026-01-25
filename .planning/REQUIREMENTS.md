@@ -67,7 +67,7 @@ Migrate 10 `toolWorkflow` nodes in N8N AI Agent workflow "Botfy - Agendamento" (
 
 ### Document Tool Migration (1 tool)
 
-- [ ] **HTTP-10**: Replace `processar_documento` toolWorkflow with toolHttpRequest
+- [x] **HTTP-10**: Replace `processar_documento` toolWorkflow with toolHttpRequest
   - Endpoint: `POST /api/agent/documentos/processar`
   - Body (JSON): `patientId` (required), `imageUrl` (required - HTTPS URL to document image)
   - Note: API also accepts multipart/form-data for direct file uploads
@@ -111,11 +111,11 @@ Migrate 10 `toolWorkflow` nodes in N8N AI Agent workflow "Botfy - Agendamento" (
 | HTTP-07 | Phase 24 | Complete |
 | HTTP-08 | Phase 24 | Complete |
 | HTTP-09 | Phase 24 | Complete |
-| HTTP-10 | Phase 25 | Pending |
+| HTTP-10 | Phase 25 | Complete |
 | VAL-01 | Phase 26 | Pending |
 | VAL-02 | Phase 26 | Pending |
 
 ---
 
 *Created: 2026-01-25*
-*Last updated: 2026-01-25 - Phase 24 complete (HTTP-06 to HTTP-09)*
+*Last updated: 2026-01-25 - Phase 25 complete (HTTP-10)*

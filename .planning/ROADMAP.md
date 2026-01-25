@@ -20,7 +20,7 @@ Migrate 10 `toolWorkflow` nodes in the N8N AI Agent workflow to `toolHttpRequest
 
 - [x] **Phase 23: Query Tools Migration** - Replace 5 read-only toolWorkflow nodes with toolHttpRequest ✓
 - [x] **Phase 24: Write Tools Migration** - Replace 4 create/update/delete toolWorkflow nodes with toolHttpRequest ✓
-- [ ] **Phase 25: Document Tool Migration** - Replace complex multipart document processing tool
+- [x] **Phase 25: Document Tool Migration** - Replace complex multipart document processing tool ✓
 - [ ] **Phase 26: Validation & Archive** - Test all migrated tools and archive replaced sub-workflows
 
 ## Phase Details
@@ -73,8 +73,8 @@ Plans:
 **Plans**: 2 plans (Wave 1: API enhancement, Wave 2: N8N tool migration)
 
 Plans:
-- [ ] 25-01-PLAN.md — Enhance API for URL-based input (Wave 1)
-- [ ] 25-02-PLAN.md — Migrate processar_documento N8N tool (Wave 2)
+- [x] 25-01-PLAN.md — Enhance API for URL-based input (Wave 1) ✓
+- [x] 25-02-PLAN.md — Migrate processar_documento N8N tool (Wave 2) ✓
 
 ### Phase 26: Validation & Archive
 **Goal**: All migrated tools are tested and old sub-workflows are archived
@@ -101,10 +101,10 @@ Phases execute in numeric order: 23 -> 24 -> 25 -> 26
 |-------|-----------|----------------|--------|-----------|
 | 23. Query Tools Migration | v2.1 | 5/5 | Complete ✓ | 2026-01-25 |
 | 24. Write Tools Migration | v2.1 | 4/4 | Complete ✓ | 2026-01-25 |
-| 25. Document Tool Migration | v2.1 | 0/2 | Planned | - |
+| 25. Document Tool Migration | v2.1 | 2/2 | Complete ✓ | 2026-01-25 |
 | 26. Validation & Archive | v2.1 | 0/2 | Not started | - |
 
 ---
 
 *Roadmap created: 2026-01-25*
-*Last updated: 2026-01-25 — Phase 25 planned*
+*Last updated: 2026-01-25 — Phase 25 complete*
