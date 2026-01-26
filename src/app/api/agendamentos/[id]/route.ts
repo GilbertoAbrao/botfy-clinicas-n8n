@@ -10,6 +10,59 @@ import {
   notifyN8NAppointmentCancelled,
 } from '@/lib/calendar/n8n-sync'
 
+/**
+ * GET /api/agendamentos/[id]
+ * Fetch a single appointment by ID from agendamentos table
+ */
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const user = await getCurrentUserWithRole()
+    if (!user || !['ADMIN', 'ATENDENTE'].includes(user.role)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { id } = await params
+    const supabase = createAdminSupabaseClient()
+
+    // Fetch from agendamentos table (N8N/legacy system)
+    const { data, error } = await supabase
+      .from('agendamentos')
+      .select(`
+        id,
+        data_hora,
+        tipo_consulta,
+        status,
+        observacoes,
+        paciente_id,
+        profissional,
+        servico_id,
+        duracao_minutos
+      `)
+      .eq('id', id)
+      .single()
+
+    if (error) {
+      console.error('[API agendamentos GET] Error:', error)
+      return NextResponse.json({ error: 'Erro ao buscar agendamento' }, { status: 500 })
+    }
+
+    if (!data) {
+      return NextResponse.json({ error: 'Agendamento não encontrado' }, { status: 404 })
+    }
+
+    return NextResponse.json(data)
+  } catch (error) {
+    console.error('[API agendamentos GET] Error:', error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { Trash2 } from 'lucide-react'
-import { createBrowserClient } from '@/lib/supabase/client'
 import { NoShowRiskBadge } from '@/components/appointments/no-show-risk-badge'
 
 // Helper to check if a string is a UUID
@@ -118,24 +117,16 @@ export function AppointmentModal({
 
     const fetchAppointment = async () => {
       try {
-        const supabase = createBrowserClient()
-        // Fetch from agendamentos table (N8N/legacy system, integer IDs)
-        const { data, error } = await supabase
-          .from('agendamentos')
-          .select(`
-            id,
-            data_hora,
-            tipo_consulta,
-            status,
-            observacoes,
-            paciente_id,
-            profissional,
-            servico_id
-          `)
-          .eq('id', appointmentId)
-          .single()
+        // Fetch from API endpoint (which uses admin client to bypass RLS)
+        const res = await fetch(`/api/agendamentos/${appointmentId}`, {
+          signal: controller.signal,
+        })
 
-        if (error) throw error
+        if (!res.ok) {
+          throw new Error(`Failed to fetch appointment: ${res.status}`)
+        }
+
+        const data = await res.json()
         if (!data) return
 
         // Map Portuguese DB status to modal status
@@ -218,37 +209,28 @@ export function AppointmentModal({
 
     const fetchData = async () => {
       try {
-        const supabase = createBrowserClient()
+        // Fetch from API endpoint (which uses admin client to bypass RLS)
+        const res = await fetch('/api/agendamentos/options', {
+          signal: controller.signal,
+        })
 
-        // Fetch patients from pacientes table (integer IDs, used by agendamentos/N8N)
-        const { data: patientsData, error: patientsError } = await supabase
-          .from('pacientes')
-          .select('id, nome, telefone')
-          .order('nome')
-          .limit(500)
+        if (!res.ok) {
+          throw new Error(`Failed to fetch options: ${res.status}`)
+        }
 
-        if (patientsError) {
-          console.error('[AppointmentModal] Error fetching patients:', patientsError)
-        } else if (patientsData) {
-          // Convert integer IDs to strings for Select component compatibility
-          setPatients(patientsData.map((p: { id: number; nome: string; telefone: string }) => ({
+        const data = await res.json()
+
+        // Convert integer IDs to strings for Select component compatibility
+        if (data.patients) {
+          setPatients(data.patients.map((p: { id: number; nome: string; telefone: string }) => ({
             ...p,
             id: p.id.toString()
           })))
         }
 
-        // Fetch services from servicos table (integer IDs, used by agendamentos/N8N)
-        const { data: servicesData, error: servicesError } = await supabase
-          .from('servicos')
-          .select('id, nome, duracao_minutos, preco')
-          .eq('ativo', true)
-          .order('nome')
-
-        if (servicesError) {
-          console.error('[AppointmentModal] Error fetching services:', servicesError)
-        } else if (servicesData) {
-          // Map to expected format and convert integer IDs to strings
-          setServices(servicesData.map((s: { id: number; nome: string; duracao_minutos: number; preco: number | null }) => ({
+        // Map to expected format and convert integer IDs to strings
+        if (data.services) {
+          setServices(data.services.map((s: { id: number; nome: string; duracao_minutos: number; preco: number | null }) => ({
             id: s.id.toString(),
             nome: s.nome,
             duracao: s.duracao_minutos,
