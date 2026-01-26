@@ -1,0 +1,459 @@
+{
+  "info": {
+    "_postman_id": "botfy-agent-api-v2",
+    "name": "Botfy Agent API v2.0",
+    "description": "API para AI Agent do N8N consumir - 11 endpoints para gerenciamento de clínica via WhatsApp",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{API_KEY}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:3051",
+      "type": "string"
+    },
+    {
+      "key": "API_KEY",
+      "value": "sua-api-key-aqui",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Query Tools",
+      "description": "Endpoints de consulta (GET)",
+      "item": [
+        {
+          "name": "1. buscar_slots_disponiveis",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/agent/slots?data=2026-01-30",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "agent", "slots"],
+              "query": [
+                {
+                  "key": "data",
+                  "value": "2026-01-30",
+                  "description": "Data no formato YYYY-MM-DD (obrigatório)"
+                },
+                {
+                  "key": "profissional",
+                  "value": "",
+                  "description": "Nome do profissional (opcional)",
+                  "disabled": true
+                },
+                {
+                  "key": "servicoId",
+                  "value": "",
+                  "description": "ID do serviço (opcional)",
+                  "disabled": true
+                },
+                {
+                  "key": "duracaoMinutos",
+                  "value": "30",
+                  "description": "Duração em minutos (opcional, default: 30)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Busca horários disponíveis para agendamento em uma data específica"
+          },
+          "response": []
+        },
+        {
+          "name": "2. buscar_agendamentos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/agent/agendamentos?telefone=11999999999",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "agent", "agendamentos"],
+              "query": [
+                {
+                  "key": "pacienteId",
+                  "value": "",
+                  "description": "ID do paciente",
+                  "disabled": true
+                },
+                {
+                  "key": "telefone",
+                  "value": "11999999999",
+                  "description": "Telefone do paciente"
+                },
+                {
+                  "key": "dataInicio",
+                  "value": "",
+                  "description": "Data inicial ISO 8601",
+                  "disabled": true
+                },
+                {
+                  "key": "dataFim",
+                  "value": "",
+                  "description": "Data final ISO 8601",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "Status: agendada, confirmada, presente, cancelada, faltou",
+                  "disabled": true
+                },
+                {
+                  "key": "servicoId",
+                  "value": "",
+                  "description": "ID do serviço",
+                  "disabled": true
+                },
+                {
+                  "key": "tipoConsulta",
+                  "value": "",
+                  "description": "Tipo de consulta",
+                  "disabled": true
+                },
+                {
+                  "key": "profissional",
+                  "value": "",
+                  "description": "Nome do profissional",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Número da página (default: 1)",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Itens por página (default: 20, max: 100)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Busca agendamentos com filtros e paginação"
+          },
+          "response": []
+        },
+        {
+          "name": "3. buscar_paciente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/agent/paciente?telefone=11999999999",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "agent", "paciente"],
+              "query": [
+                {
+                  "key": "telefone",
+                  "value": "11999999999",
+                  "description": "Telefone do paciente"
+                },
+                {
+                  "key": "cpf",
+                  "value": "",
+                  "description": "CPF do paciente",
+                  "disabled": true
+                },
+                {
+                  "key": "nome",
+                  "value": "",
+                  "description": "Nome do paciente (busca parcial)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Busca paciente por telefone, CPF ou nome (exact-first-partial-fallback)"
+          },
+          "response": []
+        },
+        {
+          "name": "4. status_pre_checkin",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/agent/pre-checkin/status?telefone=11999999999",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "agent", "pre-checkin", "status"],
+              "query": [
+                {
+                  "key": "agendamentoId",
+                  "value": "",
+                  "description": "ID do agendamento",
+                  "disabled": true
+                },
+                {
+                  "key": "pacienteId",
+                  "value": "",
+                  "description": "ID do paciente",
+                  "disabled": true
+                },
+                {
+                  "key": "telefone",
+                  "value": "11999999999",
+                  "description": "Telefone do paciente"
+                }
+              ]
+            },
+            "description": "Verifica status do pré-checkin e documentos pendentes"
+          },
+          "response": []
+        },
+        {
+          "name": "5. buscar_instrucoes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/agent/instrucoes",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "agent", "instrucoes"],
+              "query": [
+                {
+                  "key": "servicoId",
+                  "value": "",
+                  "description": "ID do serviço",
+                  "disabled": true
+                },
+                {
+                  "key": "tipoInstrucao",
+                  "value": "",
+                  "description": "Tipo: jejum, hidratacao, medicamentos, documentos, vestimenta, acompanhante, geral",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Busca instruções de procedimentos para preparação do paciente"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Write Tools",
+      "description": "Endpoints de escrita (POST/PATCH/DELETE)",
+      "item": [
+        {
+          "name": "6. criar_agendamento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pacienteId\": 1,\n  \"dataHora\": \"2026-01-30T14:00:00.000Z\",\n  \"tipoConsulta\": \"Consulta\",\n  \"profissional\": \"Dr. Maria\",\n  \"observacoes\": \"Primeira consulta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/agent/agendamentos",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "agent", "agendamentos"]
+            },
+            "description": "Cria novo agendamento com detecção de conflito.\n\nCampos:\n- pacienteId (obrigatório): ID do paciente\n- dataHora (obrigatório): Data e hora ISO 8601\n- tipoConsulta: Tipo da consulta (obrigatório se não tiver servicoId)\n- servicoId: ID do serviço para duração automática\n- profissional: Nome do profissional\n- observacoes: Notas (max 500 chars)\n- idempotencyKey: UUID para evitar duplicatas"
+          },
+          "response": []
+        },
+        {
+          "name": "7. reagendar_agendamento",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataHora\": \"2026-01-30T15:00:00.000Z\",\n  \"profissional\": \"Dr. Pedro\",\n  \"observacoes\": \"Reagendado a pedido do paciente\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/agent/agendamentos/123",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "agent", "agendamentos", "123"]
+            },
+            "description": "Reagenda um agendamento existente.\n\nPath: /api/agent/agendamentos/:id\n\nCampos (pelo menos um obrigatório):\n- dataHora: Nova data/hora ISO 8601\n- profissional: Novo profissional\n- observacoes: Notas adicionais"
+          },
+          "response": []
+        },
+        {
+          "name": "8. cancelar_agendamento",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Paciente solicitou cancelamento por conflito de horário\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/agent/agendamentos/123",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "agent", "agendamentos", "123"]
+            },
+            "description": "Cancela um agendamento com motivo obrigatório.\n\nPath: /api/agent/agendamentos/:id\n\nCampos:\n- motivo (obrigatório): Motivo do cancelamento (min 3, max 500 chars)\n\nOperação idempotente - cancelar novamente retorna sucesso."
+          },
+          "response": []
+        },
+        {
+          "name": "9. atualizar_dados_paciente",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"novo.email@example.com\",\n  \"convenio\": \"Unimed\",\n  \"observacoes\": \"Alergia a dipirona\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/agent/paciente/456",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "agent", "paciente", "456"]
+            },
+            "description": "Atualiza dados do paciente (partial update).\n\nPath: /api/agent/paciente/:id\n\nCampos (todos opcionais, pelo menos um):\n- nome\n- telefone\n- email\n- cpf\n- dataNascimento (YYYY-MM-DD)\n- convenio\n- observacoes"
+          },
+          "response": []
+        },
+        {
+          "name": "10. confirmar_presenca",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"confirmado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/agent/agendamentos/123/confirmar",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "agent", "agendamentos", "123", "confirmar"]
+            },
+            "description": "Confirma presença do paciente no agendamento.\n\nPath: /api/agent/agendamentos/:id/confirmar\n\nCampos:\n- tipo: 'confirmado' ou 'presente' (default: 'confirmado')\n\nRegras de transição:\n- 'confirmado': agendada → confirmada\n- 'presente': confirmada → presente"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Complex Tools",
+      "description": "Endpoints complexos (Vision AI)",
+      "item": [
+        {
+          "name": "11. processar_documento",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "description": "Imagem ou PDF do documento (max 5MB)",
+                  "src": []
+                },
+                {
+                  "key": "patientId",
+                  "value": "456",
+                  "type": "text",
+                  "description": "ID do paciente (obrigatório)"
+                },
+                {
+                  "key": "idempotencyKey",
+                  "value": "",
+                  "type": "text",
+                  "description": "UUID para evitar duplicatas (opcional)",
+                  "disabled": true
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/agent/documentos/processar",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "agent", "documentos", "processar"]
+            },
+            "description": "Processa documento usando GPT-4o Vision API.\n\nTipos suportados: RG, CPF, CNS, CARTEIRINHA_CONVENIO\nFormatos aceitos: Imagens (jpg, png, webp) e PDF\nTamanho máximo: 5MB\n\nRetorna dados extraídos do documento com nível de confiança."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "description": "Verificação de saúde da API",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/api/health",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "health"]
+            },
+            "description": "Verifica se a API está online (não requer autenticação)"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

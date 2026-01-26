@@ -6,6 +6,27 @@ import { parseISO, isValid } from 'date-fns'
 const CLINIC_TIMEZONE = 'America/Sao_Paulo'
 
 /**
+ * Helper to create optional string fields that treat empty strings as undefined.
+ * Used by N8N tools that may send empty strings for optional fields.
+ */
+const optionalString = (minLength = 1, maxLength = 100) =>
+  z
+    .string()
+    .optional()
+    .transform((val) => (val && val.trim() !== '' ? val.trim() : undefined))
+    .pipe(z.string().min(minLength).max(maxLength).optional())
+
+/**
+ * Helper for optional email that treats empty strings as undefined.
+ */
+const optionalEmail = () =>
+  z
+    .string()
+    .optional()
+    .transform((val) => (val && val.trim() !== '' ? val.trim() : undefined))
+    .pipe(z.string().email().optional())
+
+/**
  * Flexible date schema accepting multiple ISO 8601 formats.
  * Transforms to TZDate in clinic timezone.
  *
@@ -129,10 +150,10 @@ export type AgentPatientSearchInput = z.infer<typeof agentPatientSearchSchema>
 export const agentCreateAppointmentSchema = z.object({
   pacienteId: z.coerce.number().int().positive(),
   servicoId: z.coerce.number().int().positive().optional(),
-  tipoConsulta: z.string().min(1).optional(),
-  profissional: z.string().optional(),
+  tipoConsulta: optionalString(1, 100),
+  profissional: optionalString(1, 100),
   dataHora: flexibleDateTimeSchema,
-  observacoes: z.string().max(500).optional(),
+  observacoes: optionalString(1, 500),
 
   // Idempotency key for preventing duplicates on retry
   idempotencyKey: z.string().uuid().optional(),
@@ -148,9 +169,13 @@ export type AgentCreateAppointmentInput = z.infer<typeof agentCreateAppointmentS
  * Used by PATCH /api/agent/agendamentos/:id
  */
 export const agentUpdateAppointmentSchema = z.object({
-  dataHora: flexibleDateTimeSchema.optional(),
-  profissional: z.string().optional(),
-  observacoes: z.string().max(500).optional(),
+  dataHora: z
+    .string()
+    .optional()
+    .transform((val) => (val && val.trim() !== '' ? val.trim() : undefined))
+    .pipe(flexibleDateTimeSchema.optional()),
+  profissional: optionalString(1, 100),
+  observacoes: optionalString(1, 500),
   status: z.enum(['agendada', 'confirmada', 'presente', 'cancelada', 'faltou']).optional(),
 })
 
@@ -180,15 +205,22 @@ export type AgentConfirmAppointmentInput = z.infer<typeof agentConfirmAppointmen
 /**
  * Schema for updating patient via agent.
  * Used by PATCH /api/agent/paciente/:id
+ *
+ * Note: All fields accept empty strings and treat them as undefined (no update).
+ * This allows N8N tools to send empty strings for fields that shouldn't be updated.
  */
 export const agentUpdatePatientSchema = z.object({
-  nome: z.string().min(2).max(100).optional(),
-  telefone: z.string().min(10).max(15).optional(),
-  email: z.string().email().optional(),
-  cpf: z.string().min(11).max(14).optional(),
-  dataNascimento: flexibleDateSchema.optional(),
-  convenio: z.string().max(100).optional(),
-  observacoes: z.string().max(1000).optional(),
+  nome: optionalString(2, 100),
+  telefone: optionalString(10, 15),
+  email: optionalEmail(),
+  cpf: optionalString(11, 14),
+  dataNascimento: z
+    .string()
+    .optional()
+    .transform((val) => (val && val.trim() !== '' ? val.trim() : undefined))
+    .pipe(flexibleDateSchema.optional()),
+  convenio: optionalString(1, 100),
+  observacoes: optionalString(1, 1000),
 })
 
 export type AgentUpdatePatientInput = z.infer<typeof agentUpdatePatientSchema>

@@ -168,6 +168,39 @@ curl -H "Authorization: Bearer <API_KEY>" \
   https://seu-dominio/api/agent/slots?data=2026-01-25
 ```
 
+### Gerando API Key
+
+Para gerar uma nova API Key para o AI Agent:
+
+```bash
+npx ts-node scripts/generate-agent-key.ts
+```
+
+O script gera:
+1. **API Key** (64 caracteres hex) - Armazene nas credenciais do N8N
+2. **API Key Hash** (bcrypt) - Armazene na tabela `agents`
+
+**Configuração no N8N:**
+1. Vá em Credentials → Add Credential → Header Auth
+2. Name: `Botfy API Key`
+3. Header Name: `Authorization`
+4. Header Value: `Bearer <sua-api-key>`
+
+**Configuração no Banco:**
+```sql
+INSERT INTO agents (id, name, description, api_key_hash, user_id, active)
+VALUES (
+  gen_random_uuid(),
+  'Marilia - WhatsApp Agent',
+  'N8N AI Agent for WhatsApp patient interactions',
+  '<hash-gerado>',
+  '<user-id>',
+  true
+);
+```
+
+> ⚠️ **Importante**: A API Key plain só é exibida UMA vez. Guarde-a em local seguro antes de fechar o terminal.
+
 ### APIs Disponíveis
 
 | Tool | Método | Endpoint | Descrição |
