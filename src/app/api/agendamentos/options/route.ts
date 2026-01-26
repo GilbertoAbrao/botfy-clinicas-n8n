@@ -29,9 +29,10 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch services from servicos table (integer IDs)
+    // Note: servicos table uses 'valor' for price, not 'preco'
     const { data: services, error: servicesError } = await supabase
       .from('servicos')
-      .select('id, nome, duracao_minutos, preco')
+      .select('id, nome, duracao_minutos, valor')
       .eq('ativo', true)
       .order('nome')
 

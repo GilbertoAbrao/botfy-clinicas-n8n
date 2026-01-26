@@ -230,11 +230,11 @@ export function AppointmentModal({
 
         // Map to expected format and convert integer IDs to strings
         if (data.services) {
-          setServices(data.services.map((s: { id: number; nome: string; duracao_minutos: number; preco: number | null }) => ({
+          setServices(data.services.map((s: { id: number; nome: string; duracao_minutos: number; valor: number | null }) => ({
             id: s.id.toString(),
             nome: s.nome,
             duracao: s.duracao_minutos,
-            preco: s.preco
+            preco: s.valor  // servicos table uses 'valor' not 'preco'
           })))
         }
       } catch (err: any) {
