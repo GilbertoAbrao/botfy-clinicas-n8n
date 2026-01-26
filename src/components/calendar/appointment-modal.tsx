@@ -119,16 +119,18 @@ export function AppointmentModal({
     const fetchAppointment = async () => {
       try {
         const supabase = createBrowserClient()
+        // Fetch from agendamentos table (N8N/legacy system, integer IDs)
         const { data, error } = await supabase
-          .from('appointments')
+          .from('agendamentos')
           .select(`
             id,
-            scheduled_at,
-            service_type,
+            data_hora,
+            tipo_consulta,
             status,
-            notes,
-            patient_id,
-            provider_id
+            observacoes,
+            paciente_id,
+            profissional,
+            servico_id
           `)
           .eq('id', appointmentId)
           .single()
@@ -136,14 +138,24 @@ export function AppointmentModal({
         if (error) throw error
         if (!data) return
 
-        // Map DB status to modal status
-        const modalStatus = STATUS_TO_MODAL[data.status] || 'AGENDADO'
+        // Map Portuguese DB status to modal status
+        const statusMapPtToModal: Record<string, string> = {
+          'agendada': 'AGENDADO',
+          'confirmada': 'CONFIRMADO',
+          'cancelada': 'CANCELADO',
+          'realizada': 'REALIZADO',
+          'presente': 'REALIZADO',
+          'faltou': 'FALTOU',
+          'no_show': 'FALTOU',
+        }
+        const modalStatus = statusMapPtToModal[data.status?.toLowerCase()] || 'AGENDADO'
 
         setFormData({
-          pacienteId: data.patient_id || '',
-          servicoId: data.service_type || '', // This is the service name, will be mapped to ID below
-          dataHora: toDateTimeLocal(data.scheduled_at || ''),
-          observacoes: data.notes || '',
+          pacienteId: data.paciente_id?.toString() || '',
+          // Use servico_id if available, otherwise use tipo_consulta (will be matched to service by name)
+          servicoId: data.servico_id?.toString() || data.tipo_consulta || '',
+          dataHora: toDateTimeLocal(data.data_hora || ''),
+          observacoes: data.observacoes || '',
           status: modalStatus,
         })
       } catch (err: any) {
@@ -168,7 +180,11 @@ export function AppointmentModal({
 
   // Map service name/type to ID when services are loaded (for edit mode)
   useEffect(() => {
-    if (services.length > 0 && formData.servicoId && !isUuid(formData.servicoId)) {
+    if (services.length > 0 && formData.servicoId) {
+      // Check if servicoId is already a valid ID in our services list
+      const existingService = services.find(s => s.id === formData.servicoId)
+      if (existingService) return // Already a valid ID
+
       // servicoId is a service name or type, find the matching service ID
       const serviceName = formData.servicoId.toLowerCase()
       const matchingService = services.find(s =>
@@ -204,9 +220,9 @@ export function AppointmentModal({
       try {
         const supabase = createBrowserClient()
 
-        // Fetch patients from patients table (UUID-based, used by appointments)
+        // Fetch patients from pacientes table (integer IDs, used by agendamentos/N8N)
         const { data: patientsData, error: patientsError } = await supabase
-          .from('patients')
+          .from('pacientes')
           .select('id, nome, telefone')
           .order('nome')
           .limit(500)
@@ -214,20 +230,30 @@ export function AppointmentModal({
         if (patientsError) {
           console.error('[AppointmentModal] Error fetching patients:', patientsError)
         } else if (patientsData) {
-          setPatients(patientsData)
+          // Convert integer IDs to strings for Select component compatibility
+          setPatients(patientsData.map((p: { id: number; nome: string; telefone: string }) => ({
+            ...p,
+            id: p.id.toString()
+          })))
         }
 
-        // Fetch services from services table (UUID-based, used by appointments)
+        // Fetch services from servicos table (integer IDs, used by agendamentos/N8N)
         const { data: servicesData, error: servicesError } = await supabase
-          .from('services')
-          .select('id, nome, duracao, preco')
+          .from('servicos')
+          .select('id, nome, duracao_minutos, preco')
           .eq('ativo', true)
           .order('nome')
 
         if (servicesError) {
           console.error('[AppointmentModal] Error fetching services:', servicesError)
         } else if (servicesData) {
-          setServices(servicesData)
+          // Map to expected format and convert integer IDs to strings
+          setServices(servicesData.map((s: { id: number; nome: string; duracao_minutos: number; preco: number | null }) => ({
+            id: s.id.toString(),
+            nome: s.nome,
+            duracao: s.duracao_minutos,
+            preco: s.preco
+          })))
         }
       } catch (err: any) {
         // Ignore AbortError - happens when modal closes during fetch
