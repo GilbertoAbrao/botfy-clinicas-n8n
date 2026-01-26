@@ -7,22 +7,25 @@ import {
   AppointmentStatus,
 } from '@/lib/validations/appointment'
 
-// Map English DB status to Portuguese frontend status
-const STATUS_MAP: Record<string, AppointmentStatus> = {
-  confirmed: 'confirmado',
-  tentative: 'agendada',
-  cancelled: 'cancelada',
-  completed: 'realizada',
+// Map Portuguese DB status (agendamentos table) to frontend status
+// Note: agendamentos uses Portuguese status values directly
+const STATUS_MAP_PT: Record<string, AppointmentStatus> = {
+  agendada: 'agendada',
+  confirmada: 'confirmado',
+  cancelada: 'cancelada',
+  realizada: 'realizada',
   no_show: 'faltou',
+  presente: 'realizada', // Maps "presente" to "realizada"
+  faltou: 'faltou',
 }
 
-// Map Portuguese frontend status to English DB status for filtering
-const STATUS_MAP_REVERSE: Record<AppointmentStatus, string> = {
-  confirmado: 'confirmed',
-  agendada: 'tentative',
-  cancelada: 'cancelled',
-  realizada: 'completed',
-  faltou: 'no_show',
+// Map frontend status to Portuguese DB status for filtering
+const STATUS_MAP_REVERSE_PT: Record<AppointmentStatus, string> = {
+  agendada: 'agendada',
+  confirmado: 'confirmada',
+  cancelada: 'cancelada',
+  realizada: 'realizada',
+  faltou: 'faltou',
 }
 
 export async function GET(request: NextRequest) {
@@ -49,44 +52,57 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit
 
     // 4. Build Supabase query (using admin client since user is already authenticated above)
+    // Query from 'agendamentos' table (N8N/legacy system) instead of 'appointments'
     const supabase = createAdminSupabaseClient()
 
     let query = supabase
-      .from('appointments')
+      .from('agendamentos')
       .select(
         `
         id,
-        scheduled_at,
-        service_type,
+        data_hora,
+        tipo_consulta,
         status,
-        duration,
-        patient:patients!patient_id (id, nome, telefone),
-        provider:providers!provider_id (id, nome, cor_calendario)
+        duracao_minutos,
+        profissional,
+        observacoes,
+        paciente:pacientes!paciente_id (id, nome, telefone)
       `,
         { count: 'exact' }
       )
 
     // 5. Apply filters
     if (dateStart) {
-      query = query.gte('scheduled_at', dateStart)
+      query = query.gte('data_hora', dateStart)
     }
     if (dateEnd) {
-      query = query.lte('scheduled_at', dateEnd)
+      query = query.lte('data_hora', dateEnd)
     }
 
-    // Provider filter - support comma-separated list for multi-select
+    // Provider filter - filter by profissional name (string match)
+    // Note: agendamentos uses 'profissional' as string name, not provider_id
     if (providerId) {
+      // For backwards compatibility, we'll look up the provider name from the providers table
+      // and filter by that name. providerId can be comma-separated UUIDs.
       const providerIds = providerId.split(',').map(id => id.trim())
-      query = query.in('provider_id', providerIds)
+      const { data: providers } = await supabase
+        .from('providers')
+        .select('nome')
+        .in('id', providerIds)
+
+      if (providers && providers.length > 0) {
+        const providerNames = providers.map(p => p.nome)
+        query = query.in('profissional', providerNames)
+      }
     }
 
     if (serviceType) {
-      query = query.eq('service_type', serviceType)
+      query = query.eq('tipo_consulta', serviceType)
     }
 
     if (status) {
-      // Convert Portuguese status to English for DB query
-      const dbStatus = STATUS_MAP_REVERSE[status]
+      // Use Portuguese status directly (agendamentos table uses Portuguese values)
+      const dbStatus = STATUS_MAP_REVERSE_PT[status]
       query = query.eq('status', dbStatus)
     }
 
@@ -99,7 +115,7 @@ export async function GET(request: NextRequest) {
 
     // 6. Apply pagination and ordering
     query = query
-      .order('scheduled_at', { ascending: false })
+      .order('data_hora', { ascending: false })
       .range(offset, offset + limit - 1)
 
     const { data, count, error } = await query
@@ -112,24 +128,41 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // 7. Transform response to AppointmentListItem format
+    // 7. Fetch provider colors for mapping profissional names
+    // This allows calendar to show proper colors even though agendamentos uses names, not IDs
+    const { data: allProviders } = await supabase
+      .from('providers')
+      .select('id, nome, cor_calendario')
+      .eq('ativo', true)
+
+    const providerColorMap = new Map<string, { id: string; cor: string }>()
+    for (const p of allProviders || []) {
+      providerColorMap.set(p.nome.toLowerCase(), { id: p.id, cor: p.cor_calendario })
+    }
+
+    // 8. Transform response to AppointmentListItem format
+    // Note: agendamentos table uses different column names than appointments
     let appointments: AppointmentListItem[] = (data || []).map((apt: any) => {
-      // Handle patient and provider data (can be arrays or objects)
-      const patient = Array.isArray(apt.patient) ? apt.patient[0] : apt.patient
-      const provider = Array.isArray(apt.provider) ? apt.provider[0] : apt.provider
+      // Handle patient data (can be arrays or objects)
+      const patient = Array.isArray(apt.paciente) ? apt.paciente[0] : apt.paciente
+
+      // Lookup provider by name to get ID and color
+      const providerInfo = apt.profissional
+        ? providerColorMap.get(apt.profissional.toLowerCase())
+        : null
 
       return {
-        id: apt.id,
-        scheduledAt: apt.scheduled_at,
-        patientId: patient?.id || '',
+        id: apt.id.toString(), // Convert int to string for compatibility
+        scheduledAt: apt.data_hora,
+        patientId: patient?.id?.toString() || '',
         patientName: patient?.nome || 'Sem paciente',
         patientPhone: patient?.telefone || null,
-        serviceType: apt.service_type,
-        providerId: provider?.id || '',
-        providerName: provider?.nome || 'Sem profissional',
-        providerColor: provider?.cor_calendario || '#8B5CF6',
-        status: STATUS_MAP[apt.status] || 'agendada',
-        duration: apt.duration || 60,
+        serviceType: apt.tipo_consulta,
+        providerId: providerInfo?.id || '',
+        providerName: apt.profissional || 'Sem profissional',
+        providerColor: providerInfo?.cor || '#8B5CF6',
+        status: STATUS_MAP_PT[apt.status] || 'agendada',
+        duration: apt.duracao_minutos || 30,
       }
     })
 
